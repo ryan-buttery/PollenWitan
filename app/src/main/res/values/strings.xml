@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- app_name is set per build variant via resValue in build.gradle.kts -->
+</resources>

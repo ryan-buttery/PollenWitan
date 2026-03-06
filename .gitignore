@@ -1,0 +1,12 @@
+keystore.properties
+local.properties
+app/build/
+build/
+.gradle/
+app/release/
+*.apk
+*.iml
+.idea/
+gradle/wrapper/gradle-wrapper.jar
+*.hprof
+.DS_Store
