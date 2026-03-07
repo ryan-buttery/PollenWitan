@@ -31,7 +31,7 @@ Ordered by development phase, per the product design document.
 
 ### Phase 1 -- MVP
 
-1. **Per-User Allergen Profiles** -- Profile model with display name, tracked allergens (birch, alder, grass), severity thresholds per allergen, asthma flag. DataStore persistence. Default profiles for Ryan (birch) and Wife (alder).
+1. **Per-User Allergen Profiles** -- Profile model with display name, tracked allergens (birch, alder, grass), severity thresholds per allergen, asthma flag. DataStore persistence. Default profiles for Ryan (birch) and Olga (alder).
 
 2. **Profile Switcher & Dashboard** -- Main screen with per-profile summary: colour-coded allergen levels, AQI, natural-language summary, 24-hour hourly chart of primary allergen. Tab/chip row profile switcher.
 

@@ -2,27 +2,16 @@ package com.ryan.pollenwitan.domain.model
 
 object SeverityClassifier {
 
-    fun pollenSeverity(type: PollenType, value: Double): SeverityLevel {
+    fun pollenSeverity(type: PollenType, value: Double): SeverityLevel =
+        pollenSeverity(value, UserProfile.defaultThreshold(type))
+
+    fun pollenSeverity(value: Double, threshold: AllergenThreshold): SeverityLevel {
         if (value <= 0.0) return SeverityLevel.None
-        return when (type) {
-            PollenType.Birch -> when {
-                value <= 10 -> SeverityLevel.Low
-                value <= 50 -> SeverityLevel.Moderate
-                value <= 200 -> SeverityLevel.High
-                else -> SeverityLevel.VeryHigh
-            }
-            PollenType.Alder -> when {
-                value <= 10 -> SeverityLevel.Low
-                value <= 50 -> SeverityLevel.Moderate
-                value <= 100 -> SeverityLevel.High
-                else -> SeverityLevel.VeryHigh
-            }
-            PollenType.Grass -> when {
-                value <= 5 -> SeverityLevel.Low
-                value <= 30 -> SeverityLevel.Moderate
-                value <= 80 -> SeverityLevel.High
-                else -> SeverityLevel.VeryHigh
-            }
+        return when {
+            value < threshold.moderate -> SeverityLevel.Low
+            value < threshold.high -> SeverityLevel.Moderate
+            value < threshold.veryHigh -> SeverityLevel.High
+            else -> SeverityLevel.VeryHigh
         }
     }
 

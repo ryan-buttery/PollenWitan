@@ -5,6 +5,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.statement.HttpResponse
+import kotlinx.coroutines.delay
 
 class AirQualityApi(private val client: HttpClient) {
 
@@ -13,13 +15,49 @@ class AirQualityApi(private val client: HttpClient) {
         longitude: Double,
         forecastDays: Int = 1
     ): AirQualityResponse {
-        return client.get(BASE_URL) {
-            parameter("latitude", latitude)
-            parameter("longitude", longitude)
-            parameter("hourly", HOURLY_PARAMS)
-            parameter("timezone", "Europe/Warsaw")
-            parameter("forecast_days", forecastDays)
+        return retryWithBackoff {
+            client.get(BASE_URL) {
+                parameter("latitude", latitude)
+                parameter("longitude", longitude)
+                parameter("hourly", HOURLY_PARAMS)
+                parameter("timezone", "Europe/Warsaw")
+                parameter("forecast_days", forecastDays)
+            }
         }.body()
+    }
+
+    suspend fun getAirQualityRaw(
+        latitude: Double,
+        longitude: Double,
+        forecastDays: Int = 1
+    ): String {
+        return retryWithBackoff {
+            client.get(BASE_URL) {
+                parameter("latitude", latitude)
+                parameter("longitude", longitude)
+                parameter("hourly", HOURLY_PARAMS)
+                parameter("timezone", "Europe/Warsaw")
+                parameter("forecast_days", forecastDays)
+            }
+        }.body()
+    }
+
+    private suspend fun retryWithBackoff(
+        maxRetries: Int = 3,
+        initialDelayMs: Long = 1000,
+        block: suspend () -> HttpResponse
+    ): HttpResponse {
+        var currentDelay = initialDelayMs
+        repeat(maxRetries) { attempt ->
+            val response = block()
+            if (response.status.value != 429) return response
+            if (attempt < maxRetries - 1) {
+                delay(currentDelay)
+                currentDelay *= 2
+            }
+        }
+        // Final attempt — let it throw if it still fails
+        return block()
     }
 
     companion object {

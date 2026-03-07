@@ -31,9 +31,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ryan.pollenwitan.domain.model.CurrentConditions
 import com.ryan.pollenwitan.domain.model.PollenReading
+import com.ryan.pollenwitan.domain.model.SeverityClassifier
+import com.ryan.pollenwitan.domain.model.UserProfile
+import com.ryan.pollenwitan.ui.components.ProfileSwitcher
 import com.ryan.pollenwitan.ui.theme.toColor
 import com.ryan.pollenwitan.ui.theme.toLabel
-import com.ryan.pollenwitan.util.DefaultLocation
 import org.koin.androidx.compose.koinViewModel
 import java.time.format.DateTimeFormatter
 
@@ -41,14 +43,18 @@ import java.time.format.DateTimeFormatter
 fun DashboardScreen(viewModel: DashboardViewModel = koinViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    when (val state = uiState) {
-        is DashboardUiState.Loading -> LoadingContent()
-        is DashboardUiState.Success -> DashboardContent(
-            conditions = state.conditions,
+    when (val weather = uiState.weatherState) {
+        is WeatherState.Loading -> LoadingContent()
+        is WeatherState.Success -> DashboardContent(
+            conditions = weather.conditions,
+            profiles = uiState.profiles,
+            selectedProfile = uiState.selectedProfile,
+            locationDisplayName = uiState.locationDisplayName,
+            onSelectProfile = viewModel::selectProfile,
             onRefresh = viewModel::refresh
         )
-        is DashboardUiState.Error -> ErrorContent(
-            message = state.message,
+        is WeatherState.Error -> ErrorContent(
+            message = weather.message,
             onRetry = viewModel::refresh
         )
     }
@@ -90,7 +96,14 @@ private fun ErrorContent(message: String, onRetry: () -> Unit) {
 }
 
 @Composable
-private fun DashboardContent(conditions: CurrentConditions, onRefresh: () -> Unit) {
+private fun DashboardContent(
+    conditions: CurrentConditions,
+    profiles: List<UserProfile>,
+    selectedProfile: UserProfile?,
+    locationDisplayName: String,
+    onSelectProfile: (String) -> Unit,
+    onRefresh: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -99,7 +112,7 @@ private fun DashboardContent(conditions: CurrentConditions, onRefresh: () -> Uni
     ) {
         // Header
         Text(
-            text = DefaultLocation.DISPLAY_NAME,
+            text = locationDisplayName.ifEmpty { "Loading..." },
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
@@ -109,9 +122,19 @@ private fun DashboardContent(conditions: CurrentConditions, onRefresh: () -> Uni
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Pollen card
+        // Profile switcher
+        ProfileSwitcher(
+            profiles = profiles,
+            selectedProfileId = selectedProfile?.id,
+            onSelectProfile = onSelectProfile
+        )
+        if (profiles.size > 1) {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Pollen card -- profile-aware
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -120,14 +143,55 @@ private fun DashboardContent(conditions: CurrentConditions, onRefresh: () -> Uni
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Pollen",
+                    text = if (selectedProfile != null) "Pollen — ${selectedProfile.displayName}" else "Pollen",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                conditions.pollenReadings.forEach { reading ->
-                    PollenRow(reading)
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                if (selectedProfile != null) {
+                    // Show tracked allergens with profile-specific thresholds
+                    val trackedReadings = conditions.pollenReadings.filter { reading ->
+                        reading.type in selectedProfile.trackedAllergens
+                    }
+                    if (trackedReadings.isEmpty()) {
+                        Text(
+                            text = "No tracked allergens",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        trackedReadings.forEach { reading ->
+                            val threshold = selectedProfile.trackedAllergens[reading.type]!!
+                            val personalSeverity = SeverityClassifier.pollenSeverity(reading.value, threshold)
+                            PollenRow(reading.copy(severity = personalSeverity))
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+
+                    // Show untracked allergens dimmed
+                    val untrackedReadings = conditions.pollenReadings.filter { reading ->
+                        reading.type !in selectedProfile.trackedAllergens
+                    }
+                    if (untrackedReadings.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Other",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        untrackedReadings.forEach { reading ->
+                            PollenRow(reading, dimmed = true)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                } else {
+                    // No profile selected -- show all with default thresholds
+                    conditions.pollenReadings.forEach { reading ->
+                        PollenRow(reading)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                 }
             }
         }
@@ -219,7 +283,8 @@ private fun DashboardContent(conditions: CurrentConditions, onRefresh: () -> Uni
 }
 
 @Composable
-private fun PollenRow(reading: PollenReading) {
+private fun PollenRow(reading: PollenReading, dimmed: Boolean = false) {
+    val alpha = if (dimmed) 0.5f else 1f
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -228,24 +293,26 @@ private fun PollenRow(reading: PollenReading) {
             modifier = Modifier
                 .size(12.dp)
                 .clip(CircleShape)
-                .background(reading.severity.toColor())
+                .background(reading.severity.toColor().copy(alpha = alpha))
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = reading.type.displayName,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)
         )
+        Spacer(modifier = Modifier.weight(1f))
         Text(
             text = String.format("%.0f", reading.value),
             style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = reading.severity.toLabel(),
             style = MaterialTheme.typography.bodySmall,
-            color = reading.severity.toColor()
+            color = reading.severity.toColor().copy(alpha = alpha)
         )
     }
 }

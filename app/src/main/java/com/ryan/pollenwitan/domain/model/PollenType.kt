@@ -1,7 +1,7 @@
 package com.ryan.pollenwitan.domain.model
 
-enum class PollenType(val displayName: String) {
-    Birch("Birch"),
-    Alder("Alder"),
-    Grass("Grass")
+enum class PollenType(val displayName: String, val abbreviation: String) {
+    Birch("Birch", "Bi"),
+    Alder("Alder", "Al"),
+    Grass("Grass", "Gr")
 }
