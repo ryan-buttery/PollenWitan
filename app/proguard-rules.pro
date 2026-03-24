@@ -2,6 +2,9 @@
 -keep class io.ktor.** { *; }
 -dontwarn io.ktor.**
 
+# SLF4J (referenced by Ktor CIO, not bundled)
+-dontwarn org.slf4j.**
+
 # kotlinx-serialization
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.AnnotationsKt

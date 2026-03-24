@@ -100,12 +100,6 @@ dependencies {
     // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 
-    // Koin
-    val koinVersion = "3.5.6"
-    implementation("io.insert-koin:koin-android:$koinVersion")
-    implementation("io.insert-koin:koin-androidx-compose:$koinVersion")
-    implementation("io.insert-koin:koin-androidx-workmanager:$koinVersion")
-
     // Ktor
     val ktorVersion = "2.3.12"
     implementation("io.ktor:ktor-client-core:$ktorVersion")

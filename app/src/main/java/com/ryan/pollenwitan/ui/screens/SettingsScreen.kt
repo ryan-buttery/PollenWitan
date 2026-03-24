@@ -41,10 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ryan.pollenwitan.data.repository.NotificationPrefs
 import com.ryan.pollenwitan.domain.model.LocationMode
-import org.koin.androidx.compose.koinViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
+fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 

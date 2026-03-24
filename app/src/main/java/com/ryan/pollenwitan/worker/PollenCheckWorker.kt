@@ -12,20 +12,17 @@ import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
 import kotlinx.coroutines.flow.first
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class PollenCheckWorker(
     context: Context,
     params: WorkerParameters
-) : CoroutineWorker(context, params), KoinComponent {
+) : CoroutineWorker(context, params) {
 
-    private val airQualityRepository: AirQualityRepository by inject()
-    private val profileRepository: ProfileRepository by inject()
-    private val locationRepository: LocationRepository by inject()
-    private val notificationPrefsRepository: NotificationPrefsRepository by inject()
+    private val airQualityRepository = AirQualityRepository(applicationContext)
+    private val profileRepository = ProfileRepository(applicationContext)
+    private val locationRepository = LocationRepository(applicationContext)
+    private val notificationPrefsRepository = NotificationPrefsRepository(applicationContext)
 
     override suspend fun doWork(): Result {
         val prefs = notificationPrefsRepository.getPrefs().first()

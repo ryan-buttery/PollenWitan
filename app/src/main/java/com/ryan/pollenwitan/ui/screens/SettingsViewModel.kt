@@ -1,6 +1,7 @@
 package com.ryan.pollenwitan.ui.screens
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryan.pollenwitan.data.location.GpsLocationProvider
 import com.ryan.pollenwitan.data.repository.LocationRepository
@@ -30,11 +31,11 @@ sealed interface GpsStatus {
     data class Error(val message: String) : GpsStatus
 }
 
-class SettingsViewModel(
-    private val locationRepository: LocationRepository,
-    private val gpsLocationProvider: GpsLocationProvider,
-    private val notificationPrefsRepository: NotificationPrefsRepository
-) : ViewModel() {
+class SettingsViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val locationRepository = LocationRepository(application)
+    private val gpsLocationProvider = GpsLocationProvider(application)
+    private val notificationPrefsRepository = NotificationPrefsRepository(application)
 
     private val _gpsStatus = MutableStateFlow<GpsStatus>(GpsStatus.Idle)
 

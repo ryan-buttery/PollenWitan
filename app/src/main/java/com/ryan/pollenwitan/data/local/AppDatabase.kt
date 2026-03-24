@@ -15,11 +15,16 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun cachedForecastDao(): CachedForecastDao
 
     companion object {
-        fun create(context: Context): AppDatabase =
-            Room.databaseBuilder(
-                context.applicationContext,
-                AppDatabase::class.java,
-                "pollenwitan.db"
-            ).build()
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getInstance(context: Context): AppDatabase =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "pollenwitan.db"
+                ).build().also { INSTANCE = it }
+            }
     }
 }

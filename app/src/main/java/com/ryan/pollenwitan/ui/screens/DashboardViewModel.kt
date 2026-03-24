@@ -1,6 +1,7 @@
 package com.ryan.pollenwitan.ui.screens
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryan.pollenwitan.data.repository.AirQualityRepository
 import com.ryan.pollenwitan.data.repository.LocationRepository
@@ -31,11 +32,11 @@ data class DashboardUiState(
         get() = profiles.find { it.id == selectedProfileId }
 }
 
-class DashboardViewModel(
-    private val airQualityRepository: AirQualityRepository,
-    private val profileRepository: ProfileRepository,
-    private val locationRepository: LocationRepository
-) : ViewModel() {
+class DashboardViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val airQualityRepository = AirQualityRepository(application)
+    private val profileRepository = ProfileRepository(application)
+    private val locationRepository = LocationRepository(application)
 
     private val _weatherState = MutableStateFlow<WeatherState>(WeatherState.Loading)
 

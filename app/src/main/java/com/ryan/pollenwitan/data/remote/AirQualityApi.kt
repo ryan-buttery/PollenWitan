@@ -3,12 +3,18 @@ package com.ryan.pollenwitan.data.remote
 import com.ryan.pollenwitan.data.remote.dto.AirQualityResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.delay
+import kotlinx.serialization.json.Json
 
-class AirQualityApi(private val client: HttpClient) {
+class AirQualityApi {
+
+    private val client get() = httpClient
 
     suspend fun getAirQuality(
         latitude: Double,
@@ -56,12 +62,19 @@ class AirQualityApi(private val client: HttpClient) {
                 currentDelay *= 2
             }
         }
-        // Final attempt — let it throw if it still fails
         return block()
     }
 
     companion object {
         private const val BASE_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
         private const val HOURLY_PARAMS = "birch_pollen,alder_pollen,grass_pollen,pm2_5,pm10,european_aqi"
+
+        private val httpClient by lazy {
+            HttpClient(CIO) {
+                install(ContentNegotiation) {
+                    json(Json { ignoreUnknownKeys = true })
+                }
+            }
+        }
     }
 }

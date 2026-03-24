@@ -1,6 +1,7 @@
 package com.ryan.pollenwitan.ui.screens
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryan.pollenwitan.data.repository.AirQualityRepository
 import com.ryan.pollenwitan.data.repository.LocationRepository
@@ -32,11 +33,11 @@ data class ForecastUiState(
         get() = profiles.find { it.id == selectedProfileId }
 }
 
-class ForecastViewModel(
-    private val airQualityRepository: AirQualityRepository,
-    private val profileRepository: ProfileRepository,
-    private val locationRepository: LocationRepository
-) : ViewModel() {
+class ForecastViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val airQualityRepository = AirQualityRepository(application)
+    private val profileRepository = ProfileRepository(application)
+    private val locationRepository = LocationRepository(application)
 
     private val _forecastState = MutableStateFlow<ForecastState>(ForecastState.Loading)
     private val _expandedDayIndex = MutableStateFlow<Int?>(null)

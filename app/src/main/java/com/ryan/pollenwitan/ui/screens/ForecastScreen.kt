@@ -42,11 +42,11 @@ import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.components.ProfileSwitcher
 import com.ryan.pollenwitan.ui.theme.toColor
 import com.ryan.pollenwitan.ui.theme.toLabel
-import org.koin.androidx.compose.koinViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun ForecastScreen(viewModel: ForecastViewModel = koinViewModel()) {
+fun ForecastScreen(viewModel: ForecastViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     when (val forecast = uiState.forecastState) {
