@@ -19,7 +19,8 @@ data class UserProfile(
     val displayName: String,
     val trackedAllergens: Map<PollenType, AllergenThreshold>,
     val hasAsthma: Boolean,
-    val location: ProfileLocation? = null
+    val location: ProfileLocation? = null,
+    val medicineAssignments: List<MedicineAssignment> = emptyList()
 ) {
     companion object {
         fun defaultThreshold(type: PollenType): AllergenThreshold = when (type) {

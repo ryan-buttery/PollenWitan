@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -28,6 +29,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.ryan.pollenwitan.domain.model.AllergenThreshold
+import com.ryan.pollenwitan.domain.model.Medicine
 import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.UserProfile
 
@@ -169,6 +172,37 @@ fun ProfileEditScreen(
                 onUpdateThreshold = { level, value -> viewModel.updateThreshold(type, level, value) }
             )
             Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        // Medicines section
+        if (uiState.availableMedicines.isNotEmpty()) {
+            Text(
+                text = "Medicines",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            uiState.medicineAssignments.forEach { assignment ->
+                MedicineAssignmentCard(
+                    assignment = assignment,
+                    onUpdateDose = { viewModel.updateAssignmentDose(assignment.medicineId, it) },
+                    onUpdateTimesPerDay = { viewModel.updateAssignmentTimesPerDay(assignment.medicineId, it) },
+                    onToggleHour = { viewModel.toggleReminderHour(assignment.medicineId, it) },
+                    onRemove = { viewModel.removeMedicineAssignment(assignment.medicineId) }
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            val assignedIds = uiState.medicineAssignments.map { it.medicineId }.toSet()
+            val unassigned = uiState.availableMedicines.filter { it.id !in assignedIds }
+            if (unassigned.isNotEmpty()) {
+                AddMedicineButton(
+                    unassignedMedicines = unassigned,
+                    onAdd = viewModel::addMedicineAssignment
+                )
+            }
+            Spacer(modifier = Modifier.height(20.dp))
         }
 
         // Validation error
@@ -394,5 +428,126 @@ private fun LocationCard(
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MedicineAssignmentCard(
+    assignment: MedicineAssignmentUiState,
+    onUpdateDose: (String) -> Unit,
+    onUpdateTimesPerDay: (String) -> Unit,
+    onToggleHour: (Int) -> Unit,
+    onRemove: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = assignment.medicineName,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = assignment.medicineType.displayName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                OutlinedButton(onClick = onRemove) {
+                    Text("Remove")
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = assignment.dose,
+                    onValueChange = onUpdateDose,
+                    label = { Text("Dose") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                    suffix = { Text(assignment.medicineType.unitLabel, style = MaterialTheme.typography.bodySmall) }
+                )
+                OutlinedTextField(
+                    value = assignment.timesPerDay,
+                    onValueChange = onUpdateTimesPerDay,
+                    label = { Text("Times/day") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Text("Reminder hours", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                (6..22).forEach { hour ->
+                    FilterChip(
+                        selected = hour in assignment.reminderHours,
+                        onClick = { onToggleHour(hour) },
+                        label = { Text(String.format("%02d", hour)) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddMedicineButton(
+    unassignedMedicines: List<Medicine>,
+    onAdd: (String) -> Unit
+) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    OutlinedButton(
+        onClick = { showDialog = true },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text("Add Medicine")
+    }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Add Medicine") },
+            text = {
+                Column {
+                    unassignedMedicines.forEach { medicine ->
+                        TextButton(
+                            onClick = {
+                                onAdd(medicine.id)
+                                showDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("${medicine.name} (${medicine.type.displayName})")
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

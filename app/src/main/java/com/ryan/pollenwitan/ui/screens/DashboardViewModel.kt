@@ -4,15 +4,22 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryan.pollenwitan.data.repository.AirQualityRepository
+import com.ryan.pollenwitan.data.repository.DoseTrackingRepository
 import com.ryan.pollenwitan.data.repository.LocationRepository
+import com.ryan.pollenwitan.data.repository.MedicineRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.domain.model.CurrentConditions
+import com.ryan.pollenwitan.domain.model.DoseConfirmation
+import com.ryan.pollenwitan.domain.model.Medicine
 import com.ryan.pollenwitan.domain.model.UserProfile
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -22,11 +29,22 @@ sealed interface WeatherState {
     data class Error(val message: String) : WeatherState
 }
 
+data class MedicineSlot(
+    val medicineId: String,
+    val medicineName: String,
+    val dose: Int,
+    val unitLabel: String,
+    val hour: Int,
+    val slotIndex: Int,
+    val confirmed: Boolean
+)
+
 data class DashboardUiState(
     val weatherState: WeatherState = WeatherState.Loading,
     val profiles: List<UserProfile> = emptyList(),
     val selectedProfileId: String = "",
-    val locationDisplayName: String = ""
+    val locationDisplayName: String = "",
+    val medicineSlots: List<MedicineSlot> = emptyList()
 ) {
     val selectedProfile: UserProfile?
         get() = profiles.find { it.id == selectedProfileId }
@@ -37,23 +55,42 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val airQualityRepository = AirQualityRepository(application)
     private val profileRepository = ProfileRepository(application)
     private val locationRepository = LocationRepository(application)
+    private val medicineRepository = MedicineRepository(application)
+    private val doseTrackingRepository = DoseTrackingRepository(application)
 
     private val _weatherState = MutableStateFlow<WeatherState>(WeatherState.Loading)
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<DashboardUiState> = combine(
         _weatherState,
         profileRepository.getProfiles(),
         profileRepository.getSelectedProfileId(),
-        locationRepository.getLocation()
-    ) { weather, profiles, selectedId, globalLocation ->
+        locationRepository.getLocation(),
+        medicineRepository.getMedicines()
+    ) { weather, profiles, selectedId, globalLocation, medicines ->
         val selectedProfile = profiles.find { it.id == selectedId }
         val effectiveLocation = ProfileRepository.resolveLocation(selectedProfile, globalLocation)
-        DashboardUiState(
-            weatherState = weather,
-            profiles = profiles,
-            selectedProfileId = selectedId,
-            locationDisplayName = effectiveLocation.displayName
+        Triple(
+            DashboardUiState(
+                weatherState = weather,
+                profiles = profiles,
+                selectedProfileId = selectedId,
+                locationDisplayName = effectiveLocation.displayName
+            ),
+            selectedProfile,
+            medicines
         )
+    }.flatMapLatest { (baseState, selectedProfile, medicines) ->
+        if (selectedProfile == null || selectedProfile.medicineAssignments.isEmpty()) {
+            flowOf(baseState)
+        } else {
+            doseTrackingRepository.getConfirmations(selectedProfile.id).combine(
+                flowOf(Unit)
+            ) { confirmations, _ ->
+                val slots = buildMedicineSlots(selectedProfile, medicines, confirmations)
+                baseState.copy(medicineSlots = slots)
+            }
+        }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState())
 
     init {
@@ -103,5 +140,46 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             profileRepository.selectProfile(profileId)
         }
+    }
+
+    fun confirmDose(medicineId: String, slotIndex: Int) {
+        val profileId = uiState.value.selectedProfileId
+        if (profileId.isBlank()) return
+        viewModelScope.launch {
+            doseTrackingRepository.confirmDose(profileId, medicineId, slotIndex)
+        }
+    }
+
+    fun unconfirmDose(medicineId: String, slotIndex: Int) {
+        val profileId = uiState.value.selectedProfileId
+        if (profileId.isBlank()) return
+        viewModelScope.launch {
+            doseTrackingRepository.unconfirmDose(profileId, medicineId, slotIndex)
+        }
+    }
+
+    private fun buildMedicineSlots(
+        profile: UserProfile,
+        medicines: List<Medicine>,
+        confirmations: Set<DoseConfirmation>
+    ): List<MedicineSlot> {
+        val slots = mutableListOf<MedicineSlot>()
+        profile.medicineAssignments.forEach { assignment ->
+            val medicine = medicines.find { it.id == assignment.medicineId } ?: return@forEach
+            assignment.reminderHours.forEachIndexed { slotIndex, hour ->
+                slots.add(
+                    MedicineSlot(
+                        medicineId = assignment.medicineId,
+                        medicineName = medicine.name,
+                        dose = assignment.dose,
+                        unitLabel = medicine.type.unitLabel,
+                        hour = hour,
+                        slotIndex = slotIndex,
+                        confirmed = DoseConfirmation(assignment.medicineId, slotIndex) in confirmations
+                    )
+                )
+            }
+        }
+        return slots.sortedBy { it.hour }
     }
 }

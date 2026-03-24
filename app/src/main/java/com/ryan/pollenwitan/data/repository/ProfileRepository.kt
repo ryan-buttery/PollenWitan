@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.ryan.pollenwitan.domain.model.AllergenThreshold
 import com.ryan.pollenwitan.domain.model.AppLocation
+import com.ryan.pollenwitan.domain.model.MedicineAssignment
 import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.ProfileLocation
 import com.ryan.pollenwitan.domain.model.UserProfile
@@ -36,6 +37,10 @@ class ProfileRepository(
         fun locationLat(id: String) = stringPreferencesKey("profile_${id}_location_lat")
         fun locationLon(id: String) = stringPreferencesKey("profile_${id}_location_lon")
         fun locationName(id: String) = stringPreferencesKey("profile_${id}_location_name")
+        fun medicineIds(id: String) = stringSetPreferencesKey("profile_${id}_medicine_ids")
+        fun medDose(id: String, medId: String) = stringPreferencesKey("profile_${id}_med_${medId}_dose")
+        fun medTimesPerDay(id: String, medId: String) = stringPreferencesKey("profile_${id}_med_${medId}_times_per_day")
+        fun medReminderHours(id: String, medId: String) = stringSetPreferencesKey("profile_${id}_med_${medId}_reminder_hours")
     }
 
     fun getProfiles(): Flow<List<UserProfile>> = dataStore.data
@@ -101,6 +106,14 @@ class ProfileRepository(
                 prefs.remove(Keys.threshold(id, type.name, level))
             }
         }
+        // Clear medicine assignment keys
+        val medIds = prefs[Keys.medicineIds(id)] ?: emptySet()
+        for (medId in medIds) {
+            prefs.remove(Keys.medDose(id, medId))
+            prefs.remove(Keys.medTimesPerDay(id, medId))
+            prefs.remove(Keys.medReminderHours(id, medId))
+        }
+        prefs.remove(Keys.medicineIds(id))
     }
 
     private fun writeProfile(prefs: MutablePreferences, profile: UserProfile) {
@@ -122,6 +135,14 @@ class ProfileRepository(
             prefs.remove(Keys.locationLat(profile.id))
             prefs.remove(Keys.locationLon(profile.id))
             prefs.remove(Keys.locationName(profile.id))
+        }
+        // Medicine assignments
+        val medIds = profile.medicineAssignments.map { it.medicineId }.toSet()
+        prefs[Keys.medicineIds(profile.id)] = medIds
+        profile.medicineAssignments.forEach { assignment ->
+            prefs[Keys.medDose(profile.id, assignment.medicineId)] = assignment.dose.toString()
+            prefs[Keys.medTimesPerDay(profile.id, assignment.medicineId)] = assignment.timesPerDay.toString()
+            prefs[Keys.medReminderHours(profile.id, assignment.medicineId)] = assignment.reminderHours.map { it.toString() }.toSet()
         }
     }
 
@@ -147,12 +168,30 @@ class ProfileRepository(
             ProfileLocation(lat, lon, locName)
         }
 
+        // Medicine assignments
+        val medIds = prefs[Keys.medicineIds(id)] ?: emptySet()
+        val medicineAssignments = medIds.mapNotNull { medId ->
+            val dose = prefs[Keys.medDose(id, medId)]?.toIntOrNull() ?: return@mapNotNull null
+            val timesPerDay = prefs[Keys.medTimesPerDay(id, medId)]?.toIntOrNull() ?: return@mapNotNull null
+            val reminderHours = prefs[Keys.medReminderHours(id, medId)]
+                ?.mapNotNull { it.toIntOrNull() }
+                ?.sorted()
+                ?: emptyList()
+            MedicineAssignment(
+                medicineId = medId,
+                dose = dose,
+                timesPerDay = timesPerDay,
+                reminderHours = reminderHours
+            )
+        }
+
         return UserProfile(
             id = id,
             displayName = name,
             trackedAllergens = trackedAllergens,
             hasAsthma = asthma,
-            location = location
+            location = location,
+            medicineAssignments = medicineAssignments
         )
     }
 

@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -58,8 +59,11 @@ fun DashboardScreen(
             profiles = uiState.profiles,
             selectedProfile = uiState.selectedProfile,
             locationDisplayName = uiState.locationDisplayName,
+            medicineSlots = uiState.medicineSlots,
             onSelectProfile = viewModel::selectProfile,
-            onRefresh = viewModel::refresh
+            onRefresh = viewModel::refresh,
+            onConfirmDose = viewModel::confirmDose,
+            onUnconfirmDose = viewModel::unconfirmDose
         )
         is WeatherState.Error -> ErrorContent(
             message = weather.message,
@@ -136,8 +140,11 @@ private fun DashboardContent(
     profiles: List<UserProfile>,
     selectedProfile: UserProfile?,
     locationDisplayName: String,
+    medicineSlots: List<MedicineSlot>,
     onSelectProfile: (String) -> Unit,
-    onRefresh: () -> Unit
+    onRefresh: () -> Unit,
+    onConfirmDose: (String, Int) -> Unit,
+    onUnconfirmDose: (String, Int) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -301,6 +308,58 @@ private fun DashboardContent(
                         text = String.format("%.1f \u00B5g/m\u00B3", conditions.pm10),
                         style = MaterialTheme.typography.bodyMedium
                     )
+                }
+            }
+        }
+
+        // Medicines card
+        if (medicineSlots.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Medicines",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    medicineSlots.forEach { slot ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = slot.confirmed,
+                                onCheckedChange = { checked ->
+                                    if (checked) onConfirmDose(slot.medicineId, slot.slotIndex)
+                                    else onUnconfirmDose(slot.medicineId, slot.slotIndex)
+                                }
+                            )
+                            Text(
+                                text = String.format("%02d:00", slot.hour),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.width(52.dp)
+                            )
+                            Text(
+                                text = slot.medicineName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "${slot.dose} ${slot.unitLabel}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         }

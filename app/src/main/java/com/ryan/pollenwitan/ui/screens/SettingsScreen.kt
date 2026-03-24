@@ -18,16 +18,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ryan.pollenwitan.data.repository.NotificationPrefs
 import com.ryan.pollenwitan.domain.model.LocationMode
+import com.ryan.pollenwitan.domain.model.Medicine
+import com.ryan.pollenwitan.domain.model.MedicineType
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
@@ -80,6 +86,16 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
         )
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Medicines section
+        MedicinesCard(
+            medicines = uiState.medicines,
+            onAddMedicine = viewModel::addMedicine,
+            onUpdateMedicine = viewModel::updateMedicine,
+            onDeleteMedicine = viewModel::deleteMedicine
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Location section
         Card(
@@ -393,4 +409,160 @@ private fun GpsLocationSection(
             Text("Open App Settings")
         }
     }
+}
+
+@Composable
+private fun MedicinesCard(
+    medicines: List<Medicine>,
+    onAddMedicine: (String, MedicineType) -> Unit,
+    onUpdateMedicine: (Medicine) -> Unit,
+    onDeleteMedicine: (String) -> Unit
+) {
+    var showAddDialog by remember { mutableStateOf(false) }
+    var editingMedicine by remember { mutableStateOf<Medicine?>(null) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Medicines",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (medicines.isEmpty()) {
+                Text(
+                    text = "No medicines defined yet",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                medicines.forEachIndexed { index, medicine ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = medicine.name,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = medicine.type.displayName,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        IconButton(onClick = { editingMedicine = medicine }) {
+                            Text("\u270E", style = MaterialTheme.typography.bodyLarge)
+                        }
+                        IconButton(onClick = { onDeleteMedicine(medicine.id) }) {
+                            Text("\u2715", style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                    if (index < medicines.lastIndex) {
+                        HorizontalDivider()
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = { showAddDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Add Medicine")
+            }
+        }
+    }
+
+    if (showAddDialog) {
+        MedicineDialog(
+            title = "Add Medicine",
+            initialName = "",
+            initialType = MedicineType.Tablet,
+            onConfirm = { name, type ->
+                onAddMedicine(name, type)
+                showAddDialog = false
+            },
+            onDismiss = { showAddDialog = false }
+        )
+    }
+
+    editingMedicine?.let { medicine ->
+        MedicineDialog(
+            title = "Edit Medicine",
+            initialName = medicine.name,
+            initialType = medicine.type,
+            onConfirm = { name, type ->
+                onUpdateMedicine(medicine.copy(name = name.trim(), type = type))
+                editingMedicine = null
+            },
+            onDismiss = { editingMedicine = null }
+        )
+    }
+}
+
+@Composable
+private fun MedicineDialog(
+    title: String,
+    initialName: String,
+    initialType: MedicineType,
+    onConfirm: (String, MedicineType) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var name by remember { mutableStateOf(initialName) }
+    var selectedType by remember { mutableStateOf(initialType) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("Type", style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(4.dp))
+                MedicineType.entries.forEach { type ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        RadioButton(
+                            selected = selectedType == type,
+                            onClick = { selectedType = type }
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(type.displayName, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(name, selectedType) },
+                enabled = name.isNotBlank()
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

@@ -15,6 +15,7 @@ object NotificationHelper {
     const val CHANNEL_MORNING_BRIEFING = "morning_briefing"
     const val CHANNEL_THRESHOLD_ALERT = "threshold_alert"
     const val CHANNEL_COMPOUND_RISK = "compound_risk"
+    const val CHANNEL_MEDICATION_REMINDER = "medication_reminder"
 
     fun createChannels(context: Context) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -40,6 +41,13 @@ object NotificationHelper {
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Alerts when pollen and air quality combine to increase respiratory risk"
+            },
+            NotificationChannel(
+                CHANNEL_MEDICATION_REMINDER,
+                "Medication Reminders",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Reminders to take your allergy medication"
             }
         )
 

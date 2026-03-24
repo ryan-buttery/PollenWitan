@@ -4,8 +4,12 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryan.pollenwitan.data.location.GpsLocationProvider
+import com.ryan.pollenwitan.data.repository.MedicineRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.domain.model.AllergenThreshold
+import com.ryan.pollenwitan.domain.model.Medicine
+import com.ryan.pollenwitan.domain.model.MedicineAssignment
+import com.ryan.pollenwitan.domain.model.MedicineType
 import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.ProfileLocation
 import com.ryan.pollenwitan.domain.model.UserProfile
@@ -29,30 +33,55 @@ data class ProfileEditUiState(
     val locationLongitude: String = "",
     val locationDisplayName: String = "",
     val gpsStatus: GpsStatus = GpsStatus.Idle,
+    val medicineAssignments: List<MedicineAssignmentUiState> = emptyList(),
+    val availableMedicines: List<Medicine> = emptyList(),
     val isSaving: Boolean = false,
     val savedSuccessfully: Boolean = false,
     val validationError: String? = null
+)
+
+data class MedicineAssignmentUiState(
+    val medicineId: String,
+    val medicineName: String,
+    val medicineType: MedicineType,
+    val dose: String,
+    val timesPerDay: String,
+    val reminderHours: List<Int>
 )
 
 class ProfileEditViewModel(application: Application) : AndroidViewModel(application) {
 
     private val profileRepository = ProfileRepository(application)
     private val gpsLocationProvider = GpsLocationProvider(application)
+    private val medicineRepository = MedicineRepository(application)
 
     private val _uiState = MutableStateFlow(ProfileEditUiState())
     val uiState: StateFlow<ProfileEditUiState> = _uiState.asStateFlow()
 
     fun loadProfile(profileId: String?) {
-        if (profileId == null) {
-            _uiState.value = ProfileEditUiState(
-                isNewProfile = true,
-                profileId = UUID.randomUUID().toString()
-            )
-            return
-        }
         viewModelScope.launch {
+            val medicines = medicineRepository.getMedicines().first()
+            if (profileId == null) {
+                _uiState.value = ProfileEditUiState(
+                    isNewProfile = true,
+                    profileId = UUID.randomUUID().toString(),
+                    availableMedicines = medicines
+                )
+                return@launch
+            }
             val profiles = profileRepository.getProfiles().first()
             val profile = profiles.find { it.id == profileId } ?: return@launch
+            val assignmentStates = profile.medicineAssignments.mapNotNull { assignment ->
+                val medicine = medicines.find { it.id == assignment.medicineId } ?: return@mapNotNull null
+                MedicineAssignmentUiState(
+                    medicineId = assignment.medicineId,
+                    medicineName = medicine.name,
+                    medicineType = medicine.type,
+                    dose = assignment.dose.toString(),
+                    timesPerDay = assignment.timesPerDay.toString(),
+                    reminderHours = assignment.reminderHours
+                )
+            }
             _uiState.value = ProfileEditUiState(
                 isNewProfile = false,
                 profileId = profile.id,
@@ -66,7 +95,9 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
                 useCustomLocation = profile.location != null,
                 locationLatitude = profile.location?.latitude?.toString() ?: "",
                 locationLongitude = profile.location?.longitude?.toString() ?: "",
-                locationDisplayName = profile.location?.displayName ?: ""
+                locationDisplayName = profile.location?.displayName ?: "",
+                medicineAssignments = assignmentStates,
+                availableMedicines = medicines
             )
         }
     }
@@ -158,6 +189,55 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
         _uiState.value = _uiState.value.copy(locationDisplayName = value)
     }
 
+    fun addMedicineAssignment(medicineId: String) {
+        val current = _uiState.value
+        val medicine = current.availableMedicines.find { it.id == medicineId } ?: return
+        if (current.medicineAssignments.any { it.medicineId == medicineId }) return
+        val newAssignment = MedicineAssignmentUiState(
+            medicineId = medicineId,
+            medicineName = medicine.name,
+            medicineType = medicine.type,
+            dose = "1",
+            timesPerDay = "1",
+            reminderHours = listOf(8)
+        )
+        _uiState.value = current.copy(
+            medicineAssignments = current.medicineAssignments + newAssignment
+        )
+    }
+
+    fun removeMedicineAssignment(medicineId: String) {
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            medicineAssignments = current.medicineAssignments.filter { it.medicineId != medicineId }
+        )
+    }
+
+    fun updateAssignmentDose(medicineId: String, dose: String) {
+        updateAssignment(medicineId) { it.copy(dose = dose) }
+    }
+
+    fun updateAssignmentTimesPerDay(medicineId: String, times: String) {
+        updateAssignment(medicineId) { it.copy(timesPerDay = times) }
+    }
+
+    fun toggleReminderHour(medicineId: String, hour: Int) {
+        updateAssignment(medicineId) { assignment ->
+            val hours = assignment.reminderHours.toMutableList()
+            if (hour in hours) hours.remove(hour) else hours.add(hour)
+            assignment.copy(reminderHours = hours.sorted())
+        }
+    }
+
+    private fun updateAssignment(medicineId: String, transform: (MedicineAssignmentUiState) -> MedicineAssignmentUiState) {
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            medicineAssignments = current.medicineAssignments.map {
+                if (it.medicineId == medicineId) transform(it) else it
+            }
+        )
+    }
+
     fun requestGpsFix() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(gpsStatus = GpsStatus.Requesting)
@@ -198,12 +278,25 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
             } else null
         } else null
 
+        val medicineAssignments = state.medicineAssignments.mapNotNull { assignment ->
+            val dose = assignment.dose.toIntOrNull() ?: return@mapNotNull null
+            val timesPerDay = assignment.timesPerDay.toIntOrNull() ?: return@mapNotNull null
+            if (dose <= 0 || timesPerDay <= 0) return@mapNotNull null
+            MedicineAssignment(
+                medicineId = assignment.medicineId,
+                dose = dose,
+                timesPerDay = timesPerDay,
+                reminderHours = assignment.reminderHours
+            )
+        }
+
         val profile = UserProfile(
             id = state.profileId,
             displayName = state.displayName.trim(),
             trackedAllergens = state.thresholds.filterKeys { it in state.trackedAllergens },
             hasAsthma = state.hasAsthma,
-            location = location
+            location = location,
+            medicineAssignments = medicineAssignments
         )
 
         _uiState.value = state.copy(isSaving = true, validationError = null)

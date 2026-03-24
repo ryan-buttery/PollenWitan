@@ -4,11 +4,14 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.ryan.pollenwitan.data.repository.AirQualityRepository
+import com.ryan.pollenwitan.data.repository.DoseTrackingRepository
 import com.ryan.pollenwitan.data.repository.LocationRepository
+import com.ryan.pollenwitan.data.repository.MedicineRepository
 import com.ryan.pollenwitan.data.repository.NotificationPrefsRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.domain.model.AppLocation
 import com.ryan.pollenwitan.domain.model.CurrentConditions
+import com.ryan.pollenwitan.domain.model.DoseConfirmation
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
@@ -24,6 +27,8 @@ class PollenCheckWorker(
     private val profileRepository = ProfileRepository(applicationContext)
     private val locationRepository = LocationRepository(applicationContext)
     private val notificationPrefsRepository = NotificationPrefsRepository(applicationContext)
+    private val medicineRepository = MedicineRepository(applicationContext)
+    private val doseTrackingRepository = DoseTrackingRepository(applicationContext)
 
     override suspend fun doWork(): Result {
         val prefs = notificationPrefsRepository.getPrefs().first()
@@ -105,6 +110,31 @@ class PollenCheckWorker(
             }
         }
 
+        // Medication reminders
+        val currentHour = now.hour
+        val medicines = medicineRepository.getMedicines().first()
+        profiles.forEachIndexed { index, profile ->
+            if (profile.medicineAssignments.isEmpty()) return@forEachIndexed
+            val confirmations = doseTrackingRepository.getConfirmations(profile.id).first()
+            profile.medicineAssignments.forEachIndexed { assignmentIndex, assignment ->
+                val medicine = medicines.find { it.id == assignment.medicineId } ?: return@forEachIndexed
+                assignment.reminderHours.forEachIndexed { slotIndex, hour ->
+                    if (hour == currentHour) {
+                        val isConfirmed = DoseConfirmation(assignment.medicineId, slotIndex) in confirmations
+                        if (!isConfirmed) {
+                            NotificationHelper.sendNotification(
+                                context = applicationContext,
+                                channelId = NotificationHelper.CHANNEL_MEDICATION_REMINDER,
+                                notificationId = MEDICATION_REMINDER_BASE_ID + index * 100 + assignmentIndex * 10 + slotIndex,
+                                title = "${profile.displayName}: Medication reminder",
+                                text = "Time to take ${medicine.name} (${assignment.dose} ${medicine.type.unitLabel})"
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         return Result.success()
     }
 
@@ -177,6 +207,7 @@ class PollenCheckWorker(
         private const val MORNING_BRIEFING_BASE_ID = 1000
         private const val THRESHOLD_ALERT_BASE_ID = 2000
         private const val COMPOUND_RISK_BASE_ID = 3000
+        private const val MEDICATION_REMINDER_BASE_ID = 4000
     }
 }
 

@@ -5,9 +5,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryan.pollenwitan.data.location.GpsLocationProvider
 import com.ryan.pollenwitan.data.repository.LocationRepository
+import com.ryan.pollenwitan.data.repository.MedicineRepository
 import com.ryan.pollenwitan.data.repository.NotificationPrefs
 import com.ryan.pollenwitan.data.repository.NotificationPrefsRepository
 import com.ryan.pollenwitan.domain.model.LocationMode
+import com.ryan.pollenwitan.domain.model.Medicine
+import com.ryan.pollenwitan.domain.model.MedicineType
+import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +25,8 @@ data class SettingsUiState(
     val manualLongitude: String = "",
     val manualDisplayName: String = "",
     val gpsStatus: GpsStatus = GpsStatus.Idle,
-    val notificationPrefs: NotificationPrefs = NotificationPrefs()
+    val notificationPrefs: NotificationPrefs = NotificationPrefs(),
+    val medicines: List<Medicine> = emptyList()
 )
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
@@ -29,6 +34,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val locationRepository = LocationRepository(application)
     private val gpsLocationProvider = GpsLocationProvider(application)
     private val notificationPrefsRepository = NotificationPrefsRepository(application)
+    private val medicineRepository = MedicineRepository(application)
 
     private val _gpsStatus = MutableStateFlow<GpsStatus>(GpsStatus.Idle)
 
@@ -36,15 +42,17 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         locationRepository.getLocationMode(),
         locationRepository.getLocation(),
         _gpsStatus,
-        notificationPrefsRepository.getPrefs()
-    ) { mode, location, gpsStatus, notifPrefs ->
+        notificationPrefsRepository.getPrefs(),
+        medicineRepository.getMedicines()
+    ) { mode, location, gpsStatus, notifPrefs, medicines ->
         SettingsUiState(
             locationMode = mode,
             manualLatitude = if (mode == LocationMode.Manual) location.latitude.toString() else "",
             manualLongitude = if (mode == LocationMode.Manual) location.longitude.toString() else "",
             manualDisplayName = if (mode == LocationMode.Manual) location.displayName else "",
             gpsStatus = gpsStatus,
-            notificationPrefs = notifPrefs
+            notificationPrefs = notifPrefs,
+            medicines = medicines
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -92,5 +100,21 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setCompoundRiskAlertsEnabled(enabled: Boolean) {
         viewModelScope.launch { notificationPrefsRepository.setCompoundRiskAlertsEnabled(enabled) }
+    }
+
+    fun addMedicine(name: String, type: MedicineType) {
+        viewModelScope.launch {
+            medicineRepository.addMedicine(
+                Medicine(id = UUID.randomUUID().toString(), name = name.trim(), type = type)
+            )
+        }
+    }
+
+    fun updateMedicine(medicine: Medicine) {
+        viewModelScope.launch { medicineRepository.updateMedicine(medicine) }
+    }
+
+    fun deleteMedicine(medicineId: String) {
+        viewModelScope.launch { medicineRepository.deleteMedicine(medicineId) }
     }
 }
