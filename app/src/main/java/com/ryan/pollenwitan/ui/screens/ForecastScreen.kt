@@ -241,7 +241,7 @@ private fun PollenColumnHeaders(selectedProfile: UserProfile?) {
                     text = type.abbreviation,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
-                    modifier = Modifier.width(14.dp)
+                    modifier = Modifier.width(18.dp)
                 )
             }
         }
@@ -266,10 +266,17 @@ private fun PeakSeverityDots(
             val alpha = if (isTracked) 1f else 0.4f
             Box(
                 modifier = Modifier
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(severity.toColor().copy(alpha = alpha))
-            )
+                    .width(18.dp)
+                    .height(10.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(severity.toColor().copy(alpha = alpha))
+                )
+            }
         }
     }
 }

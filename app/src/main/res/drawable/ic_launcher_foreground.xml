@@ -1,0 +1,34 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Thurisaz rune (ᚦ): vertical stave with triangular thorn pointing right -->
+    <!-- Centred within the 66dp safe zone (coordinates 21-87) -->
+
+    <!-- Vertical stave -->
+    <path
+        android:pathData="M44,28 L44,80"
+        android:strokeColor="#E0F0E0"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Thorn: upper diagonal going out to the right -->
+    <path
+        android:pathData="M44,34 L68,48"
+        android:strokeColor="#E0F0E0"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+    <!-- Thorn: lower diagonal returning to the stave -->
+    <path
+        android:pathData="M68,48 L44,62"
+        android:strokeColor="#E0F0E0"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+</vector>
