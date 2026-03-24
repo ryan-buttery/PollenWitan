@@ -1,10 +1,11 @@
 # PollenWitan Enhancement To-Do List
 
-## In Progress
+## Done
 
-- [ ] **Profile Management Screen** — Add/edit/delete profiles with allergen picker and threshold configuration
-- [ ] **Expand Allergen Set** — Add Mugwort, Ragweed, Olive pollen types (Open-Meteo supports all 6)
-- [ ] **Remove Hardcoded Defaults** — Replace Ryan/Olga auto-seeding with empty-state onboarding prompt
+- [x] **Profile Management Screen** — Add/edit/delete profiles with allergen picker and threshold configuration
+- [x] **Expand Allergen Set** — Added Mugwort, Ragweed, Olive pollen types (all 6 Open-Meteo types)
+- [x] **Remove Hardcoded Defaults** — Replaced Ryan/Olga auto-seeding with empty-state onboarding prompt
+- [x] **App Icon** — Thurisaz rune adaptive icon with forest theme
 
 ## Planned
 
@@ -16,7 +17,8 @@
 ## Future / Low Priority
 
 - [ ] **Symptom Diary** — Daily symptom logging with threshold auto-calibration over time
-- [ ] **Medication Reminders** — Prompt on high-pollen days
+- [ ] **Medication Tracker** — Log daily medication intake with history view
+- [ ] **Pre-Season Medication Alerts** — Advance warning (~1 month before typical season start) to begin preventative medication for the user's tracked allergens
 - [ ] **Cross-Reactivity Warnings** — Birch → Bet v 1 foods (apples, hazelnuts, etc.)
 - [ ] **Wear OS Companion Tile** — Quick glance at today's pollen levels
 - [ ] **Location-Aware Profiles** — Auto-detect travel and switch forecast location

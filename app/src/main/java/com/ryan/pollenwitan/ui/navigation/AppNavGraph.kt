@@ -68,7 +68,10 @@ private val navItems = listOf(
 )
 
 @Composable
-fun AppNavGraph() {
+fun AppNavGraph(
+    isDarkTheme: Boolean = true,
+    onToggleTheme: (Boolean) -> Unit = {}
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -109,6 +112,44 @@ fun AppNavGraph() {
                         text = "Pollen & Air Quality Forecast",
                         fontSize = 14.sp,
                         color = colors.TextDim,
+                    )
+                }
+
+                // Divider
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .height(1.dp)
+                        .background(colors.TextDim.copy(alpha = 0.2f)),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Theme toggle
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onToggleTheme(!isDarkTheme) }
+                        .padding(horizontal = 12.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier.size(22.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (isDarkTheme) "\u2600" else "\u263E",
+                            fontSize = 20.sp,
+                            color = colors.TextDim,
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = if (isDarkTheme) "Light Theme" else "Dark Theme",
+                        fontSize = 16.sp,
+                        color = colors.Text,
                     )
                 }
 
