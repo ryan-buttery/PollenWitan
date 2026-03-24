@@ -30,8 +30,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,8 +50,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.ui.screens.DashboardScreen
 import com.ryan.pollenwitan.ui.screens.ForecastScreen
+import com.ryan.pollenwitan.ui.screens.OnboardingScreen
 import com.ryan.pollenwitan.ui.screens.ProfileEditScreen
 import com.ryan.pollenwitan.ui.screens.ProfileListScreen
 import com.ryan.pollenwitan.ui.screens.SettingsScreen
@@ -69,12 +75,28 @@ private val navItems = listOf(
 
 @Composable
 fun AppNavGraph() {
+    val context = LocalContext.current
+    val profileRepository = remember { ProfileRepository(context.applicationContext) }
+    val profiles by profileRepository.getProfiles().collectAsStateWithLifecycle(initialValue = null)
+
+    // Loading guard — wait for DataStore to initialize
+    if (profiles == null) return
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val colors = ForestTheme.current
+
+    // Redirect to onboarding if no profiles exist
+    LaunchedEffect(profiles) {
+        if (profiles != null && profiles!!.isEmpty()) {
+            navController.navigate(Screen.Onboarding.route) {
+                popUpTo(Screen.Dashboard.route) { inclusive = true }
+            }
+        }
+    }
 
     // Determine current screen label for the top bar
     val currentRoute = currentDestination?.route
@@ -86,8 +108,11 @@ fun AppNavGraph() {
         }?.label ?: "Dashboard"
     }
 
+    val isOnboarding = currentRoute == Screen.Onboarding.route
+
     ModalNavigationDrawer(
         drawerState = drawerState,
+        gesturesEnabled = !isOnboarding,
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = colors.Mid,
@@ -170,27 +195,29 @@ fun AppNavGraph() {
                 .safeDrawingPadding(),
             containerColor = colors.Dark,
             topBar = {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(colors.Dark)
-                        .padding(horizontal = 4.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start,
-                ) {
-                    IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                        Icon(
-                            imageVector = Icons.Default.Menu,
-                            contentDescription = "Open menu",
-                            tint = colors.Text,
+                if (!isOnboarding) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(colors.Dark)
+                            .padding(horizontal = 4.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start,
+                    ) {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "Open menu",
+                                tint = colors.Text,
+                            )
+                        }
+                        Text(
+                            text = currentLabel,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = colors.Text,
                         )
                     }
-                    Text(
-                        text = currentLabel,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colors.Text,
-                    )
                 }
             }
         ) { innerPadding ->
@@ -199,12 +226,17 @@ fun AppNavGraph() {
                 startDestination = Screen.Dashboard.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable(Screen.Dashboard.route) {
-                    DashboardScreen(
-                        onNavigateToCreateProfile = {
-                            navController.navigate(Screen.ProfileCreate.route)
+                composable(Screen.Onboarding.route) {
+                    OnboardingScreen(
+                        onFinished = {
+                            navController.navigate(Screen.Dashboard.route) {
+                                popUpTo(Screen.Onboarding.route) { inclusive = true }
+                            }
                         }
                     )
+                }
+                composable(Screen.Dashboard.route) {
+                    DashboardScreen()
                 }
                 composable(Screen.Forecast.route) { ForecastScreen() }
                 composable(Screen.Settings.route) { SettingsScreen() }
