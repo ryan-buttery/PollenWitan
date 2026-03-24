@@ -7,6 +7,7 @@ import com.ryan.pollenwitan.data.repository.AirQualityRepository
 import com.ryan.pollenwitan.data.repository.LocationRepository
 import com.ryan.pollenwitan.data.repository.NotificationPrefsRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
+import com.ryan.pollenwitan.domain.model.AppLocation
 import com.ryan.pollenwitan.domain.model.CurrentConditions
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
@@ -26,12 +27,22 @@ class PollenCheckWorker(
 
     override suspend fun doWork(): Result {
         val prefs = notificationPrefsRepository.getPrefs().first()
-        val location = locationRepository.getLocation().first()
+        val globalLocation = locationRepository.getLocation().first()
         val profiles = profileRepository.getProfiles().first()
 
-        val conditions = airQualityRepository.getCurrentConditions(
-            location.latitude, location.longitude
-        ).getOrNull() ?: return Result.retry()
+        // Group profiles by effective location to avoid redundant API calls
+        val profilesByLocation = profiles.groupBy { profile ->
+            val loc = ProfileRepository.resolveLocation(profile, globalLocation)
+            loc.latitude to loc.longitude
+        }
+
+        // Fetch conditions once per unique location
+        val conditionsByLocation = mutableMapOf<Pair<Double, Double>, CurrentConditions>()
+        for ((coords, _) in profilesByLocation) {
+            val result = airQualityRepository.getCurrentConditions(coords.first, coords.second)
+            val conditions = result.getOrNull() ?: return Result.retry()
+            conditionsByLocation[coords] = conditions
+        }
 
         val now = LocalDateTime.now()
 
@@ -47,6 +58,9 @@ class PollenCheckWorker(
         }
 
         profiles.forEachIndexed { index, profile ->
+            val loc = ProfileRepository.resolveLocation(profile, globalLocation)
+            val conditions = conditionsByLocation[loc.latitude to loc.longitude] ?: return@forEachIndexed
+
             // Morning briefing
             if (shouldSendBriefing) {
                 val summary = buildMorningSummary(profile, conditions)

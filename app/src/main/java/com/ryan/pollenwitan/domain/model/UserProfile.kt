@@ -1,5 +1,11 @@
 package com.ryan.pollenwitan.domain.model
 
+data class ProfileLocation(
+    val latitude: Double,
+    val longitude: Double,
+    val displayName: String
+)
+
 data class AllergenThreshold(
     val type: PollenType,
     val low: Double,
@@ -12,7 +18,8 @@ data class UserProfile(
     val id: String,
     val displayName: String,
     val trackedAllergens: Map<PollenType, AllergenThreshold>,
-    val hasAsthma: Boolean
+    val hasAsthma: Boolean,
+    val location: ProfileLocation? = null
 ) {
     companion object {
         fun defaultThreshold(type: PollenType): AllergenThreshold = when (type) {
