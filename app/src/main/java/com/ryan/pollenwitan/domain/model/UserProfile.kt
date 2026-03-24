@@ -19,6 +19,9 @@ data class UserProfile(
             PollenType.Birch -> AllergenThreshold(type, low = 1.0, moderate = 11.0, high = 51.0, veryHigh = 201.0)
             PollenType.Alder -> AllergenThreshold(type, low = 1.0, moderate = 11.0, high = 51.0, veryHigh = 101.0)
             PollenType.Grass -> AllergenThreshold(type, low = 1.0, moderate = 6.0, high = 31.0, veryHigh = 81.0)
+            PollenType.Mugwort -> AllergenThreshold(type, low = 1.0, moderate = 11.0, high = 51.0, veryHigh = 101.0)
+            PollenType.Ragweed -> AllergenThreshold(type, low = 1.0, moderate = 6.0, high = 31.0, veryHigh = 81.0)
+            PollenType.Olive -> AllergenThreshold(type, low = 1.0, moderate = 11.0, high = 51.0, veryHigh = 201.0)
         }
 
         val Ryan = UserProfile(

@@ -1,6 +1,7 @@
 package com.ryan.pollenwitan.data.repository
 
 import android.content.Context
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -12,7 +13,6 @@ import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.UserProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
 
 private val Context.profileDataStore by preferencesDataStore(name = "profiles")
 
@@ -34,14 +34,13 @@ class ProfileRepository(
     }
 
     fun getProfiles(): Flow<List<UserProfile>> = dataStore.data
-        .onStart { seedDefaultsIfNeeded() }
         .map { prefs ->
             val ids = prefs[Keys.PROFILE_IDS] ?: return@map emptyList()
             ids.mapNotNull { id -> readProfile(prefs, id) }
         }
 
     fun getSelectedProfileId(): Flow<String> = dataStore.data.map { prefs ->
-        prefs[Keys.SELECTED_PROFILE] ?: UserProfile.Ryan.id
+        prefs[Keys.SELECTED_PROFILE] ?: ""
     }
 
     suspend fun selectProfile(profileId: String) {
@@ -50,20 +49,53 @@ class ProfileRepository(
         }
     }
 
-    private suspend fun seedDefaultsIfNeeded() {
+    suspend fun addProfile(profile: UserProfile) {
         dataStore.edit { prefs ->
-            if (prefs[Keys.PROFILE_IDS] != null) return@edit
-            val defaults = listOf(UserProfile.Ryan, UserProfile.Olga)
-            prefs[Keys.PROFILE_IDS] = defaults.map { it.id }.toSet()
-            defaults.forEach { profile -> writeProfile(prefs, profile) }
-            prefs[Keys.SELECTED_PROFILE] = UserProfile.Ryan.id
+            val ids = prefs[Keys.PROFILE_IDS]?.toMutableSet() ?: mutableSetOf()
+            ids.add(profile.id)
+            prefs[Keys.PROFILE_IDS] = ids
+            writeProfile(prefs, profile)
+            // Auto-select if this is the first profile
+            if (ids.size == 1) {
+                prefs[Keys.SELECTED_PROFILE] = profile.id
+            }
         }
     }
 
-    private fun writeProfile(
-        prefs: androidx.datastore.preferences.core.MutablePreferences,
-        profile: UserProfile
-    ) {
+    suspend fun updateProfile(profile: UserProfile) {
+        dataStore.edit { prefs ->
+            // Clear old threshold keys (allergens may have been removed)
+            clearProfileKeys(prefs, profile.id)
+            writeProfile(prefs, profile)
+        }
+    }
+
+    suspend fun deleteProfile(profileId: String) {
+        dataStore.edit { prefs ->
+            val ids = prefs[Keys.PROFILE_IDS]?.toMutableSet() ?: return@edit
+            ids.remove(profileId)
+            prefs[Keys.PROFILE_IDS] = ids
+            clearProfileKeys(prefs, profileId)
+            // Reselect if the deleted profile was selected
+            if (prefs[Keys.SELECTED_PROFILE] == profileId) {
+                prefs[Keys.SELECTED_PROFILE] = ids.firstOrNull() ?: ""
+            }
+        }
+    }
+
+    private fun clearProfileKeys(prefs: MutablePreferences, id: String) {
+        prefs.remove(Keys.displayName(id))
+        prefs.remove(Keys.hasAsthma(id))
+        prefs.remove(Keys.trackedAllergens(id))
+        val levels = listOf("low", "moderate", "high", "veryHigh")
+        for (type in PollenType.entries) {
+            for (level in levels) {
+                prefs.remove(Keys.threshold(id, type.name, level))
+            }
+        }
+    }
+
+    private fun writeProfile(prefs: MutablePreferences, profile: UserProfile) {
         prefs[Keys.displayName(profile.id)] = profile.displayName
         prefs[Keys.hasAsthma(profile.id)] = profile.hasAsthma
         prefs[Keys.trackedAllergens(profile.id)] = profile.trackedAllergens.keys.map { it.name }.toSet()

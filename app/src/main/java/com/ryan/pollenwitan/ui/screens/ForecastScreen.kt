@@ -241,7 +241,7 @@ private fun PollenColumnHeaders(selectedProfile: UserProfile?) {
                     text = type.abbreviation,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
-                    modifier = Modifier.width(10.dp)
+                    modifier = Modifier.width(14.dp)
                 )
             }
         }
@@ -344,7 +344,7 @@ private fun HourlyRow(
                 text = String.format("%.0f", pollen.value),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
-                modifier = Modifier.width(32.dp).padding(start = 2.dp)
+                modifier = Modifier.width(28.dp).padding(start = 2.dp)
             )
         }
 

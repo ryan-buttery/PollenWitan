@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
@@ -39,12 +40,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.ryan.pollenwitan.ui.screens.DashboardScreen
 import com.ryan.pollenwitan.ui.screens.ForecastScreen
+import com.ryan.pollenwitan.ui.screens.ProfileEditScreen
+import com.ryan.pollenwitan.ui.screens.ProfileListScreen
 import com.ryan.pollenwitan.ui.screens.SettingsScreen
 import com.ryan.pollenwitan.ui.theme.ForestTheme
 import kotlinx.coroutines.launch
@@ -58,6 +63,7 @@ private data class NavItem(
 private val navItems = listOf(
     NavItem(Screen.Dashboard, "Dashboard", Icons.Filled.Dashboard),
     NavItem(Screen.Forecast, "Forecast", Icons.Filled.CalendarMonth),
+    NavItem(Screen.ProfileList, "Profiles", Icons.Filled.Person),
     NavItem(Screen.Settings, "Settings", Icons.Filled.Settings)
 )
 
@@ -71,9 +77,14 @@ fun AppNavGraph() {
     val colors = ForestTheme.current
 
     // Determine current screen label for the top bar
-    val currentLabel = navItems.find { item ->
-        currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
-    }?.label ?: "Dashboard"
+    val currentRoute = currentDestination?.route
+    val currentLabel = when {
+        currentRoute == Screen.ProfileCreate.route -> "New Profile"
+        currentRoute?.startsWith("profiles/edit/") == true -> "Edit Profile"
+        else -> navItems.find { item ->
+            currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
+        }?.label ?: "Dashboard"
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -188,9 +199,28 @@ fun AppNavGraph() {
                 startDestination = Screen.Dashboard.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable(Screen.Dashboard.route) { DashboardScreen() }
+                composable(Screen.Dashboard.route) {
+                    DashboardScreen(
+                        onNavigateToCreateProfile = {
+                            navController.navigate(Screen.ProfileCreate.route)
+                        }
+                    )
+                }
                 composable(Screen.Forecast.route) { ForecastScreen() }
                 composable(Screen.Settings.route) { SettingsScreen() }
+                composable(Screen.ProfileList.route) {
+                    ProfileListScreen(navController = navController)
+                }
+                composable(Screen.ProfileCreate.route) {
+                    ProfileEditScreen(navController = navController, profileId = null)
+                }
+                composable(
+                    Screen.ProfileEdit.route,
+                    arguments = listOf(navArgument("profileId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val profileId = backStackEntry.arguments?.getString("profileId")
+                    ProfileEditScreen(navController = navController, profileId = profileId)
+                }
             }
         }
     }

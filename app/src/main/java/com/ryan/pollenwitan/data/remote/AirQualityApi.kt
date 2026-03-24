@@ -67,7 +67,7 @@ class AirQualityApi {
 
     companion object {
         private const val BASE_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
-        private const val HOURLY_PARAMS = "birch_pollen,alder_pollen,grass_pollen,pm2_5,pm10,european_aqi"
+        private const val HOURLY_PARAMS = "birch_pollen,alder_pollen,grass_pollen,mugwort_pollen,ragweed_pollen,olive_pollen,pm2_5,pm10,european_aqi"
 
         private val httpClient by lazy {
             HttpClient(CIO) {

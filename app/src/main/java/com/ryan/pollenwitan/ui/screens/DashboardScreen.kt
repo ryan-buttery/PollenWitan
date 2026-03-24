@@ -40,8 +40,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun DashboardScreen(viewModel: DashboardViewModel = viewModel()) {
+fun DashboardScreen(
+    onNavigateToCreateProfile: () -> Unit = {},
+    viewModel: DashboardViewModel = viewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    if (uiState.profiles.isEmpty() && uiState.weatherState !is WeatherState.Loading) {
+        WelcomeContent(onCreateProfile = onNavigateToCreateProfile)
+        return
+    }
 
     when (val weather = uiState.weatherState) {
         is WeatherState.Loading -> LoadingContent()
@@ -57,6 +65,33 @@ fun DashboardScreen(viewModel: DashboardViewModel = viewModel()) {
             message = weather.message,
             onRetry = viewModel::refresh
         )
+    }
+}
+
+@Composable
+private fun WelcomeContent(onCreateProfile: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Welcome to PollenWitan",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Create a profile to get personalised pollen and air quality forecasts.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(onClick = onCreateProfile) {
+            Text("Create Your First Profile")
+        }
     }
 }
 

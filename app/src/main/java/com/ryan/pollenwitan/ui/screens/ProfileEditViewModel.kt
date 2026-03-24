@@ -1,0 +1,151 @@
+package com.ryan.pollenwitan.ui.screens
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.ryan.pollenwitan.data.repository.ProfileRepository
+import com.ryan.pollenwitan.domain.model.AllergenThreshold
+import com.ryan.pollenwitan.domain.model.PollenType
+import com.ryan.pollenwitan.domain.model.UserProfile
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import java.util.UUID
+
+data class ProfileEditUiState(
+    val isNewProfile: Boolean = true,
+    val profileId: String = "",
+    val displayName: String = "",
+    val hasAsthma: Boolean = false,
+    val trackedAllergens: Set<PollenType> = emptySet(),
+    val thresholds: Map<PollenType, AllergenThreshold> = emptyMap(),
+    val useCustomThresholds: Map<PollenType, Boolean> = emptyMap(),
+    val isSaving: Boolean = false,
+    val savedSuccessfully: Boolean = false,
+    val validationError: String? = null
+)
+
+class ProfileEditViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val profileRepository = ProfileRepository(application)
+
+    private val _uiState = MutableStateFlow(ProfileEditUiState())
+    val uiState: StateFlow<ProfileEditUiState> = _uiState.asStateFlow()
+
+    fun loadProfile(profileId: String?) {
+        if (profileId == null) {
+            _uiState.value = ProfileEditUiState(
+                isNewProfile = true,
+                profileId = UUID.randomUUID().toString()
+            )
+            return
+        }
+        viewModelScope.launch {
+            val profiles = profileRepository.getProfiles().first()
+            val profile = profiles.find { it.id == profileId } ?: return@launch
+            _uiState.value = ProfileEditUiState(
+                isNewProfile = false,
+                profileId = profile.id,
+                displayName = profile.displayName,
+                hasAsthma = profile.hasAsthma,
+                trackedAllergens = profile.trackedAllergens.keys,
+                thresholds = profile.trackedAllergens,
+                useCustomThresholds = profile.trackedAllergens.mapValues { (type, threshold) ->
+                    threshold != UserProfile.defaultThreshold(type)
+                }
+            )
+        }
+    }
+
+    fun setDisplayName(name: String) {
+        _uiState.value = _uiState.value.copy(displayName = name, validationError = null)
+    }
+
+    fun setHasAsthma(value: Boolean) {
+        _uiState.value = _uiState.value.copy(hasAsthma = value)
+    }
+
+    fun toggleAllergen(type: PollenType) {
+        val current = _uiState.value
+        val newTracked = current.trackedAllergens.toMutableSet()
+        val newThresholds = current.thresholds.toMutableMap()
+        val newCustom = current.useCustomThresholds.toMutableMap()
+
+        if (type in newTracked) {
+            newTracked.remove(type)
+            newThresholds.remove(type)
+            newCustom.remove(type)
+        } else {
+            newTracked.add(type)
+            newThresholds[type] = UserProfile.defaultThreshold(type)
+            newCustom[type] = false
+        }
+
+        _uiState.value = current.copy(
+            trackedAllergens = newTracked,
+            thresholds = newThresholds,
+            useCustomThresholds = newCustom,
+            validationError = null
+        )
+    }
+
+    fun setUseCustomThreshold(type: PollenType, custom: Boolean) {
+        val current = _uiState.value
+        val newCustom = current.useCustomThresholds.toMutableMap()
+        val newThresholds = current.thresholds.toMutableMap()
+        newCustom[type] = custom
+        if (!custom) {
+            newThresholds[type] = UserProfile.defaultThreshold(type)
+        }
+        _uiState.value = current.copy(
+            useCustomThresholds = newCustom,
+            thresholds = newThresholds
+        )
+    }
+
+    fun updateThreshold(type: PollenType, level: String, value: Double) {
+        val current = _uiState.value
+        val existing = current.thresholds[type] ?: return
+        val updated = when (level) {
+            "low" -> existing.copy(low = value)
+            "moderate" -> existing.copy(moderate = value)
+            "high" -> existing.copy(high = value)
+            "veryHigh" -> existing.copy(veryHigh = value)
+            else -> return
+        }
+        val newThresholds = current.thresholds.toMutableMap()
+        newThresholds[type] = updated
+        _uiState.value = current.copy(thresholds = newThresholds)
+    }
+
+    fun save() {
+        val state = _uiState.value
+        if (state.displayName.isBlank()) {
+            _uiState.value = state.copy(validationError = "Name cannot be empty")
+            return
+        }
+        if (state.trackedAllergens.isEmpty()) {
+            _uiState.value = state.copy(validationError = "Select at least one allergen")
+            return
+        }
+
+        val profile = UserProfile(
+            id = state.profileId,
+            displayName = state.displayName.trim(),
+            trackedAllergens = state.thresholds.filterKeys { it in state.trackedAllergens },
+            hasAsthma = state.hasAsthma
+        )
+
+        _uiState.value = state.copy(isSaving = true, validationError = null)
+        viewModelScope.launch {
+            if (state.isNewProfile) {
+                profileRepository.addProfile(profile)
+            } else {
+                profileRepository.updateProfile(profile)
+            }
+            _uiState.value = _uiState.value.copy(isSaving = false, savedSuccessfully = true)
+        }
+    }
+}

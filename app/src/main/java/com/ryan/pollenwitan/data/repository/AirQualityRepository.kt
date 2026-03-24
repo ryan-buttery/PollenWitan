@@ -146,10 +146,16 @@ class AirQualityRepository(context: Context) {
         val birchValue = hourly.birchPollen?.getOrNull(index) ?: 0.0
         val alderValue = hourly.alderPollen?.getOrNull(index) ?: 0.0
         val grassValue = hourly.grassPollen?.getOrNull(index) ?: 0.0
+        val mugwortValue = hourly.mugwortPollen?.getOrNull(index) ?: 0.0
+        val ragweedValue = hourly.ragweedPollen?.getOrNull(index) ?: 0.0
+        val oliveValue = hourly.olivePollen?.getOrNull(index) ?: 0.0
         return listOf(
             PollenReading(PollenType.Birch, birchValue, SeverityClassifier.pollenSeverity(PollenType.Birch, birchValue)),
             PollenReading(PollenType.Alder, alderValue, SeverityClassifier.pollenSeverity(PollenType.Alder, alderValue)),
-            PollenReading(PollenType.Grass, grassValue, SeverityClassifier.pollenSeverity(PollenType.Grass, grassValue))
+            PollenReading(PollenType.Grass, grassValue, SeverityClassifier.pollenSeverity(PollenType.Grass, grassValue)),
+            PollenReading(PollenType.Mugwort, mugwortValue, SeverityClassifier.pollenSeverity(PollenType.Mugwort, mugwortValue)),
+            PollenReading(PollenType.Ragweed, ragweedValue, SeverityClassifier.pollenSeverity(PollenType.Ragweed, ragweedValue)),
+            PollenReading(PollenType.Olive, oliveValue, SeverityClassifier.pollenSeverity(PollenType.Olive, oliveValue))
         )
     }
 
