@@ -9,7 +9,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.ryan.pollenwitan.domain.model.AllergenThreshold
+import com.ryan.pollenwitan.domain.model.AppLocation
 import com.ryan.pollenwitan.domain.model.PollenType
+import com.ryan.pollenwitan.domain.model.ProfileLocation
 import com.ryan.pollenwitan.domain.model.UserProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -31,6 +33,9 @@ class ProfileRepository(
         fun trackedAllergens(id: String) = stringSetPreferencesKey("profile_${id}_allergens")
         fun threshold(id: String, type: String, level: String) =
             stringPreferencesKey("profile_${id}_threshold_${type}_${level}")
+        fun locationLat(id: String) = stringPreferencesKey("profile_${id}_location_lat")
+        fun locationLon(id: String) = stringPreferencesKey("profile_${id}_location_lon")
+        fun locationName(id: String) = stringPreferencesKey("profile_${id}_location_name")
     }
 
     fun getProfiles(): Flow<List<UserProfile>> = dataStore.data
@@ -87,6 +92,9 @@ class ProfileRepository(
         prefs.remove(Keys.displayName(id))
         prefs.remove(Keys.hasAsthma(id))
         prefs.remove(Keys.trackedAllergens(id))
+        prefs.remove(Keys.locationLat(id))
+        prefs.remove(Keys.locationLon(id))
+        prefs.remove(Keys.locationName(id))
         val levels = listOf("low", "moderate", "high", "veryHigh")
         for (type in PollenType.entries) {
             for (level in levels) {
@@ -104,6 +112,16 @@ class ProfileRepository(
             prefs[Keys.threshold(profile.id, type.name, "moderate")] = threshold.moderate.toString()
             prefs[Keys.threshold(profile.id, type.name, "high")] = threshold.high.toString()
             prefs[Keys.threshold(profile.id, type.name, "veryHigh")] = threshold.veryHigh.toString()
+        }
+        val loc = profile.location
+        if (loc != null) {
+            prefs[Keys.locationLat(profile.id)] = loc.latitude.toString()
+            prefs[Keys.locationLon(profile.id)] = loc.longitude.toString()
+            prefs[Keys.locationName(profile.id)] = loc.displayName
+        } else {
+            prefs.remove(Keys.locationLat(profile.id))
+            prefs.remove(Keys.locationLon(profile.id))
+            prefs.remove(Keys.locationName(profile.id))
         }
     }
 
@@ -123,11 +141,25 @@ class ProfileRepository(
             type to threshold
         }.toMap()
 
+        val location = prefs[Keys.locationLat(id)]?.toDoubleOrNull()?.let { lat ->
+            val lon = prefs[Keys.locationLon(id)]?.toDoubleOrNull() ?: return@let null
+            val locName = prefs[Keys.locationName(id)] ?: ""
+            ProfileLocation(lat, lon, locName)
+        }
+
         return UserProfile(
             id = id,
             displayName = name,
             trackedAllergens = trackedAllergens,
-            hasAsthma = asthma
+            hasAsthma = asthma,
+            location = location
         )
+    }
+
+    companion object {
+        fun resolveLocation(profile: UserProfile?, globalLocation: AppLocation): AppLocation {
+            val loc = profile?.location ?: return globalLocation
+            return AppLocation(loc.latitude, loc.longitude, loc.displayName)
+        }
     }
 }

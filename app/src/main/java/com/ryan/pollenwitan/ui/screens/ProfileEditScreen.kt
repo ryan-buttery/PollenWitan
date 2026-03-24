@@ -1,5 +1,8 @@
 package com.ryan.pollenwitan.ui.screens
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -10,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,14 +21,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -89,6 +98,39 @@ fun ProfileEditScreen(
             Switch(
                 checked = uiState.hasAsthma,
                 onCheckedChange = viewModel::setHasAsthma
+            )
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Location
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Custom location", style = MaterialTheme.typography.bodyLarge)
+            Switch(
+                checked = uiState.useCustomLocation,
+                onCheckedChange = viewModel::setUseCustomLocation
+            )
+        }
+        if (uiState.useCustomLocation) {
+            Spacer(modifier = Modifier.height(8.dp))
+            LocationCard(
+                latitude = uiState.locationLatitude,
+                longitude = uiState.locationLongitude,
+                displayName = uiState.locationDisplayName,
+                gpsStatus = uiState.gpsStatus,
+                onLatitudeChange = viewModel::setLocationLatitude,
+                onLongitudeChange = viewModel::setLocationLongitude,
+                onDisplayNameChange = viewModel::setLocationDisplayName,
+                onRequestGps = viewModel::requestGpsFix
+            )
+        } else {
+            Text(
+                text = "Uses default location from Settings",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Spacer(modifier = Modifier.height(20.dp))
@@ -239,5 +281,118 @@ private fun ThresholdRow(
             modifier = Modifier.weight(1f),
             suffix = { Text("grains/m³", style = MaterialTheme.typography.bodySmall) }
         )
+    }
+}
+
+@Composable
+private fun LocationCard(
+    latitude: String,
+    longitude: String,
+    displayName: String,
+    gpsStatus: GpsStatus,
+    onLatitudeChange: (String) -> Unit,
+    onLongitudeChange: (String) -> Unit,
+    onDisplayNameChange: (String) -> Unit,
+    onRequestGps: () -> Unit
+) {
+    var permissionDeniedPermanently by remember { mutableStateOf(false) }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions.values.any { it }
+        if (granted) {
+            onRequestGps()
+            permissionDeniedPermanently = false
+        } else {
+            permissionDeniedPermanently = true
+        }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            OutlinedTextField(
+                value = displayName,
+                onValueChange = onDisplayNameChange,
+                label = { Text("Location name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = latitude,
+                    onValueChange = onLatitudeChange,
+                    label = { Text("Latitude") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = longitude,
+                    onValueChange = onLongitudeChange,
+                    label = { Text("Longitude") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = {
+                    locationPermissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        )
+                    )
+                }
+            ) {
+                Text("Locate Me")
+            }
+
+            when (gpsStatus) {
+                is GpsStatus.Requesting -> {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Getting location...", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                is GpsStatus.Success -> {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Located: ${gpsStatus.displayName}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                is GpsStatus.Error -> {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = gpsStatus.message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                is GpsStatus.Idle -> {}
+            }
+
+            if (permissionDeniedPermanently) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Location permission denied. Enable it in app settings.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
     }
 }

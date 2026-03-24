@@ -3,9 +3,11 @@ package com.ryan.pollenwitan.ui.screens
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryan.pollenwitan.data.location.GpsLocationProvider
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.domain.model.AllergenThreshold
 import com.ryan.pollenwitan.domain.model.PollenType
+import com.ryan.pollenwitan.domain.model.ProfileLocation
 import com.ryan.pollenwitan.domain.model.UserProfile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +24,11 @@ data class ProfileEditUiState(
     val trackedAllergens: Set<PollenType> = emptySet(),
     val thresholds: Map<PollenType, AllergenThreshold> = emptyMap(),
     val useCustomThresholds: Map<PollenType, Boolean> = emptyMap(),
+    val useCustomLocation: Boolean = false,
+    val locationLatitude: String = "",
+    val locationLongitude: String = "",
+    val locationDisplayName: String = "",
+    val gpsStatus: GpsStatus = GpsStatus.Idle,
     val isSaving: Boolean = false,
     val savedSuccessfully: Boolean = false,
     val validationError: String? = null
@@ -30,6 +37,7 @@ data class ProfileEditUiState(
 class ProfileEditViewModel(application: Application) : AndroidViewModel(application) {
 
     private val profileRepository = ProfileRepository(application)
+    private val gpsLocationProvider = GpsLocationProvider(application)
 
     private val _uiState = MutableStateFlow(ProfileEditUiState())
     val uiState: StateFlow<ProfileEditUiState> = _uiState.asStateFlow()
@@ -54,7 +62,11 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
                 thresholds = profile.trackedAllergens,
                 useCustomThresholds = profile.trackedAllergens.mapValues { (type, threshold) ->
                     threshold != UserProfile.defaultThreshold(type)
-                }
+                },
+                useCustomLocation = profile.location != null,
+                locationLatitude = profile.location?.latitude?.toString() ?: "",
+                locationLongitude = profile.location?.longitude?.toString() ?: "",
+                locationDisplayName = profile.location?.displayName ?: ""
             )
         }
     }
@@ -120,6 +132,53 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
         _uiState.value = current.copy(thresholds = newThresholds)
     }
 
+    fun setUseCustomLocation(enabled: Boolean) {
+        _uiState.value = if (enabled) {
+            _uiState.value.copy(useCustomLocation = true)
+        } else {
+            _uiState.value.copy(
+                useCustomLocation = false,
+                locationLatitude = "",
+                locationLongitude = "",
+                locationDisplayName = "",
+                gpsStatus = GpsStatus.Idle
+            )
+        }
+    }
+
+    fun setLocationLatitude(value: String) {
+        _uiState.value = _uiState.value.copy(locationLatitude = value)
+    }
+
+    fun setLocationLongitude(value: String) {
+        _uiState.value = _uiState.value.copy(locationLongitude = value)
+    }
+
+    fun setLocationDisplayName(value: String) {
+        _uiState.value = _uiState.value.copy(locationDisplayName = value)
+    }
+
+    fun requestGpsFix() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(gpsStatus = GpsStatus.Requesting)
+            val location = gpsLocationProvider.requestSingleUpdate()
+            if (location != null) {
+                _uiState.value = _uiState.value.copy(
+                    locationLatitude = location.latitude.toString(),
+                    locationLongitude = location.longitude.toString(),
+                    locationDisplayName = location.displayName,
+                    gpsStatus = GpsStatus.Success(
+                        "%.4f, %.4f".format(location.latitude, location.longitude)
+                    )
+                )
+            } else {
+                _uiState.value = _uiState.value.copy(
+                    gpsStatus = GpsStatus.Error("Could not get location. Check GPS is enabled.")
+                )
+            }
+        }
+    }
+
     fun save() {
         val state = _uiState.value
         if (state.displayName.isBlank()) {
@@ -131,11 +190,20 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
             return
         }
 
+        val location = if (state.useCustomLocation) {
+            val lat = state.locationLatitude.toDoubleOrNull()
+            val lon = state.locationLongitude.toDoubleOrNull()
+            if (lat != null && lon != null && state.locationDisplayName.isNotBlank()) {
+                ProfileLocation(lat, lon, state.locationDisplayName.trim())
+            } else null
+        } else null
+
         val profile = UserProfile(
             id = state.profileId,
             displayName = state.displayName.trim(),
             trackedAllergens = state.thresholds.filterKeys { it in state.trackedAllergens },
-            hasAsthma = state.hasAsthma
+            hasAsthma = state.hasAsthma,
+            location = location
         )
 
         _uiState.value = state.copy(isSaving = true, validationError = null)

@@ -48,27 +48,38 @@ class ForecastViewModel(application: Application) : AndroidViewModel(application
         profileRepository.getSelectedProfileId(),
         _expandedDayIndex,
         locationRepository.getLocation()
-    ) { forecast, profiles, selectedId, expandedIndex, location ->
+    ) { forecast, profiles, selectedId, expandedIndex, globalLocation ->
+        val selectedProfile = profiles.find { it.id == selectedId }
+        val effectiveLocation = ProfileRepository.resolveLocation(selectedProfile, globalLocation)
         ForecastUiState(
             forecastState = forecast,
             profiles = profiles,
             selectedProfileId = selectedId,
             expandedDayIndex = expandedIndex,
-            locationDisplayName = location.displayName
+            locationDisplayName = effectiveLocation.displayName
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ForecastUiState())
 
     init {
         refresh()
         viewModelScope.launch {
-            var previousLocation: com.ryan.pollenwitan.domain.model.AppLocation? = null
-            locationRepository.getLocation().collect { location ->
-                if (previousLocation != null &&
-                    (previousLocation!!.latitude != location.latitude || previousLocation!!.longitude != location.longitude)
+            var previousLat: Double? = null
+            var previousLon: Double? = null
+            combine(
+                locationRepository.getLocation(),
+                profileRepository.getProfiles(),
+                profileRepository.getSelectedProfileId()
+            ) { globalLocation, profiles, selectedId ->
+                val selectedProfile = profiles.find { it.id == selectedId }
+                ProfileRepository.resolveLocation(selectedProfile, globalLocation)
+            }.collect { location ->
+                if (previousLat != null &&
+                    (previousLat != location.latitude || previousLon != location.longitude)
                 ) {
                     refresh()
                 }
-                previousLocation = location
+                previousLat = location.latitude
+                previousLon = location.longitude
             }
         }
     }
@@ -76,7 +87,11 @@ class ForecastViewModel(application: Application) : AndroidViewModel(application
     fun refresh() {
         viewModelScope.launch {
             _forecastState.value = ForecastState.Loading
-            val location = locationRepository.getLocation().first()
+            val globalLocation = locationRepository.getLocation().first()
+            val profiles = profileRepository.getProfiles().first()
+            val selectedId = profileRepository.getSelectedProfileId().first()
+            val selectedProfile = profiles.find { it.id == selectedId }
+            val location = ProfileRepository.resolveLocation(selectedProfile, globalLocation)
             airQualityRepository.getForecast(
                 location.latitude,
                 location.longitude
