@@ -102,6 +102,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { notificationPrefsRepository.setCompoundRiskAlertsEnabled(enabled) }
     }
 
+    fun setPreSeasonAlertsEnabled(enabled: Boolean) {
+        viewModelScope.launch { notificationPrefsRepository.setPreSeasonAlertsEnabled(enabled) }
+    }
+
     fun addMedicine(name: String, type: MedicineType) {
         viewModelScope.launch {
             medicineRepository.addMedicine(

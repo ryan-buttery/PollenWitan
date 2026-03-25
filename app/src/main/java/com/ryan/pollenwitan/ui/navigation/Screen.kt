@@ -10,5 +10,6 @@ sealed class Screen(val route: String) {
         fun createRoute(profileId: String) = "profiles/edit/$profileId"
     }
     data object CrossReactivity : Screen("cross-reactivity")
+    data object PollenCalendar : Screen("pollen-calendar")
     data object Onboarding : Screen("onboarding")
 }
