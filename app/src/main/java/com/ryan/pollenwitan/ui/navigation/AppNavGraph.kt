@@ -57,20 +57,23 @@ import com.ryan.pollenwitan.ui.screens.OnboardingScreen
 import com.ryan.pollenwitan.ui.screens.ProfileEditScreen
 import com.ryan.pollenwitan.ui.screens.ProfileListScreen
 import com.ryan.pollenwitan.ui.screens.SettingsScreen
+import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.ui.theme.ForestTheme
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
 
 private data class NavItem(
     val screen: Screen,
-    val label: String,
+    @StringRes val labelRes: Int,
     val icon: ImageVector
 )
 
 private val navItems = listOf(
-    NavItem(Screen.Dashboard, "Dashboard", Icons.Filled.Dashboard),
-    NavItem(Screen.Forecast, "Forecast", Icons.Filled.CalendarMonth),
-    NavItem(Screen.ProfileList, "Profiles", Icons.Filled.Person),
-    NavItem(Screen.Settings, "Settings", Icons.Filled.Settings)
+    NavItem(Screen.Dashboard, R.string.nav_dashboard, Icons.Filled.Dashboard),
+    NavItem(Screen.Forecast, R.string.nav_forecast, Icons.Filled.CalendarMonth),
+    NavItem(Screen.ProfileList, R.string.nav_profiles, Icons.Filled.Person),
+    NavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings)
 )
 
 @Composable
@@ -103,13 +106,14 @@ fun AppNavGraph(
 
     // Determine current screen label for the top bar
     val currentRoute = currentDestination?.route
-    val currentLabel = when {
-        currentRoute == Screen.ProfileCreate.route -> "New Profile"
-        currentRoute?.startsWith("profiles/edit/") == true -> "Edit Profile"
+    val currentLabelRes = when {
+        currentRoute == Screen.ProfileCreate.route -> R.string.nav_new_profile
+        currentRoute?.startsWith("profiles/edit/") == true -> R.string.nav_edit_profile
         else -> navItems.find { item ->
             currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
-        }?.label ?: "Dashboard"
+        }?.labelRes ?: R.string.nav_dashboard
     }
+    val currentLabel = stringResource(currentLabelRes)
 
     val isOnboarding = currentRoute == Screen.Onboarding.route
 
@@ -128,13 +132,13 @@ fun AppNavGraph(
                         .padding(horizontal = 20.dp, vertical = 24.dp),
                 ) {
                     Text(
-                        text = "PollenWitan",
+                        text = stringResource(R.string.nav_app_name),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = colors.Text,
                     )
                     Text(
-                        text = "Pollen & Air Quality Forecast",
+                        text = stringResource(R.string.nav_app_subtitle),
                         fontSize = 14.sp,
                         color = colors.TextDim,
                     )
@@ -172,7 +176,7 @@ fun AppNavGraph(
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        text = if (isDarkTheme) "Light Theme" else "Dark Theme",
+                        text = stringResource(if (isDarkTheme) R.string.theme_light else R.string.theme_dark),
                         fontSize = 16.sp,
                         color = colors.Text,
                     )
@@ -215,13 +219,13 @@ fun AppNavGraph(
                     ) {
                         Icon(
                             imageVector = item.icon,
-                            contentDescription = item.label,
+                            contentDescription = stringResource(item.labelRes),
                             tint = if (isSelected) colors.TextOnSelected else colors.TextDim,
                             modifier = Modifier.size(22.dp),
                         )
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
-                            text = item.label,
+                            text = stringResource(item.labelRes),
                             fontSize = 16.sp,
                             color = if (isSelected) colors.TextOnSelected else colors.Text,
                         )
@@ -248,7 +252,7 @@ fun AppNavGraph(
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(
                                 imageVector = Icons.Default.Menu,
-                                contentDescription = "Open menu",
+                                contentDescription = stringResource(R.string.nav_open_menu),
                                 tint = colors.Text,
                             )
                         }

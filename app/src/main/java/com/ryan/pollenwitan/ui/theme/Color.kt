@@ -1,6 +1,10 @@
 package com.ryan.pollenwitan.ui.theme
 
+import android.content.Context
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 
 // Severity colours for allergen levels — consistent across light/dark themes
@@ -29,10 +33,21 @@ fun SeverityLevel.toColor(): Color = when (this) {
     SeverityLevel.VeryHigh -> SeverityColors.VeryHigh
 }
 
+// Composable variant — use in UI
+@Composable
 fun SeverityLevel.toLabel(): String = when (this) {
-    SeverityLevel.None -> "None"
-    SeverityLevel.Low -> "Low"
-    SeverityLevel.Moderate -> "Moderate"
-    SeverityLevel.High -> "High"
-    SeverityLevel.VeryHigh -> "Very High"
+    SeverityLevel.None -> stringResource(R.string.severity_none)
+    SeverityLevel.Low -> stringResource(R.string.severity_low)
+    SeverityLevel.Moderate -> stringResource(R.string.severity_moderate)
+    SeverityLevel.High -> stringResource(R.string.severity_high)
+    SeverityLevel.VeryHigh -> stringResource(R.string.severity_very_high)
+}
+
+// Context variant — use in workers/notifications
+fun SeverityLevel.toLabel(context: Context): String = when (this) {
+    SeverityLevel.None -> context.getString(R.string.severity_none)
+    SeverityLevel.Low -> context.getString(R.string.severity_low)
+    SeverityLevel.Moderate -> context.getString(R.string.severity_moderate)
+    SeverityLevel.High -> context.getString(R.string.severity_high)
+    SeverityLevel.VeryHigh -> context.getString(R.string.severity_very_high)
 }

@@ -40,13 +40,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import com.ryan.pollenwitan.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ryan.pollenwitan.domain.model.PollenType
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import com.ryan.pollenwitan.ui.theme.ForestTheme
+import com.ryan.pollenwitan.ui.theme.localizedName
 
 @Composable
 fun OnboardingScreen(
@@ -145,6 +150,9 @@ private fun StepIndicator(
 
 @Composable
 private fun WelcomeStep() {
+    val currentLocale = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+    val isPolish = currentLocale.startsWith("pl")
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -152,19 +160,54 @@ private fun WelcomeStep() {
     ) {
         Spacer(modifier = Modifier.height(48.dp))
         Text(
-            text = "Welcome to PollenWitan",
+            text = stringResource(R.string.onboarding_welcome_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "Personalised pollen and air quality forecasts for your household.",
+            text = stringResource(R.string.onboarding_welcome_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Language selector
+        Text(
+            text = stringResource(R.string.language_title),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (!isPolish) {
+                Button(onClick = {}) {
+                    Text(stringResource(R.string.language_english))
+                }
+            } else {
+                OutlinedButton(onClick = {
+                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("en"))
+                }) {
+                    Text(stringResource(R.string.language_english))
+                }
+            }
+            if (isPolish) {
+                Button(onClick = {}) {
+                    Text(stringResource(R.string.language_polish))
+                }
+            } else {
+                OutlinedButton(onClick = {
+                    AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("pl"))
+                }) {
+                    Text(stringResource(R.string.language_polish))
+                }
+            }
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "We\u2019ll help you set up your location and create your first allergy profile. You can also track medicines later in Settings.",
+            text = stringResource(R.string.onboarding_welcome_description),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -192,13 +235,13 @@ private fun LocationStep(
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Set Your Location",
+            text = stringResource(R.string.onboarding_location_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Pollen data is location-specific. Choose how to set your location.",
+            text = stringResource(R.string.onboarding_location_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -215,9 +258,9 @@ private fun LocationStep(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Column {
-                Text("Use default", style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.onboarding_location_default), style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    "Pozna\u0144, Poland (52.41, 16.93)",
+                    stringResource(R.string.onboarding_location_default_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -235,7 +278,7 @@ private fun LocationStep(
                 onClick = { viewModel.setLocationChoice(LocationChoice.Gps) }
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Use GPS", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.onboarding_location_gps), style = MaterialTheme.typography.bodyLarge)
         }
 
         if (uiState.locationChoice == LocationChoice.Gps) {
@@ -250,7 +293,7 @@ private fun LocationStep(
                         )
                     }
                 ) {
-                    Text("Locate Me")
+                    Text(stringResource(R.string.settings_locate_me))
                 }
                 when (uiState.gpsStatus) {
                     is GpsStatus.Requesting -> {
@@ -258,13 +301,13 @@ private fun LocationStep(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Getting location...", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.settings_getting_location), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                     is GpsStatus.Success -> {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Located: ${uiState.gpsStatus.displayName}",
+                            text = stringResource(R.string.settings_located, uiState.gpsStatus.displayName),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -282,7 +325,7 @@ private fun LocationStep(
                 if (permissionDenied) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Location permission denied. Enable it in app settings.",
+                        text = stringResource(R.string.onboarding_location_permission_denied),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -301,7 +344,7 @@ private fun LocationStep(
                 onClick = { viewModel.setLocationChoice(LocationChoice.Manual) }
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Enter manually", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.onboarding_location_manual), style = MaterialTheme.typography.bodyLarge)
         }
 
         if (uiState.locationChoice == LocationChoice.Manual) {
@@ -309,7 +352,7 @@ private fun LocationStep(
                 OutlinedTextField(
                     value = uiState.manualDisplayName,
                     onValueChange = viewModel::setManualDisplayName,
-                    label = { Text("Location name") },
+                    label = { Text(stringResource(R.string.onboarding_location_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -318,7 +361,7 @@ private fun LocationStep(
                     OutlinedTextField(
                         value = uiState.manualLatitude,
                         onValueChange = viewModel::setManualLatitude,
-                        label = { Text("Latitude") },
+                        label = { Text(stringResource(R.string.settings_latitude)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
                         modifier = Modifier.weight(1f)
@@ -326,7 +369,7 @@ private fun LocationStep(
                     OutlinedTextField(
                         value = uiState.manualLongitude,
                         onValueChange = viewModel::setManualLongitude,
-                        label = { Text("Longitude") },
+                        label = { Text(stringResource(R.string.settings_longitude)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
                         modifier = Modifier.weight(1f)
@@ -345,13 +388,13 @@ private fun ProfileStep(
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Create Your Profile",
+            text = stringResource(R.string.onboarding_profile_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Set up your allergy profile. You can customise thresholds and add medicines later.",
+            text = stringResource(R.string.onboarding_profile_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -360,7 +403,7 @@ private fun ProfileStep(
         OutlinedTextField(
             value = uiState.profileName,
             onValueChange = viewModel::setProfileName,
-            label = { Text("Name") },
+            label = { Text(stringResource(R.string.common_name)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -371,7 +414,7 @@ private fun ProfileStep(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Has asthma", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.onboarding_has_asthma), style = MaterialTheme.typography.bodyLarge)
             Switch(
                 checked = uiState.hasAsthma,
                 onCheckedChange = viewModel::setHasAsthma
@@ -380,7 +423,7 @@ private fun ProfileStep(
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
-            text = "Tracked Allergens",
+            text = stringResource(R.string.onboarding_tracked_allergens),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -393,7 +436,7 @@ private fun ProfileStep(
                 FilterChip(
                     selected = type in uiState.selectedAllergens,
                     onClick = { viewModel.toggleAllergen(type) },
-                    label = { Text(type.displayName) }
+                    label = { Text(type.localizedName()) }
                 )
             }
         }
@@ -421,37 +464,37 @@ private fun DoneStep(
     ) {
         Spacer(modifier = Modifier.height(48.dp))
         Text(
-            text = "You\u2019re all set!",
+            text = stringResource(R.string.onboarding_done_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "Profile created for ${uiState.profileName}",
+            text = stringResource(R.string.onboarding_done_profile_created, uiState.profileName),
             style = MaterialTheme.typography.bodyLarge
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Tracking: ${uiState.selectedAllergens.joinToString(", ") { it.displayName }}",
+            text = stringResource(R.string.onboarding_done_tracking, uiState.selectedAllergens.map { it.localizedName() }.joinToString(", ")),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         if (uiState.hasAsthma) {
             Text(
-                text = "Asthma monitoring enabled",
+                text = stringResource(R.string.onboarding_done_asthma_enabled),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "Tip: You can set up medicines in Settings, then add them to your profile for dose tracking and reminders.",
+            text = stringResource(R.string.onboarding_done_medicine_tip),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(32.dp))
         Button(onClick = onGoToDashboard) {
-            Text("Go to Dashboard")
+            Text(stringResource(R.string.onboarding_go_to_dashboard))
         }
     }
 }
@@ -470,7 +513,7 @@ private fun BottomNavButtons(
     ) {
         if (currentStep != OnboardingStep.Welcome) {
             TextButton(onClick = onBack) {
-                Text("Back")
+                Text(stringResource(R.string.common_back))
             }
         } else {
             Spacer(modifier = Modifier.width(1.dp))
@@ -486,13 +529,13 @@ private fun BottomNavButtons(
                     strokeWidth = 2.dp
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Saving...")
+                Text(stringResource(R.string.onboarding_saving))
             } else {
                 Text(
                     when (currentStep) {
-                        OnboardingStep.Welcome -> "Get Started"
-                        OnboardingStep.Location -> "Next"
-                        OnboardingStep.Profile -> "Finish"
+                        OnboardingStep.Welcome -> stringResource(R.string.onboarding_get_started)
+                        OnboardingStep.Location -> stringResource(R.string.common_next)
+                        OnboardingStep.Profile -> stringResource(R.string.onboarding_finish)
                         OnboardingStep.Done -> ""
                     }
                 )

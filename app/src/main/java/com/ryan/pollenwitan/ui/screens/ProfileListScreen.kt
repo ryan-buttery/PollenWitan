@@ -30,14 +30,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.navigation.Screen
 import com.ryan.pollenwitan.ui.theme.ForestTheme
+import com.ryan.pollenwitan.ui.theme.localizedName
 
 @Composable
 fun ProfileListScreen(
@@ -66,19 +69,19 @@ fun ProfileListScreen(
     profileToDelete?.let { profile ->
         AlertDialog(
             onDismissRequest = { profileToDelete = null },
-            title = { Text("Delete profile?") },
-            text = { Text("Delete \"${profile.displayName}\"? This cannot be undone.") },
+            title = { Text(stringResource(R.string.profile_list_delete_title)) },
+            text = { Text(stringResource(R.string.profile_list_delete_message, profile.displayName)) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteProfile(profile.id)
                     profileToDelete = null
                 }) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.common_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { profileToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -96,19 +99,19 @@ private fun EmptyProfilesContent(onCreateProfile: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "No profiles yet",
+            text = stringResource(R.string.profile_list_empty_title),
             style = MaterialTheme.typography.headlineSmall,
             color = colors.Text
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Create your first profile to get personalised pollen forecasts.",
+            text = stringResource(R.string.profile_list_empty_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = colors.TextDim
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = onCreateProfile) {
-            Text("Create Profile")
+            Text(stringResource(R.string.profile_create))
         }
     }
 }
@@ -140,7 +143,7 @@ private fun ProfileListContent(
             onClick = onCreateProfile,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            Text("Add Profile")
+            Text(stringResource(R.string.profile_list_add))
         }
     }
 }
@@ -170,9 +173,9 @@ private fun ProfileCard(
                     fontWeight = FontWeight.SemiBold
                 )
                 val allergenText = profile.trackedAllergens.keys
-                    .joinToString(", ") { it.displayName }
-                    .ifEmpty { "No allergens" }
-                val subtitle = if (profile.hasAsthma) "$allergenText · Asthma" else allergenText
+                    .map { it.localizedName() }.joinToString(", ")
+                    .ifEmpty { stringResource(R.string.profile_list_no_allergens) }
+                val subtitle = if (profile.hasAsthma) "$allergenText · ${stringResource(R.string.profile_list_asthma_suffix)}" else allergenText
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
@@ -182,7 +185,7 @@ private fun ProfileCard(
             IconButton(onClick = onEdit) {
                 Icon(
                     Icons.Filled.Edit,
-                    contentDescription = "Edit",
+                    contentDescription = stringResource(R.string.profile_list_edit),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -190,7 +193,7 @@ private fun ProfileCard(
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Filled.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(R.string.common_delete),
                     tint = MaterialTheme.colorScheme.error
                 )
             }

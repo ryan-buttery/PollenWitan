@@ -1,4 +1,207 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- app_name is set per build variant via resValue in build.gradle.kts -->
+
+    <!-- Common -->
+    <string name="common_retry">Retry</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_save">Save</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_back">Back</string>
+    <string name="common_next">Next</string>
+    <string name="common_refresh">Refresh</string>
+    <string name="common_loading">Loading…</string>
+    <string name="common_error_title">Something went wrong</string>
+    <string name="common_name">Name</string>
+    <string name="common_other">Other</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_forecast">Forecast</string>
+    <string name="nav_profiles">Profiles</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_open_menu">Open menu</string>
+    <string name="nav_new_profile">New Profile</string>
+    <string name="nav_edit_profile">Edit Profile</string>
+    <string name="nav_app_name">PollenWitan</string>
+    <string name="nav_app_subtitle">Pollen &amp; Air Quality Forecast</string>
+
+    <!-- Theme -->
+    <string name="theme_light">Light Theme</string>
+    <string name="theme_dark">Dark Theme</string>
+
+    <!-- Language -->
+    <string name="language_title">Language</string>
+    <string name="language_english">English</string>
+    <string name="language_polish">Polski</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_current_conditions">Current conditions as of %1$s</string>
+    <string name="dashboard_pollen_title">Pollen</string>
+    <string name="dashboard_pollen_title_profile">Pollen — %1$s</string>
+    <string name="dashboard_pollen_units">Values in grains/m³</string>
+    <string name="dashboard_no_tracked_allergens">No tracked allergens</string>
+    <string name="dashboard_air_quality">Air Quality</string>
+    <string name="dashboard_european_aqi">European AQI</string>
+    <string name="dashboard_medicines">Medicines</string>
+    <string name="dashboard_dose_format">%1$d %2$s</string>
+
+    <!-- Forecast -->
+    <string name="forecast_4_day">4-day forecast</string>
+    <string name="forecast_peak">Peak</string>
+    <string name="forecast_aqi_label">AQI %1$d · %2$s</string>
+    <string name="forecast_hourly_header">Hourly (grains/m³)</string>
+    <string name="forecast_show_key">Show key ▼</string>
+    <string name="forecast_hide_key">Hide key ▲</string>
+    <string name="forecast_legend_units">Pollen values in grains/m³ · AQI: European Air Quality Index</string>
+    <string name="forecast_abbreviation_format">%1$s = %2$s</string>
+
+    <!-- Severity levels -->
+    <string name="severity_none">None</string>
+    <string name="severity_low">Low</string>
+    <string name="severity_moderate">Moderate</string>
+    <string name="severity_high">High</string>
+    <string name="severity_very_high">Very High</string>
+
+    <!-- Pollen types -->
+    <string name="pollen_birch">Birch</string>
+    <string name="pollen_alder">Alder</string>
+    <string name="pollen_grass">Grass</string>
+    <string name="pollen_mugwort">Mugwort</string>
+    <string name="pollen_ragweed">Ragweed</string>
+    <string name="pollen_olive">Olive</string>
+    <string name="pollen_birch_abbr">Bi</string>
+    <string name="pollen_alder_abbr">Al</string>
+    <string name="pollen_grass_abbr">Gr</string>
+    <string name="pollen_mugwort_abbr">Mu</string>
+    <string name="pollen_ragweed_abbr">Ra</string>
+    <string name="pollen_olive_abbr">Ol</string>
+
+    <!-- Day periods -->
+    <string name="period_morning">Morning</string>
+    <string name="period_afternoon">Afternoon</string>
+    <string name="period_evening">Evening</string>
+
+    <!-- Medicine types -->
+    <string name="medicine_type_tablet">Tablet</string>
+    <string name="medicine_type_eyedrops">Eyedrops</string>
+    <string name="medicine_type_nasal_spray">Nasal Spray</string>
+    <string name="medicine_type_other">Other</string>
+    <string name="medicine_unit_tablets">tablets</string>
+    <string name="medicine_unit_drops">drops</string>
+    <string name="medicine_unit_sprays">sprays</string>
+    <string name="medicine_unit_doses">doses</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_location">Location</string>
+    <string name="settings_manual">Manual</string>
+    <string name="settings_gps">GPS</string>
+    <string name="settings_display_name">Display name</string>
+    <string name="settings_latitude">Latitude</string>
+    <string name="settings_longitude">Longitude</string>
+    <string name="settings_save_location">Save Location</string>
+    <string name="settings_locate_me">Locate Me</string>
+    <string name="settings_locating">Locating…</string>
+    <string name="settings_location_found">Location: %1$s</string>
+    <string name="settings_location_permission_denied">Location permission denied. Grant it in app settings to use GPS.</string>
+    <string name="settings_open_app_settings">Open App Settings</string>
+    <string name="settings_getting_location">Getting location…</string>
+    <string name="settings_located">Located: %1$s</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_grant_notification_permission">Grant Notification Permission</string>
+    <string name="settings_morning_briefing">Morning briefing</string>
+    <string name="settings_morning_briefing_desc">Daily summary at %1$s</string>
+    <string name="settings_hour">Hour:</string>
+    <string name="settings_threshold_alerts">Threshold alerts</string>
+    <string name="settings_threshold_alerts_desc">Alert when pollen reaches High or Very High</string>
+    <string name="settings_compound_risk">Compound risk alerts</string>
+    <string name="settings_compound_risk_desc">Pollen + poor air quality (asthma profiles)</string>
+    <string name="settings_medicines">Medicines</string>
+    <string name="settings_no_medicines">No medicines defined yet</string>
+    <string name="settings_add_medicine">Add Medicine</string>
+    <string name="settings_edit_medicine">Edit Medicine</string>
+    <string name="settings_type">Type</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Welcome to PollenWitan</string>
+    <string name="onboarding_welcome_subtitle">Personalised pollen and air quality forecasts for your household.</string>
+    <string name="onboarding_welcome_description">We\u2019ll help you set up your location and create your first allergy profile. You can also track medicines later in Settings.</string>
+    <string name="onboarding_location_title">Set Your Location</string>
+    <string name="onboarding_location_subtitle">Pollen data is location-specific. Choose how to set your location.</string>
+    <string name="onboarding_location_default">Use default</string>
+    <string name="onboarding_location_default_desc">Poznań, Poland (52.41, 16.93)</string>
+    <string name="onboarding_location_gps">Use GPS</string>
+    <string name="onboarding_location_manual">Enter manually</string>
+    <string name="onboarding_location_name">Location name</string>
+    <string name="onboarding_location_permission_denied">Location permission denied. Enable it in app settings.</string>
+    <string name="onboarding_profile_title">Create Your Profile</string>
+    <string name="onboarding_profile_subtitle">Set up your allergy profile. You can customise thresholds and add medicines later.</string>
+    <string name="onboarding_has_asthma">Has asthma</string>
+    <string name="onboarding_tracked_allergens">Tracked Allergens</string>
+    <string name="onboarding_done_title">You\u2019re all set!</string>
+    <string name="onboarding_done_profile_created">Profile created for %1$s</string>
+    <string name="onboarding_done_tracking">Tracking: %1$s</string>
+    <string name="onboarding_done_asthma_enabled">Asthma monitoring enabled</string>
+    <string name="onboarding_done_medicine_tip">Tip: You can set up medicines in Settings, then add them to your profile for dose tracking and reminders.</string>
+    <string name="onboarding_go_to_dashboard">Go to Dashboard</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_finish">Finish</string>
+    <string name="onboarding_saving">Saving…</string>
+
+    <!-- Profile edit -->
+    <string name="profile_new">New Profile</string>
+    <string name="profile_edit">Edit Profile</string>
+    <string name="profile_has_asthma">Has asthma</string>
+    <string name="profile_custom_location">Custom location</string>
+    <string name="profile_uses_default_location">Uses default location from Settings</string>
+    <string name="profile_tracked_allergens">Tracked Allergens</string>
+    <string name="profile_custom">Custom</string>
+    <string name="profile_create">Create Profile</string>
+    <string name="profile_save_changes">Save Changes</string>
+    <string name="profile_threshold_unit">grains/m³</string>
+    <string name="profile_medicines">Medicines</string>
+    <string name="profile_remove">Remove</string>
+    <string name="profile_dose">Dose</string>
+    <string name="profile_times_per_day">Times/day</string>
+    <string name="profile_reminder_hours">Reminder hours</string>
+    <string name="profile_add_medicine">Add Medicine</string>
+
+    <!-- Profile list -->
+    <string name="profile_list_empty_title">No profiles yet</string>
+    <string name="profile_list_empty_subtitle">Create your first profile to get personalised pollen forecasts.</string>
+    <string name="profile_list_add">Add Profile</string>
+    <string name="profile_list_delete_title">Delete profile?</string>
+    <string name="profile_list_delete_message">Delete \"%1$s\"? This cannot be undone.</string>
+    <string name="profile_list_no_allergens">No allergens</string>
+    <string name="profile_list_asthma_suffix">Asthma</string>
+    <string name="profile_list_edit">Edit</string>
+
+    <!-- Notification channels -->
+    <string name="notif_channel_morning_briefing">Morning Briefing</string>
+    <string name="notif_channel_morning_briefing_desc">Daily pollen and air quality summary</string>
+    <string name="notif_channel_threshold_alert">Threshold Alerts</string>
+    <string name="notif_channel_threshold_alert_desc">Alerts when pollen levels exceed your thresholds</string>
+    <string name="notif_channel_compound_risk">Compound Risk</string>
+    <string name="notif_channel_compound_risk_desc">Alerts when pollen and air quality combine to increase respiratory risk</string>
+    <string name="notif_channel_medication_reminder">Medication Reminders</string>
+    <string name="notif_channel_medication_reminder_desc">Reminders to take your allergy medication</string>
+
+    <!-- Notification text -->
+    <string name="notif_good_morning">Good morning, %1$s</string>
+    <string name="notif_pollen_summary">Pollen: %1$s</string>
+    <string name="notif_no_tracked_allergens">No tracked allergens today</string>
+    <string name="notif_aqi_summary">AQI: %1$d (%2$s)</string>
+    <string name="notif_elevated_particulates">Elevated particulates \u2014 consider precautions</string>
+    <string name="notif_high_pollen_alert">%1$s: High pollen alert</string>
+    <string name="notif_threshold_breach">%1$s: %2$s (%3$s grains/m³)</string>
+    <string name="notif_respiratory_risk">%1$s: Respiratory risk</string>
+    <string name="notif_compound_risk_text">Elevated pollen (%1$s) combined with poor air quality (PM2.5: %2$s, PM10: %3$s). Take extra precautions.</string>
+    <string name="notif_medication_reminder">%1$s: Medication reminder</string>
+    <string name="notif_time_to_take">Time to take %1$s (%2$d %3$s)</string>
+
+    <!-- Validation -->
+    <string name="validation_name_empty">Name cannot be empty</string>
+    <string name="validation_select_allergen">Select at least one allergen</string>
+    <string name="validation_gps_failed">Could not get location. Check GPS is enabled.</string>
 </resources>

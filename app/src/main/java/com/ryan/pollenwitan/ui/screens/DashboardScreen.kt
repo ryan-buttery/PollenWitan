@@ -27,14 +27,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.domain.model.CurrentConditions
 import com.ryan.pollenwitan.domain.model.PollenReading
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.components.ProfileSwitcher
+import com.ryan.pollenwitan.ui.theme.localizedName
+import com.ryan.pollenwitan.ui.theme.localizedUnitLabel
 import com.ryan.pollenwitan.ui.theme.toColor
 import com.ryan.pollenwitan.ui.theme.toLabel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -86,7 +90,7 @@ private fun ErrorContent(message: String, onRetry: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Something went wrong",
+            text = stringResource(R.string.common_error_title),
             style = MaterialTheme.typography.headlineSmall
         )
         Text(
@@ -96,7 +100,7 @@ private fun ErrorContent(message: String, onRetry: () -> Unit) {
             modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
         )
         Button(onClick = onRetry) {
-            Text("Retry")
+            Text(stringResource(R.string.common_retry))
         }
     }
 }
@@ -121,12 +125,12 @@ private fun DashboardContent(
     ) {
         // Header
         Text(
-            text = locationDisplayName.ifEmpty { "Loading..." },
+            text = locationDisplayName.ifEmpty { stringResource(R.string.common_loading) },
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "Current conditions as of ${conditions.timestamp.format(DateTimeFormatter.ofPattern("EEEE d MMMM, HH:mm"))}",
+            text = stringResource(R.string.dashboard_current_conditions, conditions.timestamp.format(DateTimeFormatter.ofPattern("EEEE d MMMM, HH:mm"))),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -152,12 +156,12 @@ private fun DashboardContent(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = if (selectedProfile != null) "Pollen — ${selectedProfile.displayName}" else "Pollen",
+                    text = if (selectedProfile != null) stringResource(R.string.dashboard_pollen_title_profile, selectedProfile.displayName) else stringResource(R.string.dashboard_pollen_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "Values in grains/m³",
+                    text = stringResource(R.string.dashboard_pollen_units),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -170,7 +174,7 @@ private fun DashboardContent(
                     }
                     if (trackedReadings.isEmpty()) {
                         Text(
-                            text = "No tracked allergens",
+                            text = stringResource(R.string.dashboard_no_tracked_allergens),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -190,7 +194,7 @@ private fun DashboardContent(
                     if (untrackedReadings.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Other",
+                            text = stringResource(R.string.common_other),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -221,7 +225,7 @@ private fun DashboardContent(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Air Quality",
+                    text = stringResource(R.string.dashboard_air_quality),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -237,7 +241,7 @@ private fun DashboardContent(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "European AQI",
+                        text = stringResource(R.string.dashboard_european_aqi),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f)
                     )
@@ -295,7 +299,7 @@ private fun DashboardContent(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Medicines",
+                        text = stringResource(R.string.dashboard_medicines),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -326,7 +330,7 @@ private fun DashboardContent(
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                text = "${slot.dose} ${slot.unitLabel}",
+                                text = stringResource(R.string.dashboard_dose_format, slot.dose, slot.medicineType.localizedUnitLabel()),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -343,7 +347,7 @@ private fun DashboardContent(
             onClick = onRefresh,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            Text("Refresh")
+            Text(stringResource(R.string.common_refresh))
         }
     }
 }
@@ -363,7 +367,7 @@ private fun PollenRow(reading: PollenReading, dimmed: Boolean = false) {
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = reading.type.displayName,
+            text = reading.type.localizedName(),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)
         )

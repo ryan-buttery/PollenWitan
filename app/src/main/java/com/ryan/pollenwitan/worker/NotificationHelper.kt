@@ -9,6 +9,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import com.ryan.pollenwitan.R
 
 object NotificationHelper {
 
@@ -23,31 +24,31 @@ object NotificationHelper {
         val channels = listOf(
             NotificationChannel(
                 CHANNEL_MORNING_BRIEFING,
-                "Morning Briefing",
+                context.getString(R.string.notif_channel_morning_briefing),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Daily pollen and air quality summary"
+                description = context.getString(R.string.notif_channel_morning_briefing_desc)
             },
             NotificationChannel(
                 CHANNEL_THRESHOLD_ALERT,
-                "Threshold Alerts",
+                context.getString(R.string.notif_channel_threshold_alert),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Alerts when pollen levels exceed your thresholds"
+                description = context.getString(R.string.notif_channel_threshold_alert_desc)
             },
             NotificationChannel(
                 CHANNEL_COMPOUND_RISK,
-                "Compound Risk",
+                context.getString(R.string.notif_channel_compound_risk),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Alerts when pollen and air quality combine to increase respiratory risk"
+                description = context.getString(R.string.notif_channel_compound_risk_desc)
             },
             NotificationChannel(
                 CHANNEL_MEDICATION_REMINDER,
-                "Medication Reminders",
+                context.getString(R.string.notif_channel_medication_reminder),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Reminders to take your allergy medication"
+                description = context.getString(R.string.notif_channel_medication_reminder_desc)
             }
         )
 

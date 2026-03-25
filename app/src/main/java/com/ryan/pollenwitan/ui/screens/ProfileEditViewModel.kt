@@ -3,6 +3,7 @@ package com.ryan.pollenwitan.ui.screens
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.data.location.GpsLocationProvider
 import com.ryan.pollenwitan.data.repository.MedicineRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
@@ -262,11 +263,11 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
     fun save() {
         val state = _uiState.value
         if (state.displayName.isBlank()) {
-            _uiState.value = state.copy(validationError = "Name cannot be empty")
+            _uiState.value = state.copy(validationError = getApplication<Application>().getString(R.string.validation_name_empty))
             return
         }
         if (state.trackedAllergens.isEmpty()) {
-            _uiState.value = state.copy(validationError = "Select at least one allergen")
+            _uiState.value = state.copy(validationError = getApplication<Application>().getString(R.string.validation_select_allergen))
             return
         }
 

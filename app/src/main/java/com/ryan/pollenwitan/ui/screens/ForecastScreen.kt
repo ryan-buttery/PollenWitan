@@ -46,9 +46,13 @@ import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.components.ProfileSwitcher
+import com.ryan.pollenwitan.ui.theme.localizedAbbreviation
+import com.ryan.pollenwitan.ui.theme.localizedName
 import com.ryan.pollenwitan.ui.theme.toColor
 import com.ryan.pollenwitan.ui.theme.toLabel
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ryan.pollenwitan.R
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -67,14 +71,14 @@ fun ForecastScreen(viewModel: ForecastViewModel = viewModel()) {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Something went wrong", style = MaterialTheme.typography.headlineSmall)
+                Text(stringResource(R.string.common_error_title), style = MaterialTheme.typography.headlineSmall)
                 Text(
                     text = forecast.message,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
                 )
-                Button(onClick = viewModel::refresh) { Text("Retry") }
+                Button(onClick = viewModel::refresh) { Text(stringResource(R.string.common_retry)) }
             }
         }
         is ForecastState.Success -> ForecastContent(
@@ -108,12 +112,12 @@ private fun ForecastContent(
             .padding(16.dp)
     ) {
         Text(
-            text = locationDisplayName.ifEmpty { "Loading..." },
+            text = locationDisplayName.ifEmpty { stringResource(R.string.common_loading) },
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "4-day forecast",
+            text = stringResource(R.string.forecast_4_day),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -131,7 +135,7 @@ private fun ForecastContent(
 
         var legendExpanded by remember { mutableStateOf(false) }
         Text(
-            text = if (legendExpanded) "Hide key ▲" else "Show key ▼",
+            text = if (legendExpanded) stringResource(R.string.forecast_hide_key) else stringResource(R.string.forecast_show_key),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable { legendExpanded = !legendExpanded }
@@ -159,7 +163,7 @@ private fun ForecastContent(
             onClick = onRefresh,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            Text("Refresh")
+            Text(stringResource(R.string.common_refresh))
         }
     }
 }
@@ -203,7 +207,7 @@ private fun ForecastDayCard(
 
                 // Peak severity dots for tracked allergens
                 Text(
-                    text = "Peak",
+                    text = stringResource(R.string.forecast_peak),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -214,7 +218,7 @@ private fun ForecastDayCard(
 
                 // Peak AQI
                 Text(
-                    text = "AQI ${day.peakAqi} · ${day.peakAqiSeverity.toLabel()}",
+                    text = stringResource(R.string.forecast_aqi_label, day.peakAqi, day.peakAqiSeverity.toLabel()),
                     style = MaterialTheme.typography.bodySmall,
                     color = day.peakAqiSeverity.toColor()
                 )
@@ -238,7 +242,7 @@ private fun ForecastDayCard(
                 Column {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     Text(
-                        text = "Hourly (grains/m³)",
+                        text = stringResource(R.string.forecast_hourly_header),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -264,7 +268,7 @@ private fun PollenColumnHeaders(selectedProfile: UserProfile?) {
                 val isTracked = selectedProfile?.trackedAllergens?.containsKey(type) != false
                 val alpha = if (isTracked) 0.7f else 0.3f
                 Text(
-                    text = type.abbreviation,
+                    text = type.localizedAbbreviation(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha),
                     modifier = Modifier.width(18.dp)
@@ -318,7 +322,7 @@ private fun PeriodRow(
     ) {
         Column(modifier = Modifier.width(80.dp)) {
             Text(
-                text = period.period.displayName,
+                text = period.period.localizedName(),
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
@@ -337,7 +341,7 @@ private fun PeriodRow(
         Spacer(modifier = Modifier.weight(1f))
 
         Text(
-            text = "AQI ${period.avgAqi} · ${period.aqiSeverity.toLabel()}",
+            text = stringResource(R.string.forecast_aqi_label, period.avgAqi, period.aqiSeverity.toLabel()),
             style = MaterialTheme.typography.bodySmall,
             color = period.aqiSeverity.toColor()
         )
@@ -375,7 +379,7 @@ private fun SeverityLegend() {
 
         // Abbreviation key
         Text(
-            text = PollenType.entries.joinToString(" · ") { "${it.abbreviation} = ${it.displayName}" },
+            text = PollenType.entries.map { stringResource(R.string.forecast_abbreviation_format, it.localizedAbbreviation(), it.localizedName()) }.joinToString(" · "),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )
@@ -384,7 +388,7 @@ private fun SeverityLegend() {
 
         // Units note
         Text(
-            text = "Pollen values in grains/m³ · AQI: European Air Quality Index",
+            text = stringResource(R.string.forecast_legend_units),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )
