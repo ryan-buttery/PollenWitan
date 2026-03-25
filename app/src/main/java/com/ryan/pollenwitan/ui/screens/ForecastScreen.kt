@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,6 +40,7 @@ import com.ryan.pollenwitan.domain.model.PeriodSummary
 import com.ryan.pollenwitan.domain.model.PollenReading
 import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
+import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.components.ProfileSwitcher
 import com.ryan.pollenwitan.ui.theme.toColor
@@ -123,6 +126,9 @@ private fun ForecastContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
+        SeverityLegend()
+        Spacer(modifier = Modifier.height(16.dp))
+
         days.forEachIndexed { index, day ->
             ForecastDayCard(
                 day = day,
@@ -182,13 +188,19 @@ private fun ForecastDayCard(
                 }
 
                 // Peak severity dots for tracked allergens
+                Text(
+                    text = "Peak",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.width(6.dp))
                 PeakSeverityDots(day.peakPollenReadings, selectedProfile)
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // Peak AQI
                 Text(
-                    text = "AQI ${day.peakAqi}",
+                    text = "AQI ${day.peakAqi} · ${day.peakAqiSeverity.toLabel()}",
                     style = MaterialTheme.typography.bodySmall,
                     color = day.peakAqiSeverity.toColor()
                 )
@@ -212,7 +224,7 @@ private fun ForecastDayCard(
                 Column {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     Text(
-                        text = "Hourly",
+                        text = "Hourly (grains/m³)",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -290,11 +302,20 @@ private fun PeriodRow(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = period.period.displayName,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.width(80.dp)
-        )
+        Column(modifier = Modifier.width(80.dp)) {
+            Text(
+                text = period.period.displayName,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "%02d–%02d".format(
+                    period.period.hourRange.first,
+                    period.period.hourRange.last + 1
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
         // Severity dots for each pollen type
         PeakSeverityDots(period.peakPollenReadings, selectedProfile)
@@ -302,9 +323,56 @@ private fun PeriodRow(
         Spacer(modifier = Modifier.weight(1f))
 
         Text(
-            text = "AQI ${period.avgAqi}",
+            text = "AQI ${period.avgAqi} · ${period.aqiSeverity.toLabel()}",
             style = MaterialTheme.typography.bodySmall,
             color = period.aqiSeverity.toColor()
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SeverityLegend() {
+    Column {
+        // Severity colour key
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            SeverityLevel.entries.forEach { level ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(level.toColor())
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = level.toLabel(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Abbreviation key
+        Text(
+            text = PollenType.entries.joinToString(" · ") { "${it.abbreviation} = ${it.displayName}" },
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Units note
+        Text(
+            text = "Pollen values in grains/m³ · AQI: European Air Quality Index",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )
     }
 }
