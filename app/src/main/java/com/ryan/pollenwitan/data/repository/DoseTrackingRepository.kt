@@ -6,6 +6,8 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.ryan.pollenwitan.data.local.AppDatabase
+import com.ryan.pollenwitan.data.local.DoseHistoryEntity
 import com.ryan.pollenwitan.domain.model.DoseConfirmation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -18,6 +20,7 @@ class DoseTrackingRepository(
 ) {
 
     private val dataStore get() = context.doseTrackingDataStore
+    private val doseHistoryDao = AppDatabase.getInstance(context).doseHistoryDao()
 
     private object Keys {
         val TRACKING_DATE = stringPreferencesKey("tracking_date")
@@ -47,18 +50,78 @@ class DoseTrackingRepository(
             .toSet()
     }
 
-    suspend fun confirmDose(profileId: String, medicineId: String, slotIndex: Int) {
+    suspend fun confirmDose(
+        profileId: String,
+        medicineId: String,
+        slotIndex: Int,
+        medicineName: String,
+        dose: Int,
+        medicineType: String,
+        reminderHour: Int
+    ) {
         dataStore.edit { prefs ->
             resetIfNewDay(prefs)
             prefs[Keys.confirmed(profileId, medicineId, slotIndex)] = true
         }
+        doseHistoryDao.upsert(
+            DoseHistoryEntity(
+                profileId = profileId,
+                medicineId = medicineId,
+                slotIndex = slotIndex,
+                date = LocalDate.now().toString(),
+                confirmedAtMillis = System.currentTimeMillis(),
+                confirmed = true,
+                medicineName = medicineName,
+                dose = dose,
+                medicineType = medicineType,
+                reminderHour = reminderHour
+            )
+        )
     }
 
-    suspend fun unconfirmDose(profileId: String, medicineId: String, slotIndex: Int) {
+    suspend fun unconfirmDose(
+        profileId: String,
+        medicineId: String,
+        slotIndex: Int,
+        medicineName: String,
+        dose: Int,
+        medicineType: String,
+        reminderHour: Int
+    ) {
         dataStore.edit { prefs ->
             resetIfNewDay(prefs)
             prefs.remove(Keys.confirmed(profileId, medicineId, slotIndex))
         }
+        doseHistoryDao.upsert(
+            DoseHistoryEntity(
+                profileId = profileId,
+                medicineId = medicineId,
+                slotIndex = slotIndex,
+                date = LocalDate.now().toString(),
+                confirmedAtMillis = System.currentTimeMillis(),
+                confirmed = false,
+                medicineName = medicineName,
+                dose = dose,
+                medicineType = medicineType,
+                reminderHour = reminderHour
+            )
+        )
+    }
+
+    suspend fun getHistoryForDate(profileId: String, date: LocalDate): List<DoseHistoryEntity> {
+        return doseHistoryDao.getConfirmedForDate(profileId, date.toString())
+    }
+
+    fun getHistoryForDateRange(
+        profileId: String,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): Flow<List<DoseHistoryEntity>> {
+        return doseHistoryDao.getConfirmedForDateRange(
+            profileId,
+            startDate.toString(),
+            endDate.toString()
+        )
     }
 
     private fun resetIfNewDay(prefs: MutablePreferences) {
