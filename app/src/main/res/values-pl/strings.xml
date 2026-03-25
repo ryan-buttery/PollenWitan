@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <string name="common_retry">Ponów</string>
+    <string name="common_cancel">Anuluj</string>
+    <string name="common_save">Zapisz</string>
+    <string name="common_delete">Usuń</string>
+    <string name="common_back">Wstecz</string>
+    <string name="common_next">Dalej</string>
+    <string name="common_refresh">Odśwież</string>
+    <string name="common_loading">Ładowanie…</string>
+    <string name="common_error_title">Coś poszło nie tak</string>
+    <string name="common_name">Imię</string>
+    <string name="common_other">Inne</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">Pulpit</string>
+    <string name="nav_forecast">Prognoza</string>
+    <string name="nav_profiles">Profile</string>
+    <string name="nav_settings">Ustawienia</string>
+    <string name="nav_open_menu">Otwórz menu</string>
+    <string name="nav_new_profile">Nowy profil</string>
+    <string name="nav_edit_profile">Edytuj profil</string>
+    <string name="nav_app_name">PollenWitan</string>
+    <string name="nav_app_subtitle">Prognoza pyłków i jakości powietrza</string>
+
+    <!-- Theme -->
+    <string name="theme_light">Jasny motyw</string>
+    <string name="theme_dark">Ciemny motyw</string>
+
+    <!-- Language -->
+    <string name="language_title">Język</string>
+    <string name="language_english">English</string>
+    <string name="language_polish">Polski</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_current_conditions">Aktualne warunki z %1$s</string>
+    <string name="dashboard_pollen_title">Pyłki</string>
+    <string name="dashboard_pollen_title_profile">Pyłki — %1$s</string>
+    <string name="dashboard_pollen_units">Wartości w ziarnach/m³</string>
+    <string name="dashboard_no_tracked_allergens">Brak śledzonych alergenów</string>
+    <string name="dashboard_air_quality">Jakość powietrza</string>
+    <string name="dashboard_european_aqi">Europejski AQI</string>
+    <string name="dashboard_medicines">Leki</string>
+    <string name="dashboard_dose_format">%1$d %2$s</string>
+
+    <!-- Forecast -->
+    <string name="forecast_4_day">Prognoza 4-dniowa</string>
+    <string name="forecast_peak">Szczyt</string>
+    <string name="forecast_aqi_label">AQI %1$d · %2$s</string>
+    <string name="forecast_hourly_header">Godzinowo (ziarna/m³)</string>
+    <string name="forecast_show_key">Pokaż legendę ▼</string>
+    <string name="forecast_hide_key">Ukryj legendę ▲</string>
+    <string name="forecast_legend_units">Wartości pyłków w ziarnach/m³ · AQI: Europejski Indeks Jakości Powietrza</string>
+    <string name="forecast_abbreviation_format">%1$s = %2$s</string>
+
+    <!-- Severity levels -->
+    <string name="severity_none">Brak</string>
+    <string name="severity_low">Niski</string>
+    <string name="severity_moderate">Umiarkowany</string>
+    <string name="severity_high">Wysoki</string>
+    <string name="severity_very_high">Bardzo wysoki</string>
+
+    <!-- Pollen types -->
+    <string name="pollen_birch">Brzoza</string>
+    <string name="pollen_alder">Olcha</string>
+    <string name="pollen_grass">Trawy</string>
+    <string name="pollen_mugwort">Bylica</string>
+    <string name="pollen_ragweed">Ambrozja</string>
+    <string name="pollen_olive">Oliwka</string>
+    <string name="pollen_birch_abbr">Br</string>
+    <string name="pollen_alder_abbr">Ol</string>
+    <string name="pollen_grass_abbr">Tr</string>
+    <string name="pollen_mugwort_abbr">By</string>
+    <string name="pollen_ragweed_abbr">Am</string>
+    <string name="pollen_olive_abbr">Ow</string>
+
+    <!-- Day periods -->
+    <string name="period_morning">Rano</string>
+    <string name="period_afternoon">Popołudnie</string>
+    <string name="period_evening">Wieczór</string>
+
+    <!-- Medicine types -->
+    <string name="medicine_type_tablet">Tabletka</string>
+    <string name="medicine_type_eyedrops">Krople do oczu</string>
+    <string name="medicine_type_nasal_spray">Spray do nosa</string>
+    <string name="medicine_type_other">Inne</string>
+    <string name="medicine_unit_tablets">tabletki</string>
+    <string name="medicine_unit_drops">krople</string>
+    <string name="medicine_unit_sprays">dawki</string>
+    <string name="medicine_unit_doses">dawki</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Ustawienia</string>
+    <string name="settings_location">Lokalizacja</string>
+    <string name="settings_manual">Ręcznie</string>
+    <string name="settings_gps">GPS</string>
+    <string name="settings_display_name">Nazwa wyświetlana</string>
+    <string name="settings_latitude">Szerokość</string>
+    <string name="settings_longitude">Długość</string>
+    <string name="settings_save_location">Zapisz lokalizację</string>
+    <string name="settings_locate_me">Zlokalizuj mnie</string>
+    <string name="settings_locating">Lokalizowanie…</string>
+    <string name="settings_location_found">Lokalizacja: %1$s</string>
+    <string name="settings_location_permission_denied">Odmówiono dostępu do lokalizacji. Włącz go w ustawieniach aplikacji.</string>
+    <string name="settings_open_app_settings">Otwórz ustawienia aplikacji</string>
+    <string name="settings_getting_location">Pobieranie lokalizacji…</string>
+    <string name="settings_located">Zlokalizowano: %1$s</string>
+    <string name="settings_notifications">Powiadomienia</string>
+    <string name="settings_grant_notification_permission">Przyznaj uprawnienia do powiadomień</string>
+    <string name="settings_morning_briefing">Poranny raport</string>
+    <string name="settings_morning_briefing_desc">Codzienne podsumowanie o %1$s</string>
+    <string name="settings_hour">Godzina:</string>
+    <string name="settings_threshold_alerts">Alerty progowe</string>
+    <string name="settings_threshold_alerts_desc">Alert gdy pyłki osiągną poziom Wysoki lub Bardzo wysoki</string>
+    <string name="settings_compound_risk">Alerty złożonego ryzyka</string>
+    <string name="settings_compound_risk_desc">Pyłki + zła jakość powietrza (profile z astmą)</string>
+    <string name="settings_medicines">Leki</string>
+    <string name="settings_no_medicines">Nie zdefiniowano jeszcze leków</string>
+    <string name="settings_add_medicine">Dodaj lek</string>
+    <string name="settings_edit_medicine">Edytuj lek</string>
+    <string name="settings_type">Typ</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Witaj w PollenWitan</string>
+    <string name="onboarding_welcome_subtitle">Spersonalizowane prognozy pyłków i jakości powietrza dla Twojego domu.</string>
+    <string name="onboarding_welcome_description">Pomożemy Ci ustawić lokalizację i utworzyć pierwszy profil alergii. Leki możesz dodać później w Ustawieniach.</string>
+    <string name="onboarding_location_title">Ustaw lokalizację</string>
+    <string name="onboarding_location_subtitle">Dane o pyłkach zależą od lokalizacji. Wybierz sposób ustawienia.</string>
+    <string name="onboarding_location_default">Użyj domyślnej</string>
+    <string name="onboarding_location_default_desc">Poznań, Polska (52.41, 16.93)</string>
+    <string name="onboarding_location_gps">Użyj GPS</string>
+    <string name="onboarding_location_manual">Wpisz ręcznie</string>
+    <string name="onboarding_location_name">Nazwa lokalizacji</string>
+    <string name="onboarding_location_permission_denied">Odmówiono dostępu do lokalizacji. Włącz go w ustawieniach aplikacji.</string>
+    <string name="onboarding_profile_title">Utwórz profil</string>
+    <string name="onboarding_profile_subtitle">Skonfiguruj profil alergii. Progi i leki możesz dostosować później.</string>
+    <string name="onboarding_has_asthma">Ma astmę</string>
+    <string name="onboarding_tracked_allergens">Śledzone alergeny</string>
+    <string name="onboarding_done_title">Wszystko gotowe!</string>
+    <string name="onboarding_done_profile_created">Utworzono profil dla %1$s</string>
+    <string name="onboarding_done_tracking">Śledzenie: %1$s</string>
+    <string name="onboarding_done_asthma_enabled">Monitorowanie astmy włączone</string>
+    <string name="onboarding_done_medicine_tip">Wskazówka: Leki możesz ustawić w Ustawieniach, a następnie dodać je do profilu w celu śledzenia dawek i przypomnień.</string>
+    <string name="onboarding_go_to_dashboard">Przejdź do pulpitu</string>
+    <string name="onboarding_get_started">Rozpocznij</string>
+    <string name="onboarding_finish">Zakończ</string>
+    <string name="onboarding_saving">Zapisywanie…</string>
+
+    <!-- Profile edit -->
+    <string name="profile_new">Nowy profil</string>
+    <string name="profile_edit">Edytuj profil</string>
+    <string name="profile_has_asthma">Ma astmę</string>
+    <string name="profile_custom_location">Własna lokalizacja</string>
+    <string name="profile_uses_default_location">Używa domyślnej lokalizacji z Ustawień</string>
+    <string name="profile_tracked_allergens">Śledzone alergeny</string>
+    <string name="profile_custom">Własne</string>
+    <string name="profile_create">Utwórz profil</string>
+    <string name="profile_save_changes">Zapisz zmiany</string>
+    <string name="profile_threshold_unit">ziarna/m³</string>
+    <string name="profile_medicines">Leki</string>
+    <string name="profile_remove">Usuń</string>
+    <string name="profile_dose">Dawka</string>
+    <string name="profile_times_per_day">Razy/dzień</string>
+    <string name="profile_reminder_hours">Godziny przypomnień</string>
+    <string name="profile_add_medicine">Dodaj lek</string>
+
+    <!-- Profile list -->
+    <string name="profile_list_empty_title">Brak profili</string>
+    <string name="profile_list_empty_subtitle">Utwórz pierwszy profil, aby otrzymywać spersonalizowane prognozy pyłków.</string>
+    <string name="profile_list_add">Dodaj profil</string>
+    <string name="profile_list_delete_title">Usunąć profil?</string>
+    <string name="profile_list_delete_message">Usunąć \"%1$s\"? Tego nie można cofnąć.</string>
+    <string name="profile_list_no_allergens">Brak alergenów</string>
+    <string name="profile_list_asthma_suffix">Astma</string>
+    <string name="profile_list_edit">Edytuj</string>
+
+    <!-- Notification channels -->
+    <string name="notif_channel_morning_briefing">Poranny raport</string>
+    <string name="notif_channel_morning_briefing_desc">Codzienne podsumowanie pyłków i jakości powietrza</string>
+    <string name="notif_channel_threshold_alert">Alerty progowe</string>
+    <string name="notif_channel_threshold_alert_desc">Alerty gdy poziom pyłków przekroczy Twoje progi</string>
+    <string name="notif_channel_compound_risk">Złożone ryzyko</string>
+    <string name="notif_channel_compound_risk_desc">Alerty gdy pyłki i jakość powietrza łącznie zwiększają ryzyko oddechowe</string>
+    <string name="notif_channel_medication_reminder">Przypomnienia o lekach</string>
+    <string name="notif_channel_medication_reminder_desc">Przypomnienia o przyjęciu leków na alergię</string>
+
+    <!-- Notification text -->
+    <string name="notif_good_morning">Dzień dobry, %1$s</string>
+    <string name="notif_pollen_summary">Pyłki: %1$s</string>
+    <string name="notif_no_tracked_allergens">Brak śledzonych alergenów dzisiaj</string>
+    <string name="notif_aqi_summary">AQI: %1$d (%2$s)</string>
+    <string name="notif_elevated_particulates">Podwyższone pyły \u2014 zachowaj ostrożność</string>
+    <string name="notif_high_pollen_alert">%1$s: Alert wysokich pyłków</string>
+    <string name="notif_threshold_breach">%1$s: %2$s (%3$s ziaren/m³)</string>
+    <string name="notif_respiratory_risk">%1$s: Ryzyko oddechowe</string>
+    <string name="notif_compound_risk_text">Podwyższone pyłki (%1$s) w połączeniu ze złą jakością powietrza (PM2.5: %2$s, PM10: %3$s). Zachowaj szczególną ostrożność.</string>
+    <string name="notif_medication_reminder">%1$s: Przypomnienie o leku</string>
+    <string name="notif_time_to_take">Czas na %1$s (%2$d %3$s)</string>
+
+    <!-- Validation -->
+    <string name="validation_name_empty">Imię nie może być puste</string>
+    <string name="validation_select_allergen">Wybierz co najmniej jeden alergen</string>
+    <string name="validation_gps_failed">Nie udało się uzyskać lokalizacji. Sprawdź czy GPS jest włączony.</string>
+</resources>

@@ -3,18 +3,21 @@ package com.ryan.pollenwitan.worker
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.data.repository.AirQualityRepository
 import com.ryan.pollenwitan.data.repository.DoseTrackingRepository
 import com.ryan.pollenwitan.data.repository.LocationRepository
 import com.ryan.pollenwitan.data.repository.MedicineRepository
 import com.ryan.pollenwitan.data.repository.NotificationPrefsRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
-import com.ryan.pollenwitan.domain.model.AppLocation
 import com.ryan.pollenwitan.domain.model.CurrentConditions
 import com.ryan.pollenwitan.domain.model.DoseConfirmation
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
+import com.ryan.pollenwitan.ui.theme.localizedName
+import com.ryan.pollenwitan.ui.theme.localizedUnitLabel
+import com.ryan.pollenwitan.ui.theme.toLabel
 import kotlinx.coroutines.flow.first
 import java.time.LocalDateTime
 
@@ -31,6 +34,7 @@ class PollenCheckWorker(
     private val doseTrackingRepository = DoseTrackingRepository(applicationContext)
 
     override suspend fun doWork(): Result {
+        val ctx = applicationContext
         val prefs = notificationPrefsRepository.getPrefs().first()
         val globalLocation = locationRepository.getLocation().first()
         val profiles = profileRepository.getProfiles().first()
@@ -68,28 +72,28 @@ class PollenCheckWorker(
 
             // Morning briefing
             if (shouldSendBriefing) {
-                val summary = buildMorningSummary(profile, conditions)
+                val summary = buildMorningSummary(ctx, profile, conditions)
                 NotificationHelper.sendNotification(
-                    context = applicationContext,
+                    context = ctx,
                     channelId = NotificationHelper.CHANNEL_MORNING_BRIEFING,
                     notificationId = MORNING_BRIEFING_BASE_ID + index,
-                    title = "Good morning, ${profile.displayName}",
+                    title = ctx.getString(R.string.notif_good_morning, profile.displayName),
                     text = summary
                 )
             }
 
             // Threshold breach alerts
             if (prefs.thresholdAlertsEnabled) {
-                val breaches = findThresholdBreaches(profile, conditions)
+                val breaches = findThresholdBreaches(ctx, profile, conditions)
                 if (breaches.isNotEmpty()) {
                     val text = breaches.joinToString(". ") { breach ->
-                        "${breach.typeName}: ${breach.severityLabel} (${String.format("%.0f", breach.value)} grains/m\u00B3)"
+                        ctx.getString(R.string.notif_threshold_breach, breach.typeName, breach.severityLabel, String.format("%.0f", breach.value))
                     }
                     NotificationHelper.sendNotification(
-                        context = applicationContext,
+                        context = ctx,
                         channelId = NotificationHelper.CHANNEL_THRESHOLD_ALERT,
                         notificationId = THRESHOLD_ALERT_BASE_ID + index,
-                        title = "${profile.displayName}: High pollen alert",
+                        title = ctx.getString(R.string.notif_high_pollen_alert, profile.displayName),
                         text = text
                     )
                 }
@@ -97,13 +101,13 @@ class PollenCheckWorker(
 
             // Compound risk alerts (asthma profiles only)
             if (prefs.compoundRiskAlertsEnabled && profile.hasAsthma) {
-                val compoundRisk = checkCompoundRisk(profile, conditions)
+                val compoundRisk = checkCompoundRisk(ctx, profile, conditions)
                 if (compoundRisk != null) {
                     NotificationHelper.sendNotification(
-                        context = applicationContext,
+                        context = ctx,
                         channelId = NotificationHelper.CHANNEL_COMPOUND_RISK,
                         notificationId = COMPOUND_RISK_BASE_ID + index,
-                        title = "${profile.displayName}: Respiratory risk",
+                        title = ctx.getString(R.string.notif_respiratory_risk, profile.displayName),
                         text = compoundRisk
                     )
                 }
@@ -123,11 +127,11 @@ class PollenCheckWorker(
                         val isConfirmed = DoseConfirmation(assignment.medicineId, slotIndex) in confirmations
                         if (!isConfirmed) {
                             NotificationHelper.sendNotification(
-                                context = applicationContext,
+                                context = ctx,
                                 channelId = NotificationHelper.CHANNEL_MEDICATION_REMINDER,
                                 notificationId = MEDICATION_REMINDER_BASE_ID + index * 100 + assignmentIndex * 10 + slotIndex,
-                                title = "${profile.displayName}: Medication reminder",
-                                text = "Time to take ${medicine.name} (${assignment.dose} ${medicine.type.unitLabel})"
+                                title = ctx.getString(R.string.notif_medication_reminder, profile.displayName),
+                                text = ctx.getString(R.string.notif_time_to_take, medicine.name, assignment.dose, medicine.type.localizedUnitLabel(ctx))
                             )
                         }
                     }
@@ -138,7 +142,7 @@ class PollenCheckWorker(
         return Result.success()
     }
 
-    private fun buildMorningSummary(profile: UserProfile, conditions: CurrentConditions): String {
+    private fun buildMorningSummary(ctx: Context, profile: UserProfile, conditions: CurrentConditions): String {
         val parts = mutableListOf<String>()
 
         val trackedReadings = conditions.pollenReadings.filter { it.type in profile.trackedAllergens }
@@ -146,17 +150,17 @@ class PollenCheckWorker(
             val pollenParts = trackedReadings.map { reading ->
                 val threshold = profile.trackedAllergens[reading.type]!!
                 val severity = SeverityClassifier.pollenSeverity(reading.value, threshold)
-                "${reading.type.displayName}: ${severity.label}"
+                "${reading.type.localizedName(ctx)}: ${severity.toLabel(ctx)}"
             }
-            parts.add("Pollen: ${pollenParts.joinToString(", ")}")
+            parts.add(ctx.getString(R.string.notif_pollen_summary, pollenParts.joinToString(", ")))
         } else {
-            parts.add("No tracked allergens today")
+            parts.add(ctx.getString(R.string.notif_no_tracked_allergens))
         }
 
-        parts.add("AQI: ${conditions.europeanAqi} (${conditions.aqiSeverity.label})")
+        parts.add(ctx.getString(R.string.notif_aqi_summary, conditions.europeanAqi, conditions.aqiSeverity.toLabel(ctx)))
 
         if (profile.hasAsthma && (conditions.pm25 > 25 || conditions.pm10 > 50)) {
-            parts.add("Elevated particulates \u2014 consider precautions")
+            parts.add(ctx.getString(R.string.notif_elevated_particulates))
         }
 
         return parts.joinToString(". ") + "."
@@ -169,6 +173,7 @@ class PollenCheckWorker(
     )
 
     private fun findThresholdBreaches(
+        ctx: Context,
         profile: UserProfile,
         conditions: CurrentConditions
     ): List<ThresholdBreach> {
@@ -176,12 +181,13 @@ class PollenCheckWorker(
             val threshold = profile.trackedAllergens[reading.type] ?: return@mapNotNull null
             val severity = SeverityClassifier.pollenSeverity(reading.value, threshold)
             if (severity >= SeverityLevel.High) {
-                ThresholdBreach(reading.type.displayName, reading.value, severity.label)
+                ThresholdBreach(reading.type.localizedName(ctx), reading.value, severity.toLabel(ctx))
             } else null
         }
     }
 
     private fun checkCompoundRisk(
+        ctx: Context,
         profile: UserProfile,
         conditions: CurrentConditions
     ): String? {
@@ -194,10 +200,13 @@ class PollenCheckWorker(
         if (hasElevatedPollen && hasElevatedPm) {
             val pollenSummary = conditions.pollenReadings
                 .filter { it.type in profile.trackedAllergens }
-                .joinToString(", ") { "${it.type.displayName}: ${String.format("%.0f", it.value)}" }
-            return "Elevated pollen ($pollenSummary) combined with poor air quality " +
-                "(PM2.5: ${String.format("%.1f", conditions.pm25)}, PM10: ${String.format("%.1f", conditions.pm10)}). " +
-                "Take extra precautions."
+                .joinToString(", ") { "${it.type.localizedName(ctx)}: ${String.format("%.0f", it.value)}" }
+            return ctx.getString(
+                R.string.notif_compound_risk_text,
+                pollenSummary,
+                String.format("%.1f", conditions.pm25),
+                String.format("%.1f", conditions.pm10)
+            )
         }
         return null
     }
@@ -210,12 +219,3 @@ class PollenCheckWorker(
         private const val MEDICATION_REMINDER_BASE_ID = 4000
     }
 }
-
-private val SeverityLevel.label: String
-    get() = when (this) {
-        SeverityLevel.None -> "None"
-        SeverityLevel.Low -> "Low"
-        SeverityLevel.Moderate -> "Moderate"
-        SeverityLevel.High -> "High"
-        SeverityLevel.VeryHigh -> "Very High"
-    }

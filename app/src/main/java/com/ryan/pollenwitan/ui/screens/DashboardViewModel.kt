@@ -11,6 +11,7 @@ import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.domain.model.CurrentConditions
 import com.ryan.pollenwitan.domain.model.DoseConfirmation
 import com.ryan.pollenwitan.domain.model.Medicine
+import com.ryan.pollenwitan.domain.model.MedicineType
 import com.ryan.pollenwitan.domain.model.UserProfile
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +34,7 @@ data class MedicineSlot(
     val medicineId: String,
     val medicineName: String,
     val dose: Int,
-    val unitLabel: String,
+    val medicineType: MedicineType,
     val hour: Int,
     val slotIndex: Int,
     val confirmed: Boolean
@@ -172,7 +173,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                         medicineId = assignment.medicineId,
                         medicineName = medicine.name,
                         dose = assignment.dose,
-                        unitLabel = medicine.type.unitLabel,
+                        medicineType = medicine.type,
                         hour = hour,
                         slotIndex = slotIndex,
                         confirmed = DoseConfirmation(assignment.medicineId, slotIndex) in confirmations

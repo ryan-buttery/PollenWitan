@@ -38,12 +38,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.ryan.pollenwitan.ui.theme.localizedName
+import com.ryan.pollenwitan.ui.theme.localizedUnitLabel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.domain.model.AllergenThreshold
 import com.ryan.pollenwitan.domain.model.Medicine
 import com.ryan.pollenwitan.domain.model.PollenType
@@ -75,7 +79,7 @@ fun ProfileEditScreen(
             .padding(16.dp)
     ) {
         Text(
-            text = if (uiState.isNewProfile) "New Profile" else "Edit Profile",
+            text = stringResource(if (uiState.isNewProfile) R.string.profile_new else R.string.profile_edit),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
@@ -85,7 +89,7 @@ fun ProfileEditScreen(
         OutlinedTextField(
             value = uiState.displayName,
             onValueChange = viewModel::setDisplayName,
-            label = { Text("Name") },
+            label = { Text(stringResource(R.string.common_name)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -97,7 +101,7 @@ fun ProfileEditScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Has asthma", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.profile_has_asthma), style = MaterialTheme.typography.bodyLarge)
             Switch(
                 checked = uiState.hasAsthma,
                 onCheckedChange = viewModel::setHasAsthma
@@ -111,7 +115,7 @@ fun ProfileEditScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Custom location", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.profile_custom_location), style = MaterialTheme.typography.bodyLarge)
             Switch(
                 checked = uiState.useCustomLocation,
                 onCheckedChange = viewModel::setUseCustomLocation
@@ -131,7 +135,7 @@ fun ProfileEditScreen(
             )
         } else {
             Text(
-                text = "Uses default location from Settings",
+                text = stringResource(R.string.profile_uses_default_location),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -140,7 +144,7 @@ fun ProfileEditScreen(
 
         // Allergen picker
         Text(
-            text = "Tracked Allergens",
+            text = stringResource(R.string.profile_tracked_allergens),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
@@ -153,7 +157,7 @@ fun ProfileEditScreen(
                 FilterChip(
                     selected = type in uiState.trackedAllergens,
                     onClick = { viewModel.toggleAllergen(type) },
-                    label = { Text(type.displayName) }
+                    label = { Text(type.localizedName()) }
                 )
             }
         }
@@ -177,7 +181,7 @@ fun ProfileEditScreen(
         // Medicines section
         if (uiState.availableMedicines.isNotEmpty()) {
             Text(
-                text = "Medicines",
+                text = stringResource(R.string.profile_medicines),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -223,7 +227,7 @@ fun ProfileEditScreen(
             enabled = !uiState.isSaving,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         ) {
-            Text(if (uiState.isNewProfile) "Create Profile" else "Save Changes")
+            Text(stringResource(if (uiState.isNewProfile) R.string.profile_create else R.string.profile_save_changes))
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -253,13 +257,13 @@ private fun ThresholdCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = type.displayName,
+                    text = type.localizedName(),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Custom",
+                        text = stringResource(R.string.profile_custom),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -273,13 +277,13 @@ private fun ThresholdCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             if (isCustom) {
-                ThresholdRow("Low", threshold.low) { onUpdateThreshold("low", it) }
-                ThresholdRow("Moderate", threshold.moderate) { onUpdateThreshold("moderate", it) }
-                ThresholdRow("High", threshold.high) { onUpdateThreshold("high", it) }
-                ThresholdRow("Very High", threshold.veryHigh) { onUpdateThreshold("veryHigh", it) }
+                ThresholdRow(stringResource(R.string.severity_low), threshold.low) { onUpdateThreshold("low", it) }
+                ThresholdRow(stringResource(R.string.severity_moderate), threshold.moderate) { onUpdateThreshold("moderate", it) }
+                ThresholdRow(stringResource(R.string.severity_high), threshold.high) { onUpdateThreshold("high", it) }
+                ThresholdRow(stringResource(R.string.severity_very_high), threshold.veryHigh) { onUpdateThreshold("veryHigh", it) }
             } else {
                 Text(
-                    text = "Low: ${defaults.low.toInt()}  ·  Moderate: ${defaults.moderate.toInt()}  ·  High: ${defaults.high.toInt()}  ·  Very High: ${defaults.veryHigh.toInt()}",
+                    text = "${stringResource(R.string.severity_low)}: ${defaults.low.toInt()}  ·  ${stringResource(R.string.severity_moderate)}: ${defaults.moderate.toInt()}  ·  ${stringResource(R.string.severity_high)}: ${defaults.high.toInt()}  ·  ${stringResource(R.string.severity_very_high)}: ${defaults.veryHigh.toInt()}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -313,7 +317,7 @@ private fun ThresholdRow(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             singleLine = true,
             modifier = Modifier.weight(1f),
-            suffix = { Text("grains/m³", style = MaterialTheme.typography.bodySmall) }
+            suffix = { Text(stringResource(R.string.profile_threshold_unit), style = MaterialTheme.typography.bodySmall) }
         )
     }
 }
@@ -353,7 +357,7 @@ private fun LocationCard(
             OutlinedTextField(
                 value = displayName,
                 onValueChange = onDisplayNameChange,
-                label = { Text("Location name") },
+                label = { Text(stringResource(R.string.onboarding_location_name)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -362,7 +366,7 @@ private fun LocationCard(
                 OutlinedTextField(
                     value = latitude,
                     onValueChange = onLatitudeChange,
-                    label = { Text("Latitude") },
+                    label = { Text(stringResource(R.string.settings_latitude)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.weight(1f)
@@ -370,7 +374,7 @@ private fun LocationCard(
                 OutlinedTextField(
                     value = longitude,
                     onValueChange = onLongitudeChange,
-                    label = { Text("Longitude") },
+                    label = { Text(stringResource(R.string.settings_longitude)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.weight(1f)
@@ -388,7 +392,7 @@ private fun LocationCard(
                     )
                 }
             ) {
-                Text("Locate Me")
+                Text(stringResource(R.string.settings_locate_me))
             }
 
             when (gpsStatus) {
@@ -397,13 +401,13 @@ private fun LocationCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Getting location...", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.settings_getting_location), style = MaterialTheme.typography.bodySmall)
                     }
                 }
                 is GpsStatus.Success -> {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Located: ${gpsStatus.displayName}",
+                        text = stringResource(R.string.settings_located, gpsStatus.displayName),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -422,7 +426,7 @@ private fun LocationCard(
             if (permissionDeniedPermanently) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Location permission denied. Enable it in app settings.",
+                    text = stringResource(R.string.onboarding_location_permission_denied),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
                 )
@@ -459,13 +463,13 @@ private fun MedicineAssignmentCard(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = assignment.medicineType.displayName,
+                        text = assignment.medicineType.localizedName(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 OutlinedButton(onClick = onRemove) {
-                    Text("Remove")
+                    Text(stringResource(R.string.profile_remove))
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -474,16 +478,16 @@ private fun MedicineAssignmentCard(
                 OutlinedTextField(
                     value = assignment.dose,
                     onValueChange = onUpdateDose,
-                    label = { Text("Dose") },
+                    label = { Text(stringResource(R.string.profile_dose)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.weight(1f),
-                    suffix = { Text(assignment.medicineType.unitLabel, style = MaterialTheme.typography.bodySmall) }
+                    suffix = { Text(assignment.medicineType.localizedUnitLabel(), style = MaterialTheme.typography.bodySmall) }
                 )
                 OutlinedTextField(
                     value = assignment.timesPerDay,
                     onValueChange = onUpdateTimesPerDay,
-                    label = { Text("Times/day") },
+                    label = { Text(stringResource(R.string.profile_times_per_day)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.weight(1f)
@@ -491,7 +495,7 @@ private fun MedicineAssignmentCard(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Text("Reminder hours", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.profile_reminder_hours), style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(4.dp))
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -520,13 +524,13 @@ private fun AddMedicineButton(
         onClick = { showDialog = true },
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("Add Medicine")
+        Text(stringResource(R.string.profile_add_medicine))
     }
 
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Add Medicine") },
+            title = { Text(stringResource(R.string.profile_add_medicine)) },
             text = {
                 Column {
                     unassignedMedicines.forEach { medicine ->
@@ -537,7 +541,7 @@ private fun AddMedicineButton(
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("${medicine.name} (${medicine.type.displayName})")
+                            Text("${medicine.name} (${medicine.type.localizedName()})")
                         }
                     }
                 }
@@ -545,7 +549,7 @@ private fun AddMedicineButton(
             confirmButton = {},
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )

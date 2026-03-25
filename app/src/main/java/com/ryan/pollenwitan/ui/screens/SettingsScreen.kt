@@ -40,6 +40,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.ryan.pollenwitan.ui.theme.localizedName
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,6 +51,7 @@ import com.ryan.pollenwitan.data.repository.NotificationPrefs
 import com.ryan.pollenwitan.domain.model.LocationMode
 import com.ryan.pollenwitan.domain.model.Medicine
 import com.ryan.pollenwitan.domain.model.MedicineType
+import com.ryan.pollenwitan.R
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
@@ -80,7 +85,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             .padding(16.dp)
     ) {
         Text(
-            text = "Settings",
+            text = stringResource(R.string.settings_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
@@ -97,6 +102,11 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Language section
+        LanguageCard()
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Location section
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -106,7 +116,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Location",
+                    text = stringResource(R.string.settings_location),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -119,7 +129,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                         onClick = { viewModel.setLocationMode(LocationMode.Manual) }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Manual", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.settings_manual), style = MaterialTheme.typography.bodyLarge)
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -128,7 +138,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                         onClick = { viewModel.setLocationMode(LocationMode.Gps) }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("GPS", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.settings_gps), style = MaterialTheme.typography.bodyLarge)
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -175,7 +185,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Notifications",
+                    text = stringResource(R.string.settings_notifications),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -190,7 +200,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Grant Notification Permission")
+                        Text(stringResource(R.string.settings_grant_notification_permission))
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -222,9 +232,9 @@ private fun NotificationSettings(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text("Morning briefing", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.settings_morning_briefing), style = MaterialTheme.typography.bodyLarge)
             Text(
-                "Daily summary at ${String.format("%02d:00", prefs.morningBriefingHour)}",
+                stringResource(R.string.settings_morning_briefing_desc, String.format("%02d:00", prefs.morningBriefingHour)),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -243,7 +253,7 @@ private fun NotificationSettings(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Hour:", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.settings_hour), style = MaterialTheme.typography.bodyMedium)
             listOf(6, 7, 8, 9).forEach { hour ->
                 val isSelected = prefs.morningBriefingHour == hour
                 if (isSelected) {
@@ -276,9 +286,9 @@ private fun NotificationSettings(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text("Threshold alerts", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.settings_threshold_alerts), style = MaterialTheme.typography.bodyLarge)
             Text(
-                "Alert when pollen reaches High or Very High",
+                stringResource(R.string.settings_threshold_alerts_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -298,9 +308,9 @@ private fun NotificationSettings(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text("Compound risk alerts", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.settings_compound_risk), style = MaterialTheme.typography.bodyLarge)
             Text(
-                "Pollen + poor air quality (asthma profiles)",
+                stringResource(R.string.settings_compound_risk_desc),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -326,7 +336,7 @@ private fun ManualLocationFields(
     OutlinedTextField(
         value = name,
         onValueChange = { name = it },
-        label = { Text("Display name") },
+        label = { Text(stringResource(R.string.settings_display_name)) },
         modifier = Modifier.fillMaxWidth(),
         singleLine = true
     )
@@ -340,14 +350,14 @@ private fun ManualLocationFields(
         OutlinedTextField(
             value = lat,
             onValueChange = { lat = it },
-            label = { Text("Latitude") },
+            label = { Text(stringResource(R.string.settings_latitude)) },
             modifier = Modifier.weight(1f),
             singleLine = true
         )
         OutlinedTextField(
             value = lon,
             onValueChange = { lon = it },
-            label = { Text("Longitude") },
+            label = { Text(stringResource(R.string.settings_longitude)) },
             modifier = Modifier.weight(1f),
             singleLine = true
         )
@@ -359,7 +369,7 @@ private fun ManualLocationFields(
         onClick = { onSave(lat, lon, name) },
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text("Save Location")
+        Text(stringResource(R.string.settings_save_location))
     }
 }
 
@@ -381,9 +391,9 @@ private fun GpsLocationSection(
                 strokeWidth = 2.dp
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Locating...")
+            Text(stringResource(R.string.settings_locating))
         } else {
-            Text("Locate Me")
+            Text(stringResource(R.string.settings_locate_me))
         }
     }
 
@@ -391,7 +401,7 @@ private fun GpsLocationSection(
         is GpsStatus.Success -> {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Location: ${gpsStatus.displayName}",
+                text = stringResource(R.string.settings_location_found, gpsStatus.displayName),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -410,13 +420,13 @@ private fun GpsLocationSection(
     if (permissionDeniedPermanently) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Location permission denied. Grant it in app settings to use GPS.",
+            text = stringResource(R.string.settings_location_permission_denied),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error
         )
         Spacer(modifier = Modifier.height(4.dp))
         OutlinedButton(onClick = onOpenSettings) {
-            Text("Open App Settings")
+            Text(stringResource(R.string.settings_open_app_settings))
         }
     }
 }
@@ -439,7 +449,7 @@ private fun MedicinesCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "Medicines",
+                text = stringResource(R.string.settings_medicines),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -447,7 +457,7 @@ private fun MedicinesCard(
 
             if (medicines.isEmpty()) {
                 Text(
-                    text = "No medicines defined yet",
+                    text = stringResource(R.string.settings_no_medicines),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -465,7 +475,7 @@ private fun MedicinesCard(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                text = medicine.type.displayName,
+                                text = medicine.type.localizedName(),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -488,14 +498,14 @@ private fun MedicinesCard(
                 onClick = { showAddDialog = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Add Medicine")
+                Text(stringResource(R.string.settings_add_medicine))
             }
         }
     }
 
     if (showAddDialog) {
         MedicineDialog(
-            title = "Add Medicine",
+            title = stringResource(R.string.settings_add_medicine),
             initialName = "",
             initialType = MedicineType.Tablet,
             onConfirm = { name, type ->
@@ -508,7 +518,7 @@ private fun MedicinesCard(
 
     editingMedicine?.let { medicine ->
         MedicineDialog(
-            title = "Edit Medicine",
+            title = stringResource(R.string.settings_edit_medicine),
             initialName = medicine.name,
             initialType = medicine.type,
             onConfirm = { name, type ->
@@ -539,12 +549,12 @@ private fun MedicineDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(R.string.common_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Text("Type", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.settings_type), style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.height(4.dp))
                 MedicineType.entries.forEach { type ->
                     Row(
@@ -556,7 +566,7 @@ private fun MedicineDialog(
                             onClick = { selectedType = type }
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(type.displayName, style = MaterialTheme.typography.bodyMedium)
+                        Text(type.localizedName(), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
@@ -566,13 +576,59 @@ private fun MedicineDialog(
                 onClick = { onConfirm(name, selectedType) },
                 enabled = name.isNotBlank()
             ) {
-                Text("Save")
+                Text(stringResource(R.string.common_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.common_cancel))
             }
         }
     )
+}
+
+@Composable
+private fun LanguageCard() {
+    val currentLocale = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+    val isPolish = currentLocale.startsWith("pl")
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.language_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (!isPolish) {
+                    Button(onClick = {}) {
+                        Text(stringResource(R.string.language_english))
+                    }
+                } else {
+                    OutlinedButton(onClick = {
+                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("en"))
+                    }) {
+                        Text(stringResource(R.string.language_english))
+                    }
+                }
+                if (isPolish) {
+                    Button(onClick = {}) {
+                        Text(stringResource(R.string.language_polish))
+                    }
+                } else {
+                    OutlinedButton(onClick = {
+                        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("pl"))
+                    }) {
+                        Text(stringResource(R.string.language_polish))
+                    }
+                }
+            }
+        }
+    }
 }

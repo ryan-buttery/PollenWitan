@@ -12,13 +12,16 @@
 - [x] **First-Run Onboarding Flow** — Guided wizard for creating first profile (name, allergens, asthma, location)
 - [x] **Forecast & Dashboard UX** — Severity legend, abbreviation key, units (grains/m³), period time ranges, AQI severity labels, "Peak" label
 
-## Future / Low Priority
+## Planned
+
+- [ ] **Polish Localisation** — Full English and Polish string resources
+- [ ] **Cross-Reactivity Warnings** — Birch → Bet v 1 foods (apples, hazelnuts, etc.), static lookup, dashboard card when relevant allergens are elevated
+- [ ] **Home Screen Widget** — Jetpack Glance widget with per-profile instances (Phase 2 from design doc)
+
+## Future
 
 - [ ] **Pre-Season Medication Alerts** — Advance warning to start taking medication (e.g., 1 month before typical season for user's selected allergies)
 - [ ] **Symptom Diary** — Daily symptom logging with threshold auto-calibration over time
-- [ ] **Cross-Reactivity Warnings** — Birch → Bet v 1 foods (apples, hazelnuts, etc.)
-- [ ] **Wear OS Companion Tile** — Quick glance at today's pollen levels
 - [ ] **Location-Aware Profiles** — Auto-detect travel and switch forecast location
 - [ ] **Season Comparison** — Historical data using CAMS reanalysis
-- [ ] **Home Screen Widget** — Jetpack Glance widget with per-profile instances (Phase 2 from design doc)
-- [ ] **Polish Localisation** — Full English and Polish string resources
+- [ ] **Data Export/Import** — Export/import profiles, medication history, and symptom data (after Symptom Diary is implemented)

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.ryan.pollenwitan.data.location.GpsLocationProvider
 import com.ryan.pollenwitan.data.repository.LocationRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
+import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.domain.model.LocationMode
 import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.UserProfile
@@ -124,11 +125,11 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
     private fun finish() {
         val state = _uiState.value
         if (state.profileName.isBlank()) {
-            _uiState.value = state.copy(validationError = "Name cannot be empty")
+            _uiState.value = state.copy(validationError = getApplication<Application>().getString(R.string.validation_name_empty))
             return
         }
         if (state.selectedAllergens.isEmpty()) {
-            _uiState.value = state.copy(validationError = "Select at least one allergen")
+            _uiState.value = state.copy(validationError = getApplication<Application>().getString(R.string.validation_select_allergen))
             return
         }
 
