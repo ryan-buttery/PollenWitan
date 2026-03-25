@@ -225,4 +225,11 @@
     <string name="cross_foods_olive">Peaches, pears, cherries, kiwi, hazelnuts</string>
     <string name="cross_hint">Many who are allergic to %1$s are also allergic to %2$s (%3$s). Consider tracking it too.</string>
     <string name="cross_hint_add">Add</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Current pollen levels for your profile</string>
+    <string name="widget_loading">Loading…</string>
+    <string name="widget_no_data">No data available</string>
+    <string name="widget_no_profiles">No profiles configured</string>
+    <string name="widget_aqi_format">AQI: %1$d (%2$s)</string>
 </resources>
