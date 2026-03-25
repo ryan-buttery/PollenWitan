@@ -9,17 +9,17 @@ Comprehensive guide for AI assistants working in this repository.
 **PollenWitan** is a privacy-respecting Android application that delivers personalised pollen and air quality forecasts tailored to the specific allergenic triggers of each household member. Built on the free Open-Meteo Air Quality API (CAMS European model, ~11 km resolution).
 
 - **Language**: Kotlin
-- **UI**: Jetpack Compose + Material 3 (Material You dynamic colour)
+- **UI**: Jetpack Compose + Material 3, custom ForestColors theme (dark/light)
 - **Min SDK**: 26 (Android 8.0) / **Target SDK**: 35 (Android 15)
 - **Version**: 0.1.0 (versionCode 1)
 - **Package**: `com.ryan.pollenwitan`
 - **Build system**: Gradle with Kotlin DSL (`.gradle.kts` files throughout)
-- **DI**: Koin
+- **DI**: None -- ViewModels extend `AndroidViewModel` and instantiate repositories directly
 - **Networking**: Ktor Client (CIO engine) + kotlinx.serialization
-- **Local storage**: DataStore (preferences/profiles), Room (cached forecast data)
+- **Local storage**: DataStore (preferences/profiles/theme), Room (cached forecast data)
 - **Background work**: WorkManager (periodic fetch), AlarmManager (time-critical alerts)
 
-Key features: Per-user allergen profiles with configurable severity thresholds, colour-coded dashboard, push notifications (morning briefing, threshold breach, compound respiratory risk), home screen widget (Jetpack Glance), 4-day forecast view.
+Key features: Per-user allergen profiles (6 pollen types) with configurable severity thresholds, colour-coded dashboard, 4-day forecast view, push notifications (morning briefing, threshold breach, compound respiratory risk), dark/light theme toggle.
 
 The product design document lives at `PollenWitan-Product-Design-Document.docx` in the project root.
 
@@ -27,32 +27,32 @@ The product design document lives at `PollenWitan-Product-Design-Document.docx` 
 
 ## Feature Roadmap
 
-Ordered by development phase, per the product design document.
+Ordered by development phase, per the product design document. See `tasks/todo.md` for the current enhancement backlog.
 
 ### Phase 1 -- MVP
 
-1. **Per-User Allergen Profiles** -- Profile model with display name, tracked allergens (birch, alder, grass), severity thresholds per allergen, asthma flag. DataStore persistence. Default profiles for Ryan (birch) and Olga (alder).
+1. **Per-User Allergen Profiles** -- Profile CRUD with display name, tracked allergens (birch, alder, grass, mugwort, ragweed, olive), severity thresholds per allergen, asthma flag. DataStore persistence. Empty-state onboarding prompts new users to create their first profile.
 
-2. **Profile Switcher & Dashboard** -- Main screen with per-profile summary: colour-coded allergen levels, AQI, natural-language summary, 24-hour hourly chart of primary allergen. Tab/chip row profile switcher.
+2. **Profile Switcher & Dashboard** -- Main screen with per-profile summary: colour-coded allergen levels, AQI. Chip row profile switcher. Welcome state when no profiles exist.
 
 3. **Open-Meteo Data Layer** -- Ktor client for the Air Quality API, Room caching, repository pattern. Single fetch per day with manual refresh. Exponential backoff on 429s. Off-season detection (null/zero pollen values).
 
 4. **Push Notifications** -- WorkManager scheduled morning briefing (per-profile summary at configurable time). Threshold breach alerts. Compound risk alerts (pollen + PM2.5/PM10 for asthma profiles). Android notification channels: `morning_briefing`, `threshold_alert`, `compound_risk`.
 
-5. **MVP Release** -- v1.0.0 signed APK on GitHub.
+5. **Multi-Day Forecast View** -- 4-day scrollable forecast, morning/afternoon/evening periods, peak levels per allergen, AQI trend. Tappable day cards with hourly breakdown.
+
+6. **MVP Release** -- v1.0.0 signed APK on GitHub.
 
 ### Phase 2
 
-6. **Home Screen Widget (Jetpack Glance)** -- `SizeMode.Responsive` with compact (2x1) and expanded (4x2) layouts. Per-profile widget instances. Refresh tied to WorkManager fetch.
-
-7. **Multi-Day Forecast View** -- 4-day scrollable forecast, morning/afternoon/evening periods, peak levels per allergen, AQI trend. Tappable day cards with hourly breakdown.
+7. **Home Screen Widget (Jetpack Glance)** -- `SizeMode.Responsive` with compact (2x1) and expanded (4x2) layouts. Per-profile widget instances. Refresh tied to WorkManager fetch.
 
 8. **Polish Localisation** -- Full English and Polish string resources.
 
 ### Future / Low Priority
 
 - Symptom diary with threshold auto-calibration
-- Medication reminders on high-pollen days
+- Medication tracker and pre-season medication alerts
 - Cross-reactivity warnings (birch -> Bet v 1 foods)
 - Wear OS companion tile
 - Location-aware profiles (travel detection)
@@ -73,36 +73,75 @@ PollenWitan/
 +-- gradlew / gradlew.bat
 +-- gradle/wrapper/
 |   +-- gradle-wrapper.properties
++-- tasks/
+|   +-- todo.md                   # Enhancement backlog
 +-- app/
     +-- build.gradle.kts          # App-level (dependencies, build variants)
     +-- proguard-rules.pro
     +-- src/main/
         +-- AndroidManifest.xml
         +-- res/
+        |   +-- drawable/
+        |   |   +-- ic_launcher_background.xml  # Dark forest background
+        |   |   +-- ic_launcher_foreground.xml  # Thurisaz rune (ᚦ)
+        |   +-- mipmap-anydpi-v26/
+        |   |   +-- ic_launcher.xml             # Adaptive icon
+        |   |   +-- ic_launcher_round.xml
         |   +-- values/
         |       +-- strings.xml
         |       +-- themes.xml
         +-- java/com/ryan/pollenwitan/
-            +-- PollenWitanApp.kt         # Application class (Koin init)
-            +-- MainActivity.kt
-            +-- di/
-            |   +-- AppModule.kt          # Koin module definitions
-            +-- data/                     # API client, Room DB, DataStore, repos
-            +-- domain/                   # Models, use cases
+            +-- PollenWitanApp.kt         # Application class
+            +-- MainActivity.kt           # Theme collection, system bar styling
+            +-- data/
+            |   +-- local/
+            |   |   +-- AppDatabase.kt          # Room DB (thread-safe singleton)
+            |   |   +-- CachedForecastDao.kt
+            |   |   +-- CachedForecastEntity.kt
+            |   +-- location/
+            |   |   +-- GpsLocationProvider.kt   # AOSP LocationManager (no Play Services)
+            |   +-- remote/
+            |   |   +-- AirQualityApi.kt         # Open-Meteo client (Ktor, lazy singleton)
+            |   |   +-- dto/
+            |   |       +-- AirQualityResponse.kt
+            |   +-- repository/
+            |       +-- AirQualityRepository.kt
+            |       +-- LocationRepository.kt
+            |       +-- NotificationPrefsRepository.kt
+            |       +-- ProfileRepository.kt
+            |       +-- ThemePrefsRepository.kt
+            +-- domain/
+            |   +-- model/
+            |       +-- AirQualityData.kt
+            |       +-- AppLocation.kt
+            |       +-- ForecastData.kt
+            |       +-- PollenType.kt            # 6 types: Birch, Alder, Grass, Mugwort, Ragweed, Olive
+            |       +-- SeverityClassifier.kt
+            |       +-- SeverityLevel.kt
+            |       +-- UserProfile.kt           # Profile model + default thresholds
             +-- ui/
+            |   +-- components/
+            |   |   +-- ProfileSwitcher.kt
             |   +-- theme/
-            |   |   +-- Color.kt          # Severity & AQI colour palettes
-            |   |   +-- Theme.kt          # Material You + fallback schemes
+            |   |   +-- Color.kt          # SeverityColors & AqiColors (fixed, theme-independent)
+            |   |   +-- ForestTheme.kt    # ForestColors data class, dark/light palettes, CompositionLocal
+            |   |   +-- Theme.kt          # PollenWitanTheme -- maps ForestColors into MaterialTheme
             |   |   +-- Type.kt
             |   +-- navigation/
             |   |   +-- Screen.kt         # Sealed class route definitions
-            |   |   +-- AppNavGraph.kt    # NavHost + bottom navigation
+            |   |   +-- AppNavGraph.kt    # NavHost + side drawer navigation
             |   +-- screens/
-            |       +-- DashboardScreen.kt
-            |       +-- ForecastScreen.kt
-            |       +-- SettingsScreen.kt
+            |       +-- DashboardScreen.kt / DashboardViewModel.kt
+            |       +-- ForecastScreen.kt / ForecastViewModel.kt
+            |       +-- ProfileListScreen.kt / ProfileManagementViewModel.kt
+            |       +-- ProfileEditScreen.kt / ProfileEditViewModel.kt
+            |       +-- SettingsScreen.kt / SettingsViewModel.kt
+            +-- util/
+            |   +-- DefaultLocation.kt
             +-- widget/                   # Glance widget definitions (Phase 2)
-            +-- worker/                   # WorkManager workers
+            +-- worker/
+                +-- NotificationHelper.kt
+                +-- PollenCheckWorker.kt
 ```
 
 ---
@@ -113,9 +152,9 @@ Single-module project. If the project grows, extraction into `:core:data`, `:cor
 
 ### Layers
 
-- **`data/`** -- API client (Open-Meteo via Ktor), Room database, DataStore, repository implementations
-- **`domain/`** -- Models (`UserProfile`, `AllergenThreshold`, `ForecastData`, `AlertLevel`), use cases (`EvaluateForecast`, `CheckThresholdBreach`, `GenerateNotificationContent`)
-- **`ui/`** -- Compose screens, navigation, theme
+- **`data/`** -- API client (Open-Meteo via Ktor), Room database, DataStore, repository implementations, GPS location provider
+- **`domain/`** -- Models (`UserProfile`, `AllergenThreshold`, `PollenType`, `SeverityLevel`, `ForecastData`)
+- **`ui/`** -- Compose screens, navigation, theme, components
 - **`widget/`** -- Glance widget definitions, widget state management
 - **`worker/`** -- WorkManager workers for scheduled fetch and notification dispatch
 
@@ -124,33 +163,35 @@ Single-module project. If the project grows, extraction into `:core:data`, `:cor
 1. WorkManager triggers periodic job (default: once daily at 06:00, configurable)
 2. Worker calls Open-Meteo API with user's location + tracked allergen parameters
 3. Response parsed, validated, persisted to Room (replacing stale data)
-4. For each active profile, `EvaluateForecast` compares forecast vs thresholds
+4. For each active profile, forecast is compared against thresholds
 5. Notifications dispatched per profile, per channel
-6. Widget state updated via `GlanceAppWidget.updateAll()`
-7. UI reads from Room (single source of truth) via Flow
+6. UI reads from Room (single source of truth) via Flow
 
 ### Theming
 
-The app uses **Material 3 with Material You dynamic colour** (Android 12+). On older devices, a green-toned fallback colour scheme is used.
+The app uses a **custom ForestColors theme** with dark and light palettes, mapped into `MaterialTheme.colorScheme` so M3 components (Card, FilterChip, Switch, Button, etc.) work correctly.
 
-- Access colours via `MaterialTheme.colorScheme` in composables
+- **ForestColors** -- `ForestTheme.kt` defines `DarkForestColors` and `LightForestColors` data classes, provided via `LocalForestColors` CompositionLocal
+- Access custom colours via `ForestTheme.current` (e.g. `ForestTheme.current.Dark`, `ForestTheme.current.TextDim`)
+- Access standard M3 colours via `MaterialTheme.colorScheme` (mapped from ForestColors in `Theme.kt`)
 - **Severity colours** (`SeverityColors` object in `Color.kt`) are fixed across themes for consistent meaning: Grey (none), Green (low), Amber (moderate), Red (high), Purple (very high)
 - **AQI colours** (`AqiColors` object) follow a similar fixed palette
-- Dark mode first -- both target users prefer dark mode
+- **Theme toggle** in the navigation drawer, persisted via `ThemePrefsRepository` (DataStore)
+- Dark mode default -- both target users prefer dark mode
 
 ### Dependency Injection
 
-Koin is initialised in `PollenWitanApp.onCreate()`. All modules are defined in `di/AppModule.kt`. ViewModels, repositories, API clients, and use cases are registered there.
+There is **no DI framework**. ViewModels extend `AndroidViewModel(application)` and instantiate repositories directly. Repositories take `Context` as a constructor parameter. Singletons (Room database, Ktor HttpClient) use lazy companion objects or double-checked locking.
 
 ### Persistence
 
-- **DataStore** for user profiles and app preferences
-- **Room** for cached forecast data
+- **DataStore** for user profiles (`ProfileRepository`), notification preferences (`NotificationPrefsRepository`), theme preference (`ThemePrefsRepository`), and location settings (`LocationRepository`)
+- **Room** for cached forecast data (`AppDatabase`, `CachedForecastDao`)
 - Never access DataStore or Room directly from screens -- always go through a repository
 
 ### Navigation
 
-Three top-level destinations with a bottom navigation bar: Dashboard, Forecast, Settings. Defined in `Screen.kt` (sealed class) and wired in `AppNavGraph.kt`.
+Side drawer (`ModalNavigationDrawer`) with four top-level destinations: Dashboard, Forecast, Profiles, Settings. Theme toggle also in the drawer. Sub-screens (ProfileCreate, ProfileEdit) navigate via `NavController`. Defined in `Screen.kt` (sealed class) and wired in `AppNavGraph.kt`.
 
 ---
 
@@ -174,7 +215,6 @@ Three top-level destinations with a bottom navigation bar: Dashboard, Forecast, 
 | DataStore | `datastore-preferences` | 1.1.1 |
 | Glance | `glance-appwidget` / `glance-material3` | 1.1.1 |
 | WorkManager | `work-runtime-ktx` | 2.9.1 |
-| Koin | `koin-android` / `koin-androidx-compose` / `koin-androidx-workmanager` | 3.5.6 |
 | Ktor | `ktor-client-core` / `ktor-client-cio` / `ktor-client-content-negotiation` / `ktor-serialization-kotlinx-json` | 2.3.12 |
 | Serialization | `kotlinx-serialization-json` | 1.7.3 |
 
@@ -330,33 +370,36 @@ git push origin --delete release/1.0.0
 - **Official Kotlin code style** (`kotlin.code.style=official` in `gradle.properties`)
 - Use data classes for immutable model types
 - Prefer `val` over `var`; use `copy()` for updates
-- Sealed classes for discriminated unions (e.g. `Screen`, `AlertLevel`)
+- Sealed classes for discriminated unions (e.g. `Screen`, `SeverityLevel`)
 - `@Serializable` data classes for API responses
 
 ### Compose Conventions
 
-- Access theme colours via `MaterialTheme.colorScheme`
+- Access custom theme colours via `ForestTheme.current`
+- Access M3 colours via `MaterialTheme.colorScheme` (mapped from ForestColors)
 - Use `SeverityColors` and `AqiColors` objects for fixed severity/AQI indicators
 - Use `safeDrawingPadding()` at the root layout; inner screens do not need window inset handling
-- Screen composables receive dependencies (repository, callbacks) as parameters
-- ViewModels injected via `koinViewModel()`
+- Screen composables receive dependencies (callbacks) as parameters
+- ViewModels instantiated via `viewModel()` from `androidx.lifecycle.viewmodel.compose`
 
 ### Navigation Conventions
 
-- Three top-level destinations: Dashboard, Forecast, Settings (bottom nav bar)
+- Four top-level destinations: Dashboard, Forecast, Profiles, Settings (side drawer)
+- Theme toggle in the drawer header area
 - Add new routes to both `Screen.kt` and `AppNavGraph.kt`
-- Sub-screens use a back-arrow header with `popBackStack()`
+- Sub-screens navigate via `NavController` and pop back with `popBackStack()`
 
 ### Persistence Conventions
 
-- **DataStore** for user profiles and preferences
-- **Room** for cached forecast data
+- **DataStore** for user profiles and preferences (each concern gets its own repository + DataStore file)
+- **Room** for cached forecast data (thread-safe singleton via `AppDatabase.getInstance()`)
 - Never access DataStore or Room directly from screens -- always go through a repository
 
 ### Permissions
 
 - `INTERNET` -- required for Open-Meteo API calls
-- `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` -- will be needed for GPS-based location (can be deferred; app supports manual location pinning as alternative)
+- `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` -- GPS-based location via AOSP LocationManager (not Google Play Services)
+- `POST_NOTIFICATIONS` -- notification delivery
 
 ---
 
@@ -394,7 +437,7 @@ Base URL: `https://air-quality-api.open-meteo.com/v1/air-quality`
 
 Key parameters:
 - `latitude`, `longitude` -- location (default: Poznan 52.4064, 16.9252)
-- `hourly` -- `birch_pollen,alder_pollen,grass_pollen,pm2_5,pm10,european_aqi`
+- `hourly` -- `birch_pollen,alder_pollen,grass_pollen,mugwort_pollen,ragweed_pollen,olive_pollen,pm2_5,pm10,european_aqi`
 - `timezone` -- `Europe/Warsaw`
 - `forecast_days` -- `4`
 
@@ -402,12 +445,12 @@ No API key required. Rate limiting applies (respect HTTP 429, exponential backof
 
 ### Pollen Threshold Defaults (grains/m3)
 
-| Level | Birch | Alder | Grass |
-|---|---|---|---|
-| Low | 1-10 | 1-10 | 1-5 |
-| Moderate | 11-50 | 11-50 | 6-30 |
-| High | 51-200 | 51-100 | 31-80 |
-| Very High | >200 | >100 | >80 |
+| Level | Birch | Alder | Grass | Mugwort | Ragweed | Olive |
+|---|---|---|---|---|---|---|
+| Low | 1-10 | 1-10 | 1-5 | 1-10 | 1-5 | 1-10 |
+| Moderate | 11-50 | 11-50 | 6-30 | 11-50 | 6-30 | 11-50 |
+| High | 51-200 | 51-100 | 31-80 | 51-100 | 31-80 | 51-200 |
+| Very High | >200 | >100 | >80 | >100 | >80 | >200 |
 
 ---
 

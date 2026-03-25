@@ -6,22 +6,28 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.lifecycleScope
+import com.ryan.pollenwitan.data.repository.ThemePrefsRepository
 import com.ryan.pollenwitan.ui.navigation.AppNavGraph
 import com.ryan.pollenwitan.ui.theme.ForestTheme
 import com.ryan.pollenwitan.ui.theme.PollenWitanTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applySystemBars(dark = true)
 
+        val themePrefsRepository = ThemePrefsRepository(this)
+
         setContent {
-            val isDark = isSystemInDarkTheme()
+            val isDark by themePrefsRepository.isDarkTheme().collectAsState(initial = true)
 
             LaunchedEffect(isDark) {
                 applySystemBars(isDark)
@@ -33,7 +39,12 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(ForestTheme.current.Dark)
                 ) {
-                    AppNavGraph()
+                    AppNavGraph(
+                        isDarkTheme = isDark,
+                        onToggleTheme = { newValue ->
+                            lifecycleScope.launch { themePrefsRepository.setDarkTheme(newValue) }
+                        }
+                    )
                 }
             }
         }

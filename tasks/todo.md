@@ -9,11 +9,8 @@
 - [x] **Theme Toggle in Drawer** — Manual dark/light toggle, persisted in DataStore
 - [x] **Per-Profile Locations** — Allow different household members to track pollen for different areas
 - [x] **Medication Tracker** — Medicine definitions in Settings, per-profile assignments with dosage/schedule, dashboard dose confirmation, reminder notifications
-
-## Planned
-
-- [ ] **First-Run Onboarding Flow** — Guided wizard for creating first profile (name, allergens, asthma, location)
-- [ ] **ForecastScreen Column Tuning** — Adjust layout for 6 allergen types on narrow screens (may need horizontal scroll or show only tracked allergens)
+- [x] **First-Run Onboarding Flow** — Guided wizard for creating first profile (name, allergens, asthma, location)
+- [x] **Forecast & Dashboard UX** — Severity legend, abbreviation key, units (grains/m³), period time ranges, AQI severity labels, "Peak" label
 
 ## Future / Low Priority
 
