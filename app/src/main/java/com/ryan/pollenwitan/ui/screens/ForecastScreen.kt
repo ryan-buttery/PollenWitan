@@ -28,6 +28,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -126,7 +129,18 @@ private fun ForecastContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        SeverityLegend()
+        var legendExpanded by remember { mutableStateOf(false) }
+        Text(
+            text = if (legendExpanded) "Hide key ▲" else "Show key ▼",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.clickable { legendExpanded = !legendExpanded }
+        )
+        AnimatedVisibility(visible = legendExpanded) {
+            Column(modifier = Modifier.padding(top = 8.dp)) {
+                SeverityLegend()
+            }
+        }
         Spacer(modifier = Modifier.height(16.dp))
 
         days.forEachIndexed { index, day ->

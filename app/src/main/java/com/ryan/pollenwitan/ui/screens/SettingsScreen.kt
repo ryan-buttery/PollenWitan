@@ -245,13 +245,23 @@ private fun NotificationSettings(
         ) {
             Text("Hour:", style = MaterialTheme.typography.bodyMedium)
             listOf(6, 7, 8, 9).forEach { hour ->
-                OutlinedButton(
-                    onClick = { onMorningHourChange(hour) },
-                    enabled = prefs.morningBriefingHour != hour,
-                    modifier = Modifier.weight(1f),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 8.dp)
-                ) {
-                    Text("${hour}:00", style = MaterialTheme.typography.bodySmall)
+                val isSelected = prefs.morningBriefingHour == hour
+                if (isSelected) {
+                    Button(
+                        onClick = {},
+                        modifier = Modifier.weight(1f),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                    ) {
+                        Text("${hour}:00", style = MaterialTheme.typography.bodySmall)
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = { onMorningHourChange(hour) },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                    ) {
+                        Text("${hour}:00", style = MaterialTheme.typography.bodySmall)
+                    }
                 }
             }
         }

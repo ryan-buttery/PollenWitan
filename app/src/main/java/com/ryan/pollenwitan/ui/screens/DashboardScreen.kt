@@ -126,7 +126,7 @@ private fun DashboardContent(
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = conditions.timestamp.format(DateTimeFormatter.ofPattern("EEEE d MMMM, HH:mm")),
+            text = "Current conditions as of ${conditions.timestamp.format(DateTimeFormatter.ofPattern("EEEE d MMMM, HH:mm"))}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
