@@ -204,4 +204,25 @@
     <string name="validation_name_empty">Name cannot be empty</string>
     <string name="validation_select_allergen">Select at least one allergen</string>
     <string name="validation_gps_failed">Could not get location. Check GPS is enabled.</string>
+
+    <!-- Cross-reactivity -->
+    <string name="nav_cross_reactivity">Cross-Reactivity</string>
+    <string name="cross_title">Cross-Reactivity Guide</string>
+    <string name="cross_intro">Many pollen allergies share proteins with other pollen types and certain foods. This is called cross-reactivity. If you react to one, you may also react to the others listed here — a phenomenon known as Oral Allergy Syndrome (OAS).</string>
+    <string name="cross_related_pollen">Related Pollen</string>
+    <string name="cross_food_reactions">Food Cross-Reactions (OAS)</string>
+    <string name="cross_strength_strong">Strong</string>
+    <string name="cross_strength_moderate">Moderate</string>
+    <string name="cross_family_format">%1$s family</string>
+    <string name="cross_family_betulaceae">Betulaceae</string>
+    <string name="cross_family_asteraceae">Asteraceae</string>
+    <string name="cross_oas_disclaimer">OAS symptoms are usually mild (itching or tingling in the mouth) and limited to raw foods. Cooking typically breaks down the proteins. Consult your allergist for personalised advice.</string>
+    <string name="cross_foods_birch">Apples, pears, cherries, peaches, plums, kiwi, hazelnuts, almonds, carrots, celery, soy</string>
+    <string name="cross_foods_alder">Apples, pears, cherries, peaches, hazelnuts, almonds, carrots, celery</string>
+    <string name="cross_foods_grass">Tomatoes, potatoes, melons, oranges, wheat</string>
+    <string name="cross_foods_mugwort">Celery, carrots, coriander, cumin, fennel, anise, sunflower seeds, chamomile tea</string>
+    <string name="cross_foods_ragweed">Melons (cantaloupe, watermelon, honeydew), bananas, zucchini, cucumbers, sunflower seeds</string>
+    <string name="cross_foods_olive">Peaches, pears, cherries, kiwi, hazelnuts</string>
+    <string name="cross_hint">Many who are allergic to %1$s are also allergic to %2$s (%3$s). Consider tracking it too.</string>
+    <string name="cross_hint_add">Add</string>
 </resources>

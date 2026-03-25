@@ -50,6 +50,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ryan.pollenwitan.domain.model.PollenType
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
+import com.ryan.pollenwitan.ui.components.CrossReactivityHints
 import com.ryan.pollenwitan.ui.theme.ForestTheme
 import com.ryan.pollenwitan.ui.theme.localizedName
 
@@ -440,6 +441,10 @@ private fun ProfileStep(
                 )
             }
         }
+        CrossReactivityHints(
+            selectedAllergens = uiState.selectedAllergens,
+            onAddAllergen = { viewModel.toggleAllergen(it) }
+        )
 
         uiState.validationError?.let { error ->
             Spacer(modifier = Modifier.height(12.dp))

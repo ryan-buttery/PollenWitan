@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -51,6 +52,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ryan.pollenwitan.data.repository.ProfileRepository
+import com.ryan.pollenwitan.ui.screens.CrossReactivityScreen
 import com.ryan.pollenwitan.ui.screens.DashboardScreen
 import com.ryan.pollenwitan.ui.screens.ForecastScreen
 import com.ryan.pollenwitan.ui.screens.OnboardingScreen
@@ -73,6 +75,7 @@ private val navItems = listOf(
     NavItem(Screen.Dashboard, R.string.nav_dashboard, Icons.Filled.Dashboard),
     NavItem(Screen.Forecast, R.string.nav_forecast, Icons.Filled.CalendarMonth),
     NavItem(Screen.ProfileList, R.string.nav_profiles, Icons.Filled.Person),
+    NavItem(Screen.CrossReactivity, R.string.nav_cross_reactivity, Icons.Filled.Link),
     NavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings)
 )
 
@@ -284,6 +287,7 @@ fun AppNavGraph(
                     DashboardScreen()
                 }
                 composable(Screen.Forecast.route) { ForecastScreen() }
+                composable(Screen.CrossReactivity.route) { CrossReactivityScreen() }
                 composable(Screen.Settings.route) { SettingsScreen() }
                 composable(Screen.ProfileList.route) {
                     ProfileListScreen(navController = navController)

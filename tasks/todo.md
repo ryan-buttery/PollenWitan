@@ -11,11 +11,10 @@
 - [x] **Medication Tracker** — Medicine definitions in Settings, per-profile assignments with dosage/schedule, dashboard dose confirmation, reminder notifications
 - [x] **First-Run Onboarding Flow** — Guided wizard for creating first profile (name, allergens, asthma, location)
 - [x] **Forecast & Dashboard UX** — Severity legend, abbreviation key, units (grains/m³), period time ranges, AQI severity labels, "Peak" label
+- [x] **Polish Localisation** — Full English and Polish string resources, runtime language switching via AppCompat
+- [x] **Cross-Reactivity Warnings** — Info screen with pollen-to-pollen and OAS food data, contextual hints in allergen selection
 
 ## Planned
-
-- [ ] **Polish Localisation** — Full English and Polish string resources
-- [ ] **Cross-Reactivity Warnings** — Birch → Bet v 1 foods (apples, hazelnuts, etc.), static lookup, dashboard card when relevant allergens are elevated
 - [ ] **Home Screen Widget** — Jetpack Glance widget with per-profile instances (Phase 2 from design doc)
 
 ## Future
