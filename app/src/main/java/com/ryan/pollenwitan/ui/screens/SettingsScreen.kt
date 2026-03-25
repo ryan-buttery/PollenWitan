@@ -210,7 +210,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                     onMorningBriefingToggle = viewModel::setMorningBriefingEnabled,
                     onMorningHourChange = viewModel::setMorningBriefingHour,
                     onThresholdToggle = viewModel::setThresholdAlertsEnabled,
-                    onCompoundRiskToggle = viewModel::setCompoundRiskAlertsEnabled
+                    onCompoundRiskToggle = viewModel::setCompoundRiskAlertsEnabled,
+                    onPreSeasonToggle = viewModel::setPreSeasonAlertsEnabled
                 )
             }
         }
@@ -223,7 +224,8 @@ private fun NotificationSettings(
     onMorningBriefingToggle: (Boolean) -> Unit,
     onMorningHourChange: (Int) -> Unit,
     onThresholdToggle: (Boolean) -> Unit,
-    onCompoundRiskToggle: (Boolean) -> Unit
+    onCompoundRiskToggle: (Boolean) -> Unit,
+    onPreSeasonToggle: (Boolean) -> Unit
 ) {
     // Morning briefing
     Row(
@@ -318,6 +320,28 @@ private fun NotificationSettings(
         Switch(
             checked = prefs.compoundRiskAlertsEnabled,
             onCheckedChange = onCompoundRiskToggle
+        )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Pre-season medication alerts
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.settings_pre_season_alerts), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                stringResource(R.string.settings_pre_season_alerts_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(
+            checked = prefs.preSeasonAlertsEnabled,
+            onCheckedChange = onPreSeasonToggle
         )
     }
 }

@@ -15,6 +15,7 @@ import com.ryan.pollenwitan.domain.model.DoseConfirmation
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
+import com.ryan.pollenwitan.domain.model.PollenSeasonCalendar
 import com.ryan.pollenwitan.ui.theme.localizedName
 import androidx.glance.appwidget.updateAll
 import com.ryan.pollenwitan.widget.PollenWidget
@@ -141,6 +142,30 @@ class PollenCheckWorker(
             }
         }
 
+        // Pre-season medication alerts
+        if (prefs.preSeasonAlertsEnabled) {
+            profiles.forEachIndexed { index, profile ->
+                if (profile.medicineAssignments.isEmpty()) return@forEachIndexed
+                val alertTypes = PollenSeasonCalendar.preSeasonAlerts(
+                    profile.trackedAllergens.keys, today
+                )
+                for (type in alertTypes) {
+                    val lastYear = notificationPrefsRepository.getLastPreSeasonAlertYear(type)
+                    val alertYear = today.year
+                    if (lastYear == alertYear) continue
+                    notificationPrefsRepository.setLastPreSeasonAlertYear(type, alertYear)
+                    val seasonDate = PollenSeasonCalendar.seasonStartDisplay(type, today)
+                    NotificationHelper.sendNotification(
+                        context = ctx,
+                        channelId = NotificationHelper.CHANNEL_MEDICATION_REMINDER,
+                        notificationId = PRE_SEASON_ALERT_BASE_ID + index * 10 + type.ordinal,
+                        title = ctx.getString(R.string.notif_pre_season_title, profile.displayName),
+                        text = ctx.getString(R.string.notif_pre_season_text, type.localizedName(ctx), seasonDate)
+                    )
+                }
+            }
+        }
+
         // Refresh home screen widgets with latest data
         PollenWidget().updateAll(applicationContext)
 
@@ -222,5 +247,6 @@ class PollenCheckWorker(
         private const val THRESHOLD_ALERT_BASE_ID = 2000
         private const val COMPOUND_RISK_BASE_ID = 3000
         private const val MEDICATION_REMINDER_BASE_ID = 4000
+        private const val PRE_SEASON_ALERT_BASE_ID = 5000
     }
 }

@@ -115,6 +115,8 @@
     <string name="settings_threshold_alerts_desc">Alert gdy pyłki osiągną poziom Wysoki lub Bardzo wysoki</string>
     <string name="settings_compound_risk">Alerty złożonego ryzyka</string>
     <string name="settings_compound_risk_desc">Pyłki + zła jakość powietrza (profile z astmą)</string>
+    <string name="settings_pre_season_alerts">Alerty przedsezonowe o lekach</string>
+    <string name="settings_pre_season_alerts_desc">Przypomnienie o rozpoczęciu leczenia 4 tygodnie przed sezonem pyłkowym</string>
     <string name="settings_medicines">Leki</string>
     <string name="settings_no_medicines">Nie zdefiniowano jeszcze leków</string>
     <string name="settings_add_medicine">Dodaj lek</string>
@@ -197,6 +199,8 @@
     <string name="notif_compound_risk_text">Podwyższone pyłki (%1$s) w połączeniu ze złą jakością powietrza (PM2.5: %2$s, PM10: %3$s). Zachowaj szczególną ostrożność.</string>
     <string name="notif_medication_reminder">%1$s: Przypomnienie o leku</string>
     <string name="notif_time_to_take">Czas na %1$s (%2$d %3$s)</string>
+    <string name="notif_pre_season_title">%1$s: Czas rozpocząć leczenie</string>
+    <string name="notif_pre_season_text">Sezon %1$s zazwyczaj zaczyna się około %2$s. Rozważ rozpoczęcie przyjmowania leków.</string>
 
     <!-- Validation -->
     <string name="validation_name_empty">Imię nie może być puste</string>
@@ -223,6 +227,20 @@
     <string name="cross_foods_olive">Brzoskwinie, gruszki, czereśnie, kiwi, orzechy laskowe</string>
     <string name="cross_hint">Wiele osób uczulonych na %1$s jest również uczulonych na %2$s (%3$s). Rozważ śledzenie tego alergenu.</string>
     <string name="cross_hint_add">Dodaj</string>
+
+    <!-- Pollen Calendar -->
+    <string name="nav_pollen_calendar">Kalendarz pyłkowy</string>
+    <string name="calendar_title">Kalendarz sezonu pyłkowego</string>
+    <string name="calendar_intro">Typowe daty sezonu pyłkowego dla Europy Środkowej (region Poznania). Te daty są używane do przedsezonowych alertów o lekach.</string>
+    <string name="calendar_season_start">Początek sezonu: %1$s</string>
+    <string name="calendar_pre_season_from">Alert przedsezonowy od: %1$s</string>
+    <string name="calendar_pre_season_now">Przedsezon — rozważ rozpoczęcie przyjmowania leków</string>
+    <string name="calendar_in_season">Aktualnie w sezonie</string>
+    <string name="calendar_legend_title">Legenda</string>
+    <string name="calendar_legend_in_season">W sezonie</string>
+    <string name="calendar_legend_pre_season">Okno alertu przedsezonowego</string>
+    <string name="calendar_legend_off_season">Poza sezonem</string>
+    <string name="calendar_disclaimer">Daty są przybliżone i oparte na typowych danych aerobiologicznych dla Europy Środkowej. Rzeczywisty termin sezonu różni się w zależności od roku i warunków pogodowych.</string>
 
     <!-- Widget -->
     <string name="widget_description">Aktualne poziomy pyłków dla Twojego profilu</string>
