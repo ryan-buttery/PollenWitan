@@ -16,6 +16,8 @@ import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.theme.localizedName
+import androidx.glance.appwidget.updateAll
+import com.ryan.pollenwitan.widget.PollenWidget
 import com.ryan.pollenwitan.ui.theme.localizedUnitLabel
 import com.ryan.pollenwitan.ui.theme.toLabel
 import kotlinx.coroutines.flow.first
@@ -138,6 +140,9 @@ class PollenCheckWorker(
                 }
             }
         }
+
+        // Refresh home screen widgets with latest data
+        PollenWidget().updateAll(applicationContext)
 
         return Result.success()
     }

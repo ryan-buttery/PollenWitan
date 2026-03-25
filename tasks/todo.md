@@ -13,9 +13,9 @@
 - [x] **Forecast & Dashboard UX** — Severity legend, abbreviation key, units (grains/m³), period time ranges, AQI severity labels, "Peak" label
 - [x] **Polish Localisation** — Full English and Polish string resources, runtime language switching via AppCompat
 - [x] **Cross-Reactivity Warnings** — Info screen with pollen-to-pollen and OAS food data, contextual hints in allergen selection
+- [x] **Home Screen Widget** — Jetpack Glance widget showing selected profile's pollen levels, AQI, severity colours
 
 ## Planned
-- [ ] **Home Screen Widget** — Jetpack Glance widget with per-profile instances (Phase 2 from design doc)
 
 ## Future
 

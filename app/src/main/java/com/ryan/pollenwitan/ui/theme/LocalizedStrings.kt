@@ -39,6 +39,15 @@ fun PollenType.localizedAbbreviation(): String = when (this) {
     PollenType.Olive -> stringResource(R.string.pollen_olive_abbr)
 }
 
+fun PollenType.localizedAbbreviation(context: Context): String = when (this) {
+    PollenType.Birch -> context.getString(R.string.pollen_birch_abbr)
+    PollenType.Alder -> context.getString(R.string.pollen_alder_abbr)
+    PollenType.Grass -> context.getString(R.string.pollen_grass_abbr)
+    PollenType.Mugwort -> context.getString(R.string.pollen_mugwort_abbr)
+    PollenType.Ragweed -> context.getString(R.string.pollen_ragweed_abbr)
+    PollenType.Olive -> context.getString(R.string.pollen_olive_abbr)
+}
+
 // ── DayPeriod ───────────────────────────────────────────────
 
 @Composable
