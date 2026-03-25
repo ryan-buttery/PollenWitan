@@ -18,7 +18,7 @@
 ## Planned
 
 - [x] **Pre-Season Medication Alerts** — Advance warning to start taking medication (e.g., 1 month before typical season for user's selected allergies)
-- [ ] **Medication History** — Persist daily dose confirmations to Room so medication adherence is available for historical review
+- [x] **Medication History** — Persist daily dose confirmations to Room so medication adherence is available for historical review
 - [ ] **Symptom Diary** — Configurable symptoms per profile (defaults + custom via Settings), daily evening check-in (in-app + notification) with 0–5 severity rating per symptom, auto-logs daily peak pollen/AQI values alongside entries
 - [ ] **History Screen** — Timeline view combining symptom ratings, pollen exposure (daily peaks), and medication adherence. Helps users identify which pollens trigger their symptoms by correlating trends. Replaces the Season Comparison concept.
 - [ ] **Data Export/Import** — Export/import profiles, medication history, symptom diary, and settings as JSON

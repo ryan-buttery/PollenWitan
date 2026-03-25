@@ -146,16 +146,28 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     fun confirmDose(medicineId: String, slotIndex: Int) {
         val profileId = uiState.value.selectedProfileId
         if (profileId.isBlank()) return
+        val slot = uiState.value.medicineSlots.find {
+            it.medicineId == medicineId && it.slotIndex == slotIndex
+        } ?: return
         viewModelScope.launch {
-            doseTrackingRepository.confirmDose(profileId, medicineId, slotIndex)
+            doseTrackingRepository.confirmDose(
+                profileId, medicineId, slotIndex,
+                slot.medicineName, slot.dose, slot.medicineType.name, slot.hour
+            )
         }
     }
 
     fun unconfirmDose(medicineId: String, slotIndex: Int) {
         val profileId = uiState.value.selectedProfileId
         if (profileId.isBlank()) return
+        val slot = uiState.value.medicineSlots.find {
+            it.medicineId == medicineId && it.slotIndex == slotIndex
+        } ?: return
         viewModelScope.launch {
-            doseTrackingRepository.unconfirmDose(profileId, medicineId, slotIndex)
+            doseTrackingRepository.unconfirmDose(
+                profileId, medicineId, slotIndex,
+                slot.medicineName, slot.dose, slot.medicineType.name, slot.hour
+            )
         }
     }
 
