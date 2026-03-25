@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.ryan.pollenwitan.ui.theme.localizedName
+import com.ryan.pollenwitan.ui.components.CrossReactivityHints
 import com.ryan.pollenwitan.ui.theme.localizedUnitLabel
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -161,6 +162,10 @@ fun ProfileEditScreen(
                 )
             }
         }
+        CrossReactivityHints(
+            selectedAllergens = uiState.trackedAllergens,
+            onAddAllergen = { viewModel.toggleAllergen(it) }
+        )
         Spacer(modifier = Modifier.height(20.dp))
 
         // Threshold configuration per selected allergen

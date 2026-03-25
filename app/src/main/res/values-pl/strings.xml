@@ -202,4 +202,25 @@
     <string name="validation_name_empty">Imię nie może być puste</string>
     <string name="validation_select_allergen">Wybierz co najmniej jeden alergen</string>
     <string name="validation_gps_failed">Nie udało się uzyskać lokalizacji. Sprawdź czy GPS jest włączony.</string>
+
+    <!-- Cross-reactivity -->
+    <string name="nav_cross_reactivity">Reakcje krzyżowe</string>
+    <string name="cross_title">Przewodnik po reakcjach krzyżowych</string>
+    <string name="cross_intro">Wiele alergii pyłkowych dzieli białka z innymi rodzajami pyłków i niektórymi pokarmami. To nazywamy reakcjami krzyżowymi. Jeśli reagujesz na jeden, możesz również reagować na inne wymienione tutaj — zjawisko znane jako Zespół Alergii Jamy Ustnej (OAS).</string>
+    <string name="cross_related_pollen">Powiązane pyłki</string>
+    <string name="cross_food_reactions">Krzyżowe reakcje pokarmowe (OAS)</string>
+    <string name="cross_strength_strong">Silna</string>
+    <string name="cross_strength_moderate">Umiarkowana</string>
+    <string name="cross_family_format">Rodzina %1$s</string>
+    <string name="cross_family_betulaceae">Betulaceae</string>
+    <string name="cross_family_asteraceae">Asteraceae</string>
+    <string name="cross_oas_disclaimer">Objawy OAS są zazwyczaj łagodne (swędzenie lub mrowienie w ustach) i ograniczone do surowych pokarmów. Gotowanie zazwyczaj rozkłada białka. Skonsultuj się z alergologiem w celu uzyskania spersonalizowanej porady.</string>
+    <string name="cross_foods_birch">Jabłka, gruszki, czereśnie, brzoskwinie, śliwki, kiwi, orzechy laskowe, migdały, marchew, seler, soja</string>
+    <string name="cross_foods_alder">Jabłka, gruszki, czereśnie, brzoskwinie, orzechy laskowe, migdały, marchew, seler</string>
+    <string name="cross_foods_grass">Pomidory, ziemniaki, melony, pomarańcze, pszenica</string>
+    <string name="cross_foods_mugwort">Seler, marchew, kolendra, kmin, koper, anyż, pestki słonecznika, herbata rumiankowa</string>
+    <string name="cross_foods_ragweed">Melony (kantalupa, arbuz, melon miodowy), banany, cukinia, ogórki, pestki słonecznika</string>
+    <string name="cross_foods_olive">Brzoskwinie, gruszki, czereśnie, kiwi, orzechy laskowe</string>
+    <string name="cross_hint">Wiele osób uczulonych na %1$s jest również uczulonych na %2$s (%3$s). Rozważ śledzenie tego alergenu.</string>
+    <string name="cross_hint_add">Dodaj</string>
 </resources>
