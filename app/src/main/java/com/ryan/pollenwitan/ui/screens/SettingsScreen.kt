@@ -765,6 +765,13 @@ private fun GpsLocationSection(
             Text(stringResource(R.string.settings_open_app_settings))
         }
     }
+
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = stringResource(R.string.settings_gps_auto_refresh),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 @Composable

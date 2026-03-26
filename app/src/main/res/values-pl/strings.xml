@@ -104,6 +104,7 @@
     <string name="settings_location_found">Lokalizacja: %1$s</string>
     <string name="settings_location_permission_denied">Odmówiono dostępu do lokalizacji. Włącz go w ustawieniach aplikacji.</string>
     <string name="settings_open_app_settings">Otwórz ustawienia aplikacji</string>
+    <string name="settings_gps_auto_refresh">Lokalizacja aktualizuje się automatycznie co 6 godzin i przy odświeżeniu widżetu</string>
     <string name="settings_getting_location">Pobieranie lokalizacji…</string>
     <string name="settings_located">Zlokalizowano: %1$s</string>
     <string name="settings_notifications">Powiadomienia</string>

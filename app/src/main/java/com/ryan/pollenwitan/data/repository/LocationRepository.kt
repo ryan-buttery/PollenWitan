@@ -25,6 +25,7 @@ class LocationRepository(
         const val GPS_LAT = "gps_latitude"
         const val GPS_LON = "gps_longitude"
         const val GPS_NAME = "gps_display_name"
+        const val GPS_LAST_UPDATED = "gps_last_updated"
     }
 
     fun getLocation(): Flow<AppLocation> = store.data.map { prefs ->
@@ -78,6 +79,12 @@ class LocationRepository(
             putDouble(Keys.GPS_LAT, latitude)
             putDouble(Keys.GPS_LON, longitude)
             putString(Keys.GPS_NAME, displayName)
+            putLong(Keys.GPS_LAST_UPDATED, System.currentTimeMillis())
         }
+    }
+
+    fun isGpsRefreshDue(intervalMillis: Long): Boolean {
+        val lastUpdated = store.prefs.getLong(Keys.GPS_LAST_UPDATED, 0L)
+        return System.currentTimeMillis() - lastUpdated >= intervalMillis
     }
 }
