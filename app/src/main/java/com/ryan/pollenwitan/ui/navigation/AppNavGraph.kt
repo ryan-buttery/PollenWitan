@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,6 +58,7 @@ import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.ui.screens.CrossReactivityScreen
 import com.ryan.pollenwitan.ui.screens.PollenCalendarScreen
 import com.ryan.pollenwitan.ui.screens.SymptomCheckInScreen
+import com.ryan.pollenwitan.ui.screens.SymptomTrendsScreen
 import com.ryan.pollenwitan.ui.screens.SymptomDiaryScreen
 import com.ryan.pollenwitan.ui.screens.DashboardScreen
 import com.ryan.pollenwitan.ui.screens.ForecastScreen
@@ -83,6 +85,7 @@ private val navItems = listOf(
     NavItem(Screen.CrossReactivity, R.string.nav_cross_reactivity, Icons.Filled.Link),
     NavItem(Screen.PollenCalendar, R.string.nav_pollen_calendar, Icons.Filled.EventNote),
     NavItem(Screen.SymptomDiary, R.string.nav_symptom_diary, Icons.Filled.EditNote),
+    NavItem(Screen.SymptomTrends, R.string.nav_symptom_trends, Icons.Filled.Timeline),
     NavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings)
 )
 
@@ -307,6 +310,7 @@ fun AppNavGraph(
                     )
                 }
                 composable(Screen.SymptomDiary.route) { SymptomDiaryScreen() }
+                composable(Screen.SymptomTrends.route) { SymptomTrendsScreen() }
                 composable(Screen.Settings.route) { SettingsScreen() }
                 composable(Screen.ProfileList.route) {
                     ProfileListScreen(navController = navController)
