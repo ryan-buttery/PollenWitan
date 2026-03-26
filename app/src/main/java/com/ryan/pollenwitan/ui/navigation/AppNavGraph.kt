@@ -92,7 +92,8 @@ private val navItems = listOf(
 @Composable
 fun AppNavGraph(
     isDarkTheme: Boolean = true,
-    onToggleTheme: (Boolean) -> Unit = {}
+    onToggleTheme: (Boolean) -> Unit = {},
+    initialRoute: String? = null
 ) {
     val context = LocalContext.current
     val profileRepository = remember { ProfileRepository(context.applicationContext) }
@@ -102,6 +103,16 @@ fun AppNavGraph(
     if (profiles == null) return
 
     val navController = rememberNavController()
+
+    // Navigate to target route when launched from a notification
+    LaunchedEffect(initialRoute) {
+        if (initialRoute != null) {
+            navController.navigate(initialRoute) {
+                popUpTo(Screen.Dashboard.route) { saveState = true }
+                launchSingleTop = true
+            }
+        }
+    }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val drawerState = rememberDrawerState(DrawerValue.Closed)
