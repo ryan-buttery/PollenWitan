@@ -20,8 +20,11 @@ import java.util.UUID
 enum class OnboardingStep { Welcome, Location, Profile, Done }
 enum class LocationChoice { Default, Gps, Manual }
 
+enum class OnboardingPath { KnownAllergies, DiscoveryMode }
+
 data class OnboardingUiState(
     val currentStep: OnboardingStep = OnboardingStep.Welcome,
+    val onboardingPath: OnboardingPath = OnboardingPath.KnownAllergies,
     val locationChoice: LocationChoice = LocationChoice.Default,
     val manualLatitude: String = "",
     val manualLongitude: String = "",
@@ -116,6 +119,10 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
         _uiState.value = _uiState.value.copy(hasAsthma = value)
     }
 
+    fun setOnboardingPath(path: OnboardingPath) {
+        _uiState.value = _uiState.value.copy(onboardingPath = path, validationError = null)
+    }
+
     fun toggleAllergen(type: PollenType) {
         val current = _uiState.value.selectedAllergens.toMutableSet()
         if (type in current) current.remove(type) else current.add(type)
@@ -128,7 +135,8 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
             _uiState.value = state.copy(validationError = getApplication<Application>().getString(R.string.validation_name_empty))
             return
         }
-        if (state.selectedAllergens.isEmpty()) {
+        val isDiscovery = state.onboardingPath == OnboardingPath.DiscoveryMode
+        if (!isDiscovery && state.selectedAllergens.isEmpty()) {
             _uiState.value = state.copy(validationError = getApplication<Application>().getString(R.string.validation_select_allergen))
             return
         }
@@ -161,7 +169,8 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
                 id = UUID.randomUUID().toString(),
                 displayName = state.profileName.trim(),
                 trackedAllergens = trackedAllergens,
-                hasAsthma = state.hasAsthma
+                hasAsthma = state.hasAsthma,
+                discoveryMode = isDiscovery
             )
             profileRepository.addProfile(profile)
 

@@ -21,4 +21,7 @@ sealed class Screen(val route: String) {
         fun createRoute(profileId: String) = "profiles/$profileId/calibrate"
     }
     data object Onboarding : Screen("onboarding")
+    data object AllergenDiscovery : Screen("profiles/{profileId}/discovery") {
+        fun createRoute(profileId: String) = "profiles/$profileId/discovery"
+    }
 }

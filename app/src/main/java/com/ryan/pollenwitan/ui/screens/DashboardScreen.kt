@@ -54,7 +54,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
-    onNavigateToCheckIn: () -> Unit = {}
+    onNavigateToCheckIn: () -> Unit = {},
+    onNavigateToDiscovery: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -71,7 +72,8 @@ fun DashboardScreen(
             onRefresh = viewModel::refresh,
             onConfirmDose = viewModel::confirmDose,
             onUnconfirmDose = viewModel::unconfirmDose,
-            onNavigateToCheckIn = onNavigateToCheckIn
+            onNavigateToCheckIn = onNavigateToCheckIn,
+            onNavigateToDiscovery = onNavigateToDiscovery
         )
         is WeatherState.Error -> ErrorContent(
             message = weather.message,
@@ -127,7 +129,8 @@ private fun DashboardContent(
     onRefresh: () -> Unit,
     onConfirmDose: (String, Int) -> Unit,
     onUnconfirmDose: (String, Int) -> Unit,
-    onNavigateToCheckIn: () -> Unit
+    onNavigateToCheckIn: () -> Unit,
+    onNavigateToDiscovery: (String) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -179,7 +182,15 @@ private fun DashboardContent(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                if (selectedProfile != null) {
+                if (selectedProfile != null && selectedProfile.discoveryMode) {
+                    // Discovery mode: show all pollens dimmed with default thresholds
+                    conditions.pollenReadings.forEach { reading ->
+                        val defaultThreshold = UserProfile.defaultThreshold(reading.type)
+                        val severity = SeverityClassifier.pollenSeverity(reading.value, defaultThreshold)
+                        PollenRow(reading.copy(severity = severity), dimmed = true)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                } else if (selectedProfile != null) {
                     // Show tracked allergens with profile-specific thresholds
                     val trackedReadings = conditions.pollenReadings.filter { reading ->
                         reading.type in selectedProfile.trackedAllergens
@@ -221,6 +232,37 @@ private fun DashboardContent(
                     conditions.pollenReadings.forEach { reading ->
                         PollenRow(reading)
                         Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+            }
+        }
+
+        // Discovery mode banner
+        if (selectedProfile != null && selectedProfile.discoveryMode) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = stringResource(R.string.discovery_banner_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.discovery_banner_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = { onNavigateToDiscovery(selectedProfile.id) }
+                    ) {
+                        Text(stringResource(R.string.discovery_view_analysis))
                     }
                 }
             }
