@@ -46,6 +46,27 @@
     <string name="dashboard_medicines">Medicines</string>
     <string name="dashboard_dose_format">%1$d %2$s</string>
 
+    <string-array name="reinforcement_medication">
+        <item>All done for today — well played!</item>
+        <item>Every dose counts. Great work!</item>
+        <item>Medication complete — you\'re on top of it!</item>
+        <item>That\'s today sorted. Nice one!</item>
+        <item>Consistency is key, and you\'ve nailed it today.</item>
+        <item>All taken — your future self thanks you!</item>
+        <item>Full marks for today. Keep it up!</item>
+        <item>Done and dusted — enjoy the rest of your day!</item>
+    </string-array>
+    <string-array name="reinforcement_symptom">
+        <item>Logged! Every entry helps you spot patterns.</item>
+        <item>Check-in complete — well done for staying on track.</item>
+        <item>Nice one! Your diary is building a useful picture.</item>
+        <item>Noted! Tracking today helps you plan tomorrow.</item>
+        <item>All recorded — great job looking after yourself.</item>
+        <item>Another day logged. You\'re doing brilliantly!</item>
+        <item>Check-in done — that\'s the habit of a champion.</item>
+        <item>Saved! Your data gets more valuable every day.</item>
+    </string-array>
+
     <!-- Forecast -->
     <string name="forecast_4_day">4-day forecast</string>
     <string name="forecast_peak">Peak</string>

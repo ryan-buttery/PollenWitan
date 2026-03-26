@@ -52,6 +52,8 @@ data class DashboardUiState(
 ) {
     val selectedProfile: UserProfile?
         get() = profiles.find { it.id == selectedProfileId }
+    val allDosesConfirmed: Boolean
+        get() = medicineSlots.isNotEmpty() && medicineSlots.all { it.confirmed }
 }
 
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {

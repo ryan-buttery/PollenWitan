@@ -22,11 +22,16 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -342,6 +347,22 @@ private fun DashboardContent(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                    }
+
+                    val allConfirmed = medicineSlots.isNotEmpty() && medicineSlots.all { it.confirmed }
+                    val medPhrases = LocalContext.current.resources.getStringArray(R.array.reinforcement_medication)
+                    val medPhrase = remember { medPhrases.random() }
+                    AnimatedVisibility(
+                        visible = allConfirmed,
+                        enter = fadeIn() + slideInVertically { it }
+                    ) {
+                        Text(
+                            text = medPhrase,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(top = 12.dp)
+                        )
                     }
                 }
             }

@@ -44,6 +44,27 @@
     <string name="dashboard_medicines">Leki</string>
     <string name="dashboard_dose_format">%1$d %2$s</string>
 
+    <string-array name="reinforcement_medication">
+        <item>Wszystko na dziś — świetna robota!</item>
+        <item>Każda dawka się liczy. Tak trzymaj!</item>
+        <item>Leki zaliczone — masz to pod kontrolą!</item>
+        <item>Dzisiejszy plan wykonany. Brawo!</item>
+        <item>Regularność to klucz, a dziś się udało.</item>
+        <item>Wszystko przyjęte — Twoje przyszłe ja dziękuje!</item>
+        <item>Pełna punktacja na dziś. Nie zwalniaj!</item>
+        <item>Gotowe — miłego reszty dnia!</item>
+    </string-array>
+    <string-array name="reinforcement_symptom">
+        <item>Zapisano! Każdy wpis pomaga dostrzec wzorce.</item>
+        <item>Przegląd ukończony — świetnie, że pilnujesz.</item>
+        <item>Brawo! Twój dziennik buduje użyteczny obraz.</item>
+        <item>Odnotowano! Śledzenie dziś pomaga planować jutro.</item>
+        <item>Wszystko zapisane — super dbasz o siebie.</item>
+        <item>Kolejny dzień zalogowany. Świetnie Ci idzie!</item>
+        <item>Przegląd gotowy — to nawyk mistrza.</item>
+        <item>Zapisano! Twoje dane są coraz cenniejsze.</item>
+    </string-array>
+
     <!-- Forecast -->
     <string name="forecast_4_day">Prognoza 4-dniowa</string>
     <string name="forecast_peak">Szczyt</string>

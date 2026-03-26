@@ -24,10 +24,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -55,13 +57,36 @@ fun SymptomCheckInScreen(
         viewModel.setTargetDate(dateString)
     }
 
+    val symptomPhrases = LocalContext.current.resources.getStringArray(R.array.reinforcement_symptom)
+    val symptomPhrase = remember { symptomPhrases.random() }
+
     LaunchedEffect(uiState.savedSuccessfully) {
-        if (uiState.savedSuccessfully) onSaved()
+        if (uiState.savedSuccessfully) {
+            kotlinx.coroutines.delay(2000)
+            onSaved()
+        }
     }
 
     if (uiState.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
+        }
+        return
+    }
+
+    if (uiState.savedSuccessfully) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = symptomPhrase,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(32.dp)
+            )
         }
         return
     }
