@@ -3,6 +3,7 @@ package com.ryan.pollenwitan.widget
 import android.content.Context
 import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.data.repository.AirQualityRepository
+import com.ryan.pollenwitan.data.repository.DoseTrackingRepository
 import com.ryan.pollenwitan.data.repository.LocationRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
@@ -20,6 +21,7 @@ object WidgetDataProvider {
         val profileRepository = ProfileRepository(context)
         val locationRepository = LocationRepository(context)
         val airQualityRepository = AirQualityRepository(context)
+        val doseTrackingRepository = DoseTrackingRepository(context)
 
         val profiles = profileRepository.getProfiles().first()
         if (profiles.isEmpty()) {
@@ -52,6 +54,39 @@ object WidgetDataProvider {
                 )
             }
 
+        // Fetch today's forecast peaks
+        val peakReadings = try {
+            val forecast = airQualityRepository.getForecast(
+                location.first, location.second, days = 1
+            ).getOrNull()
+            forecast?.firstOrNull()?.peakPollenReadings
+                ?.filter { it.type in profile.trackedAllergens }
+                ?.map { reading ->
+                    val threshold = profile.trackedAllergens[reading.type]!!
+                    val severity = SeverityClassifier.pollenSeverity(reading.value, threshold)
+                    WidgetAllergenReading(
+                        abbreviation = reading.type.localizedAbbreviation(context),
+                        value = String.format("%.0f", reading.value),
+                        severityColor = severityToArgb(severity)
+                    )
+                } ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
+
+        // Medication status
+        val assignments = profile.medicineAssignments
+        val hasMedication = assignments.isNotEmpty()
+        val medicationText = if (hasMedication) {
+            val totalSlots = assignments.sumOf { it.timesPerDay }
+            val confirmed = try {
+                doseTrackingRepository.getConfirmations(profile.id).first()
+            } catch (_: Exception) {
+                emptySet()
+            }
+            context.getString(R.string.widget_meds_status, confirmed.size, totalSlots)
+        } else ""
+
         val aqiSeverity = conditions.aqiSeverity
         val aqiText = context.getString(
             R.string.widget_aqi_format,
@@ -64,8 +99,11 @@ object WidgetDataProvider {
             locationName = location.third,
             timestamp = conditions.timestamp.format(TIME_FORMAT),
             allergenReadings = readings,
+            peakAllergenReadings = peakReadings,
             aqiText = aqiText,
             aqiColor = severityToArgb(aqiSeverity),
+            medicationText = medicationText,
+            hasMedication = hasMedication,
             hasData = true
         )
     }
@@ -75,8 +113,11 @@ object WidgetDataProvider {
         locationName = "",
         timestamp = "",
         allergenReadings = emptyList(),
+        peakAllergenReadings = emptyList(),
         aqiText = message,
         aqiColor = 0xFF9E9E9E,
+        medicationText = "",
+        hasMedication = false,
         hasData = false
     )
 

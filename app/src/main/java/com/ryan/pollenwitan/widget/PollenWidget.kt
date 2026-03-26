@@ -9,6 +9,7 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
@@ -29,6 +30,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.ryan.pollenwitan.MainActivity
+import com.ryan.pollenwitan.R
 
 class PollenWidget : GlanceAppWidget() {
 
@@ -68,13 +70,13 @@ private fun WidgetContent(data: PollenWidgetData, context: Context) {
             )
         } else {
             Column(modifier = GlanceModifier.fillMaxWidth()) {
-                // Header: profile name · location, timestamp
+                // Header: profile name · location, refresh, timestamp
                 Row(
                     modifier = GlanceModifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${data.profileName} · ${data.locationName}",
+                        text = "${data.profileName} \u00B7 ${data.locationName}",
                         style = TextStyle(
                             color = TextColor,
                             fontSize = 13.sp,
@@ -83,6 +85,19 @@ private fun WidgetContent(data: PollenWidgetData, context: Context) {
                         maxLines = 1
                     )
                     Spacer(modifier = GlanceModifier.defaultWeight())
+                    Box(
+                        modifier = GlanceModifier
+                            .size(24.dp)
+                            .cornerRadius(12.dp)
+                            .clickable(actionRunCallback<WidgetRefreshAction>()),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "\u27F3",
+                            style = TextStyle(color = DimTextColor, fontSize = 14.sp)
+                        )
+                    }
+                    Spacer(modifier = GlanceModifier.width(4.dp))
                     Text(
                         text = data.timestamp,
                         style = TextStyle(color = DimTextColor, fontSize = 12.sp)
@@ -91,47 +106,85 @@ private fun WidgetContent(data: PollenWidgetData, context: Context) {
 
                 Spacer(modifier = GlanceModifier.height(6.dp))
 
-                // Allergen readings in rows of 3
-                val rows = data.allergenReadings.chunked(3)
-                rows.forEach { rowItems ->
+                // Current allergen readings
+                AllergenGrid(data.allergenReadings)
+
+                // Peak allergen readings
+                if (data.peakAllergenReadings.isNotEmpty()) {
+                    Spacer(modifier = GlanceModifier.height(4.dp))
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        rowItems.forEach { reading ->
-                            Row(
-                                modifier = GlanceModifier.width(95.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = GlanceModifier
-                                        .size(8.dp)
-                                        .cornerRadius(4.dp)
-                                        .background(ColorProvider(Color(reading.severityColor.toInt())))
-                                ) {}
-                                Spacer(modifier = GlanceModifier.width(4.dp))
-                                Text(
-                                    text = "${reading.abbreviation} ${reading.value}",
-                                    style = TextStyle(color = TextColor, fontSize = 12.sp),
-                                    maxLines = 1
-                                )
-                            }
-                        }
+                        Text(
+                            text = context.getString(R.string.widget_peak),
+                            style = TextStyle(
+                                color = DimTextColor,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                        Spacer(modifier = GlanceModifier.width(6.dp))
                     }
-                    Spacer(modifier = GlanceModifier.height(2.dp))
+                    AllergenGrid(data.peakAllergenReadings)
                 }
 
                 Spacer(modifier = GlanceModifier.height(4.dp))
 
-                // AQI row
-                Text(
-                    text = data.aqiText,
-                    style = TextStyle(
-                        color = ColorProvider(Color(data.aqiColor.toInt())),
-                        fontSize = 12.sp
+                // Footer: AQI + medication status
+                Row(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = data.aqiText,
+                        style = TextStyle(
+                            color = ColorProvider(Color(data.aqiColor.toInt())),
+                            fontSize = 12.sp
+                        )
                     )
-                )
+                    if (data.hasMedication) {
+                        Spacer(modifier = GlanceModifier.defaultWeight())
+                        Text(
+                            text = data.medicationText,
+                            style = TextStyle(color = DimTextColor, fontSize = 12.sp)
+                        )
+                    }
+                }
             }
         }
+    }
+}
+
+@androidx.glance.GlanceComposable
+@androidx.compose.runtime.Composable
+private fun AllergenGrid(readings: List<WidgetAllergenReading>) {
+    val rows = readings.chunked(3)
+    rows.forEach { rowItems ->
+        Row(
+            modifier = GlanceModifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            rowItems.forEach { reading ->
+                Row(
+                    modifier = GlanceModifier.width(95.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = GlanceModifier
+                            .size(8.dp)
+                            .cornerRadius(4.dp)
+                            .background(ColorProvider(Color(reading.severityColor.toInt())))
+                    ) {}
+                    Spacer(modifier = GlanceModifier.width(4.dp))
+                    Text(
+                        text = "${reading.abbreviation} ${reading.value}",
+                        style = TextStyle(color = TextColor, fontSize = 12.sp),
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+        Spacer(modifier = GlanceModifier.height(2.dp))
     }
 }

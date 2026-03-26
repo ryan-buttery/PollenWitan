@@ -11,7 +11,10 @@ data class PollenWidgetData(
     val locationName: String,
     val timestamp: String,
     val allergenReadings: List<WidgetAllergenReading>,
+    val peakAllergenReadings: List<WidgetAllergenReading>,
     val aqiText: String,
     val aqiColor: Long,
+    val medicationText: String,
+    val hasMedication: Boolean,
     val hasData: Boolean
 )
