@@ -325,6 +325,9 @@
     <string name="widget_no_data">No data available</string>
     <string name="widget_no_profiles">No profiles configured</string>
     <string name="widget_aqi_format">AQI: %1$d (%2$s)</string>
+    <string name="widget_peak">Peak:</string>
+    <string name="widget_meds_status">Meds: %1$d/%2$d taken</string>
+    <string name="widget_refresh">Refresh</string>
 
     <!-- About -->
     <string name="about_title">PollenWitan</string>
