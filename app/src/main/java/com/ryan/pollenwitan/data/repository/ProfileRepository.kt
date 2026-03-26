@@ -1,198 +1,197 @@
 package com.ryan.pollenwitan.data.repository
 
 import android.content.Context
-import androidx.datastore.preferences.core.MutablePreferences
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.core.stringSetPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import android.content.SharedPreferences
+import com.ryan.pollenwitan.data.security.EncryptedPrefsStore
 import com.ryan.pollenwitan.domain.model.AllergenThreshold
 import com.ryan.pollenwitan.domain.model.AppLocation
 import com.ryan.pollenwitan.domain.model.MedicineAssignment
 import com.ryan.pollenwitan.domain.model.PollenType
-import com.ryan.pollenwitan.domain.model.DefaultSymptom
 import com.ryan.pollenwitan.domain.model.ProfileLocation
 import com.ryan.pollenwitan.domain.model.TrackedSymptom
 import com.ryan.pollenwitan.domain.model.UserProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-private val Context.profileDataStore by preferencesDataStore(name = "profiles")
-
 class ProfileRepository(
-    private val context: Context
+    context: Context
 ) {
 
-    private val dataStore get() = context.profileDataStore
+    private val store = EncryptedPrefsStore(context, "profiles_encrypted")
 
     private object Keys {
-        val PROFILE_IDS = stringSetPreferencesKey("profile_ids")
-        val SELECTED_PROFILE = stringPreferencesKey("selected_profile")
+        const val PROFILE_IDS = "profile_ids"
+        const val SELECTED_PROFILE = "selected_profile"
 
-        fun displayName(id: String) = stringPreferencesKey("profile_${id}_name")
-        fun hasAsthma(id: String) = booleanPreferencesKey("profile_${id}_asthma")
-        fun trackedAllergens(id: String) = stringSetPreferencesKey("profile_${id}_allergens")
+        fun displayName(id: String) = "profile_${id}_name"
+        fun hasAsthma(id: String) = "profile_${id}_asthma"
+        fun trackedAllergens(id: String) = "profile_${id}_allergens"
         fun threshold(id: String, type: String, level: String) =
-            stringPreferencesKey("profile_${id}_threshold_${type}_${level}")
-        fun locationLat(id: String) = stringPreferencesKey("profile_${id}_location_lat")
-        fun locationLon(id: String) = stringPreferencesKey("profile_${id}_location_lon")
-        fun locationName(id: String) = stringPreferencesKey("profile_${id}_location_name")
-        fun medicineIds(id: String) = stringSetPreferencesKey("profile_${id}_medicine_ids")
-        fun medDose(id: String, medId: String) = stringPreferencesKey("profile_${id}_med_${medId}_dose")
-        fun medTimesPerDay(id: String, medId: String) = stringPreferencesKey("profile_${id}_med_${medId}_times_per_day")
-        fun medReminderHours(id: String, medId: String) = stringSetPreferencesKey("profile_${id}_med_${medId}_reminder_hours")
-        fun symptomIds(id: String) = stringSetPreferencesKey("profile_${id}_symptom_ids")
-        fun symptomName(id: String, symptomId: String) = stringPreferencesKey("profile_${id}_symptom_${symptomId}_name")
-        fun symptomIsDefault(id: String, symptomId: String) = booleanPreferencesKey("profile_${id}_symptom_${symptomId}_default")
+            "profile_${id}_threshold_${type}_${level}"
+        fun locationLat(id: String) = "profile_${id}_location_lat"
+        fun locationLon(id: String) = "profile_${id}_location_lon"
+        fun locationName(id: String) = "profile_${id}_location_name"
+        fun medicineIds(id: String) = "profile_${id}_medicine_ids"
+        fun medDose(id: String, medId: String) = "profile_${id}_med_${medId}_dose"
+        fun medTimesPerDay(id: String, medId: String) = "profile_${id}_med_${medId}_times_per_day"
+        fun medReminderHours(id: String, medId: String) = "profile_${id}_med_${medId}_reminder_hours"
+        fun symptomIds(id: String) = "profile_${id}_symptom_ids"
+        fun symptomName(id: String, symptomId: String) = "profile_${id}_symptom_${symptomId}_name"
+        fun symptomIsDefault(id: String, symptomId: String) = "profile_${id}_symptom_${symptomId}_default"
     }
 
-    fun getProfiles(): Flow<List<UserProfile>> = dataStore.data
+    fun getProfiles(): Flow<List<UserProfile>> = store.data
         .map { prefs ->
-            val ids = prefs[Keys.PROFILE_IDS] ?: return@map emptyList()
+            val ids = prefs.getStringSet(Keys.PROFILE_IDS, null) ?: return@map emptyList()
             ids.mapNotNull { id -> readProfile(prefs, id) }
         }
 
-    fun getSelectedProfileId(): Flow<String> = dataStore.data.map { prefs ->
-        prefs[Keys.SELECTED_PROFILE] ?: ""
+    fun getSelectedProfileId(): Flow<String> = store.data.map { prefs ->
+        prefs.getString(Keys.SELECTED_PROFILE, null) ?: ""
     }
 
     suspend fun selectProfile(profileId: String) {
-        dataStore.edit { prefs ->
-            prefs[Keys.SELECTED_PROFILE] = profileId
+        store.edit {
+            putString(Keys.SELECTED_PROFILE, profileId)
         }
     }
 
     suspend fun addProfile(profile: UserProfile) {
-        dataStore.edit { prefs ->
-            val ids = prefs[Keys.PROFILE_IDS]?.toMutableSet() ?: mutableSetOf()
+        store.edit {
+            val ids = store.prefs.getStringSet(Keys.PROFILE_IDS, null)?.toMutableSet() ?: mutableSetOf()
             ids.add(profile.id)
-            prefs[Keys.PROFILE_IDS] = ids
-            writeProfile(prefs, profile)
-            // Auto-select if this is the first profile
+            putStringSet(Keys.PROFILE_IDS, ids)
+            writeProfile(this, profile)
             if (ids.size == 1) {
-                prefs[Keys.SELECTED_PROFILE] = profile.id
+                putString(Keys.SELECTED_PROFILE, profile.id)
             }
         }
     }
 
     suspend fun updateProfile(profile: UserProfile) {
-        dataStore.edit { prefs ->
-            // Clear old threshold keys (allergens may have been removed)
-            clearProfileKeys(prefs, profile.id)
-            writeProfile(prefs, profile)
+        store.edit {
+            clearProfileKeys(this, store.prefs, profile.id)
+            writeProfile(this, profile)
         }
     }
 
     suspend fun deleteProfile(profileId: String) {
-        dataStore.edit { prefs ->
-            val ids = prefs[Keys.PROFILE_IDS]?.toMutableSet() ?: return@edit
+        store.edit {
+            val ids = store.prefs.getStringSet(Keys.PROFILE_IDS, null)?.toMutableSet() ?: return@edit
             ids.remove(profileId)
-            prefs[Keys.PROFILE_IDS] = ids
-            clearProfileKeys(prefs, profileId)
-            // Reselect if the deleted profile was selected
-            if (prefs[Keys.SELECTED_PROFILE] == profileId) {
-                prefs[Keys.SELECTED_PROFILE] = ids.firstOrNull() ?: ""
+            putStringSet(Keys.PROFILE_IDS, ids)
+            clearProfileKeys(this, store.prefs, profileId)
+            if (store.prefs.getString(Keys.SELECTED_PROFILE, null) == profileId) {
+                putString(Keys.SELECTED_PROFILE, ids.firstOrNull() ?: "")
             }
         }
     }
 
-    private fun clearProfileKeys(prefs: MutablePreferences, id: String) {
-        prefs.remove(Keys.displayName(id))
-        prefs.remove(Keys.hasAsthma(id))
-        prefs.remove(Keys.trackedAllergens(id))
-        prefs.remove(Keys.locationLat(id))
-        prefs.remove(Keys.locationLon(id))
-        prefs.remove(Keys.locationName(id))
+    private fun clearProfileKeys(editor: SharedPreferences.Editor, prefs: SharedPreferences, id: String) {
+        editor.remove(Keys.displayName(id))
+        editor.remove(Keys.hasAsthma(id))
+        editor.remove(Keys.trackedAllergens(id))
+        editor.remove(Keys.locationLat(id))
+        editor.remove(Keys.locationLon(id))
+        editor.remove(Keys.locationName(id))
         val levels = listOf("low", "moderate", "high", "veryHigh")
         for (type in PollenType.entries) {
             for (level in levels) {
-                prefs.remove(Keys.threshold(id, type.name, level))
+                editor.remove(Keys.threshold(id, type.name, level))
             }
         }
-        // Clear medicine assignment keys
-        val medIds = prefs[Keys.medicineIds(id)] ?: emptySet()
+        val medIds = prefs.getStringSet(Keys.medicineIds(id), null) ?: emptySet()
         for (medId in medIds) {
-            prefs.remove(Keys.medDose(id, medId))
-            prefs.remove(Keys.medTimesPerDay(id, medId))
-            prefs.remove(Keys.medReminderHours(id, medId))
+            editor.remove(Keys.medDose(id, medId))
+            editor.remove(Keys.medTimesPerDay(id, medId))
+            editor.remove(Keys.medReminderHours(id, medId))
         }
-        prefs.remove(Keys.medicineIds(id))
-        // Clear symptom keys
-        val symptomIds = prefs[Keys.symptomIds(id)] ?: emptySet()
+        editor.remove(Keys.medicineIds(id))
+        val symptomIds = prefs.getStringSet(Keys.symptomIds(id), null) ?: emptySet()
         for (symptomId in symptomIds) {
-            prefs.remove(Keys.symptomName(id, symptomId))
-            prefs.remove(Keys.symptomIsDefault(id, symptomId))
+            editor.remove(Keys.symptomName(id, symptomId))
+            editor.remove(Keys.symptomIsDefault(id, symptomId))
         }
-        prefs.remove(Keys.symptomIds(id))
+        editor.remove(Keys.symptomIds(id))
     }
 
-    private fun writeProfile(prefs: MutablePreferences, profile: UserProfile) {
-        prefs[Keys.displayName(profile.id)] = profile.displayName
-        prefs[Keys.hasAsthma(profile.id)] = profile.hasAsthma
-        prefs[Keys.trackedAllergens(profile.id)] = profile.trackedAllergens.keys.map { it.name }.toSet()
+    private fun writeProfile(editor: SharedPreferences.Editor, profile: UserProfile) {
+        editor.putString(Keys.displayName(profile.id), profile.displayName)
+        editor.putBoolean(Keys.hasAsthma(profile.id), profile.hasAsthma)
+        editor.putStringSet(
+            Keys.trackedAllergens(profile.id),
+            profile.trackedAllergens.keys.map { it.name }.toSet()
+        )
         profile.trackedAllergens.forEach { (type, threshold) ->
-            prefs[Keys.threshold(profile.id, type.name, "low")] = threshold.low.toString()
-            prefs[Keys.threshold(profile.id, type.name, "moderate")] = threshold.moderate.toString()
-            prefs[Keys.threshold(profile.id, type.name, "high")] = threshold.high.toString()
-            prefs[Keys.threshold(profile.id, type.name, "veryHigh")] = threshold.veryHigh.toString()
+            editor.putString(Keys.threshold(profile.id, type.name, "low"), threshold.low.toString())
+            editor.putString(Keys.threshold(profile.id, type.name, "moderate"), threshold.moderate.toString())
+            editor.putString(Keys.threshold(profile.id, type.name, "high"), threshold.high.toString())
+            editor.putString(Keys.threshold(profile.id, type.name, "veryHigh"), threshold.veryHigh.toString())
         }
         val loc = profile.location
         if (loc != null) {
-            prefs[Keys.locationLat(profile.id)] = loc.latitude.toString()
-            prefs[Keys.locationLon(profile.id)] = loc.longitude.toString()
-            prefs[Keys.locationName(profile.id)] = loc.displayName
+            editor.putString(Keys.locationLat(profile.id), loc.latitude.toString())
+            editor.putString(Keys.locationLon(profile.id), loc.longitude.toString())
+            editor.putString(Keys.locationName(profile.id), loc.displayName)
         } else {
-            prefs.remove(Keys.locationLat(profile.id))
-            prefs.remove(Keys.locationLon(profile.id))
-            prefs.remove(Keys.locationName(profile.id))
+            editor.remove(Keys.locationLat(profile.id))
+            editor.remove(Keys.locationLon(profile.id))
+            editor.remove(Keys.locationName(profile.id))
         }
-        // Medicine assignments
         val medIds = profile.medicineAssignments.map { it.medicineId }.toSet()
-        prefs[Keys.medicineIds(profile.id)] = medIds
+        editor.putStringSet(Keys.medicineIds(profile.id), medIds)
         profile.medicineAssignments.forEach { assignment ->
-            prefs[Keys.medDose(profile.id, assignment.medicineId)] = assignment.dose.toString()
-            prefs[Keys.medTimesPerDay(profile.id, assignment.medicineId)] = assignment.timesPerDay.toString()
-            prefs[Keys.medReminderHours(profile.id, assignment.medicineId)] = assignment.reminderHours.map { it.toString() }.toSet()
+            editor.putString(Keys.medDose(profile.id, assignment.medicineId), assignment.dose.toString())
+            editor.putString(
+                Keys.medTimesPerDay(profile.id, assignment.medicineId),
+                assignment.timesPerDay.toString()
+            )
+            editor.putStringSet(
+                Keys.medReminderHours(profile.id, assignment.medicineId),
+                assignment.reminderHours.map { it.toString() }.toSet()
+            )
         }
-        // Symptoms
         val symptomIds = profile.trackedSymptoms.map { it.id }.toSet()
-        prefs[Keys.symptomIds(profile.id)] = symptomIds
+        editor.putStringSet(Keys.symptomIds(profile.id), symptomIds)
         profile.trackedSymptoms.forEach { symptom ->
-            prefs[Keys.symptomName(profile.id, symptom.id)] = symptom.displayName
-            prefs[Keys.symptomIsDefault(profile.id, symptom.id)] = symptom.isDefault
+            editor.putString(Keys.symptomName(profile.id, symptom.id), symptom.displayName)
+            editor.putBoolean(Keys.symptomIsDefault(profile.id, symptom.id), symptom.isDefault)
         }
     }
 
-    private fun readProfile(prefs: Preferences, id: String): UserProfile? {
-        val name = prefs[Keys.displayName(id)] ?: return null
-        val asthma = prefs[Keys.hasAsthma(id)] ?: false
-        val allergenNames = prefs[Keys.trackedAllergens(id)] ?: emptySet()
+    private fun readProfile(prefs: SharedPreferences, id: String): UserProfile? {
+        val name = prefs.getString(Keys.displayName(id), null) ?: return null
+        val asthma = prefs.getBoolean(Keys.hasAsthma(id), false)
+        val allergenNames = prefs.getStringSet(Keys.trackedAllergens(id), null) ?: emptySet()
         val trackedAllergens = allergenNames.mapNotNull { allergenName ->
             val type = PollenType.entries.find { it.name == allergenName } ?: return@mapNotNull null
             val threshold = AllergenThreshold(
                 type = type,
-                low = prefs[Keys.threshold(id, allergenName, "low")]?.toDoubleOrNull() ?: return@mapNotNull null,
-                moderate = prefs[Keys.threshold(id, allergenName, "moderate")]?.toDoubleOrNull() ?: return@mapNotNull null,
-                high = prefs[Keys.threshold(id, allergenName, "high")]?.toDoubleOrNull() ?: return@mapNotNull null,
-                veryHigh = prefs[Keys.threshold(id, allergenName, "veryHigh")]?.toDoubleOrNull() ?: return@mapNotNull null
+                low = prefs.getString(Keys.threshold(id, allergenName, "low"), null)
+                    ?.toDoubleOrNull() ?: return@mapNotNull null,
+                moderate = prefs.getString(Keys.threshold(id, allergenName, "moderate"), null)
+                    ?.toDoubleOrNull() ?: return@mapNotNull null,
+                high = prefs.getString(Keys.threshold(id, allergenName, "high"), null)
+                    ?.toDoubleOrNull() ?: return@mapNotNull null,
+                veryHigh = prefs.getString(Keys.threshold(id, allergenName, "veryHigh"), null)
+                    ?.toDoubleOrNull() ?: return@mapNotNull null
             )
             type to threshold
         }.toMap()
 
-        val location = prefs[Keys.locationLat(id)]?.toDoubleOrNull()?.let { lat ->
-            val lon = prefs[Keys.locationLon(id)]?.toDoubleOrNull() ?: return@let null
-            val locName = prefs[Keys.locationName(id)] ?: ""
+        val location = prefs.getString(Keys.locationLat(id), null)?.toDoubleOrNull()?.let { lat ->
+            val lon = prefs.getString(Keys.locationLon(id), null)?.toDoubleOrNull() ?: return@let null
+            val locName = prefs.getString(Keys.locationName(id), null) ?: ""
             ProfileLocation(lat, lon, locName)
         }
 
-        // Medicine assignments
-        val medIds = prefs[Keys.medicineIds(id)] ?: emptySet()
+        val medIds = prefs.getStringSet(Keys.medicineIds(id), null) ?: emptySet()
         val medicineAssignments = medIds.mapNotNull { medId ->
-            val dose = prefs[Keys.medDose(id, medId)]?.toIntOrNull() ?: return@mapNotNull null
-            val timesPerDay = prefs[Keys.medTimesPerDay(id, medId)]?.toIntOrNull() ?: return@mapNotNull null
-            val reminderHours = prefs[Keys.medReminderHours(id, medId)]
+            val dose = prefs.getString(Keys.medDose(id, medId), null)?.toIntOrNull()
+                ?: return@mapNotNull null
+            val timesPerDay = prefs.getString(Keys.medTimesPerDay(id, medId), null)?.toIntOrNull()
+                ?: return@mapNotNull null
+            val reminderHours = prefs.getStringSet(Keys.medReminderHours(id, medId), null)
                 ?.mapNotNull { it.toIntOrNull() }
                 ?.sorted()
                 ?: emptyList()
@@ -204,12 +203,12 @@ class ProfileRepository(
             )
         }
 
-        // Symptoms (backwards-compatible: missing key → defaults)
-        val trackedSymptoms = if (prefs[Keys.symptomIds(id)] != null) {
-            val sIds = prefs[Keys.symptomIds(id)] ?: emptySet()
+        val trackedSymptoms = if (prefs.getStringSet(Keys.symptomIds(id), null) != null) {
+            val sIds = prefs.getStringSet(Keys.symptomIds(id), null) ?: emptySet()
             sIds.mapNotNull { symptomId ->
-                val sName = prefs[Keys.symptomName(id, symptomId)] ?: return@mapNotNull null
-                val isDefault = prefs[Keys.symptomIsDefault(id, symptomId)] ?: false
+                val sName = prefs.getString(Keys.symptomName(id, symptomId), null)
+                    ?: return@mapNotNull null
+                val isDefault = prefs.getBoolean(Keys.symptomIsDefault(id, symptomId), false)
                 TrackedSymptom(id = symptomId, displayName = sName, isDefault = isDefault)
             }
         } else {

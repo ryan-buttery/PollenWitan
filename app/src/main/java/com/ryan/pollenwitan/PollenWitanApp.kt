@@ -5,8 +5,10 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.ryan.pollenwitan.data.security.DatabaseEncryption
+import com.ryan.pollenwitan.data.security.DataStoreMigration
 import com.ryan.pollenwitan.worker.NotificationHelper
 import com.ryan.pollenwitan.worker.PollenCheckWorker
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 
 class PollenWitanApp : Application() {
@@ -14,6 +16,7 @@ class PollenWitanApp : Application() {
         super.onCreate()
 
         DatabaseEncryption.init(this)
+        runBlocking { DataStoreMigration.migrateIfNeeded(this@PollenWitanApp) }
         NotificationHelper.createChannels(this)
         schedulePollenCheck()
     }

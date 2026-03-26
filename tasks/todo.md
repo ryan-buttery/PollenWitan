@@ -29,6 +29,6 @@
 
 ## Future
 
-- [ ] **DataStore Encryption** — Encrypt sensitive DataStore files (profiles, medicines, dose_tracking, location) using EncryptedSharedPreferences
+- [x] **DataStore Encryption** — Encrypt sensitive DataStore files (profiles, medicines, dose_tracking, location) using EncryptedSharedPreferences
 - [ ] **Location-Aware Profiles** — Auto-detect travel and switch forecast location
 - [ ] **Threshold Auto-Calibration** — Use symptom diary data to suggest personalised threshold adjustments
