@@ -17,7 +17,9 @@ data class NotificationPrefs(
     val morningBriefingHour: Int = 7,
     val thresholdAlertsEnabled: Boolean = true,
     val compoundRiskAlertsEnabled: Boolean = true,
-    val preSeasonAlertsEnabled: Boolean = true
+    val preSeasonAlertsEnabled: Boolean = true,
+    val symptomReminderEnabled: Boolean = true,
+    val symptomReminderHour: Int = 20
 )
 
 private val Context.notificationPrefsDataStore by preferencesDataStore(name = "notification_prefs")
@@ -35,6 +37,8 @@ class NotificationPrefsRepository(
         val COMPOUND_ENABLED = booleanPreferencesKey("compound_risk_enabled")
         val LAST_BRIEFING_DATE = stringPreferencesKey("last_briefing_date")
         val PRE_SEASON_ENABLED = booleanPreferencesKey("pre_season_alerts_enabled")
+        val SYMPTOM_REMINDER_ENABLED = booleanPreferencesKey("symptom_reminder_enabled")
+        val SYMPTOM_REMINDER_HOUR = intPreferencesKey("symptom_reminder_hour")
         fun preSeasonAlertYearKey(type: PollenType) =
             intPreferencesKey("preseason_alert_year_${type.name.lowercase()}")
     }
@@ -45,7 +49,9 @@ class NotificationPrefsRepository(
             morningBriefingHour = prefs[Keys.MORNING_HOUR] ?: 7,
             thresholdAlertsEnabled = prefs[Keys.THRESHOLD_ENABLED] ?: true,
             compoundRiskAlertsEnabled = prefs[Keys.COMPOUND_ENABLED] ?: true,
-            preSeasonAlertsEnabled = prefs[Keys.PRE_SEASON_ENABLED] ?: true
+            preSeasonAlertsEnabled = prefs[Keys.PRE_SEASON_ENABLED] ?: true,
+            symptomReminderEnabled = prefs[Keys.SYMPTOM_REMINDER_ENABLED] ?: true,
+            symptomReminderHour = prefs[Keys.SYMPTOM_REMINDER_HOUR] ?: 20
         )
     }
 
@@ -84,5 +90,13 @@ class NotificationPrefsRepository(
 
     suspend fun setLastPreSeasonAlertYear(type: PollenType, year: Int) {
         dataStore.edit { it[Keys.preSeasonAlertYearKey(type)] = year }
+    }
+
+    suspend fun setSymptomReminderEnabled(enabled: Boolean) {
+        dataStore.edit { it[Keys.SYMPTOM_REMINDER_ENABLED] = enabled }
+    }
+
+    suspend fun setSymptomReminderHour(hour: Int) {
+        dataStore.edit { it[Keys.SYMPTOM_REMINDER_HOUR] = hour }
     }
 }

@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Menu
@@ -55,6 +56,8 @@ import androidx.navigation.navArgument
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.ui.screens.CrossReactivityScreen
 import com.ryan.pollenwitan.ui.screens.PollenCalendarScreen
+import com.ryan.pollenwitan.ui.screens.SymptomCheckInScreen
+import com.ryan.pollenwitan.ui.screens.SymptomDiaryScreen
 import com.ryan.pollenwitan.ui.screens.DashboardScreen
 import com.ryan.pollenwitan.ui.screens.ForecastScreen
 import com.ryan.pollenwitan.ui.screens.OnboardingScreen
@@ -79,6 +82,7 @@ private val navItems = listOf(
     NavItem(Screen.ProfileList, R.string.nav_profiles, Icons.Filled.Person),
     NavItem(Screen.CrossReactivity, R.string.nav_cross_reactivity, Icons.Filled.Link),
     NavItem(Screen.PollenCalendar, R.string.nav_pollen_calendar, Icons.Filled.EventNote),
+    NavItem(Screen.SymptomDiary, R.string.nav_symptom_diary, Icons.Filled.EditNote),
     NavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings)
 )
 
@@ -115,6 +119,7 @@ fun AppNavGraph(
     val currentLabelRes = when {
         currentRoute == Screen.ProfileCreate.route -> R.string.nav_new_profile
         currentRoute?.startsWith("profiles/edit/") == true -> R.string.nav_edit_profile
+        currentRoute == Screen.SymptomCheckIn.route -> R.string.symptom_checkin_title
         else -> navItems.find { item ->
             currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
         }?.labelRes ?: R.string.nav_dashboard
@@ -287,11 +292,21 @@ fun AppNavGraph(
                     )
                 }
                 composable(Screen.Dashboard.route) {
-                    DashboardScreen()
+                    DashboardScreen(
+                        onNavigateToCheckIn = {
+                            navController.navigate(Screen.SymptomCheckIn.route)
+                        }
+                    )
                 }
                 composable(Screen.Forecast.route) { ForecastScreen() }
                 composable(Screen.CrossReactivity.route) { CrossReactivityScreen() }
                 composable(Screen.PollenCalendar.route) { PollenCalendarScreen() }
+                composable(Screen.SymptomCheckIn.route) {
+                    SymptomCheckInScreen(
+                        onSaved = { navController.popBackStack() }
+                    )
+                }
+                composable(Screen.SymptomDiary.route) { SymptomDiaryScreen() }
                 composable(Screen.Settings.route) { SettingsScreen() }
                 composable(Screen.ProfileList.route) {
                     ProfileListScreen(navController = navController)

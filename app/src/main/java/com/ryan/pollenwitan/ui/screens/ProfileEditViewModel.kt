@@ -11,8 +11,10 @@ import com.ryan.pollenwitan.domain.model.AllergenThreshold
 import com.ryan.pollenwitan.domain.model.Medicine
 import com.ryan.pollenwitan.domain.model.MedicineAssignment
 import com.ryan.pollenwitan.domain.model.MedicineType
+import com.ryan.pollenwitan.domain.model.DefaultSymptom
 import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.ProfileLocation
+import com.ryan.pollenwitan.domain.model.TrackedSymptom
 import com.ryan.pollenwitan.domain.model.UserProfile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,6 +38,7 @@ data class ProfileEditUiState(
     val gpsStatus: GpsStatus = GpsStatus.Idle,
     val medicineAssignments: List<MedicineAssignmentUiState> = emptyList(),
     val availableMedicines: List<Medicine> = emptyList(),
+    val trackedSymptoms: List<TrackedSymptom> = UserProfile.defaultSymptoms(),
     val isSaving: Boolean = false,
     val savedSuccessfully: Boolean = false,
     val validationError: String? = null
@@ -98,7 +101,8 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
                 locationLongitude = profile.location?.longitude?.toString() ?: "",
                 locationDisplayName = profile.location?.displayName ?: "",
                 medicineAssignments = assignmentStates,
-                availableMedicines = medicines
+                availableMedicines = medicines,
+                trackedSymptoms = profile.trackedSymptoms
             )
         }
     }
@@ -239,6 +243,33 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
         )
     }
 
+    fun toggleDefaultSymptom(symptom: DefaultSymptom) {
+        val current = _uiState.value
+        val symptoms = current.trackedSymptoms.toMutableList()
+        val existing = symptoms.find { it.id == symptom.name }
+        if (existing != null) {
+            symptoms.remove(existing)
+        } else {
+            symptoms.add(TrackedSymptom(id = symptom.name, displayName = symptom.name, isDefault = true))
+        }
+        _uiState.value = current.copy(trackedSymptoms = symptoms)
+    }
+
+    fun addCustomSymptom(name: String) {
+        val trimmed = name.trim()
+        if (trimmed.isBlank()) return
+        val current = _uiState.value
+        val symptom = TrackedSymptom(id = UUID.randomUUID().toString(), displayName = trimmed, isDefault = false)
+        _uiState.value = current.copy(trackedSymptoms = current.trackedSymptoms + symptom)
+    }
+
+    fun removeCustomSymptom(id: String) {
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            trackedSymptoms = current.trackedSymptoms.filter { it.id != id }
+        )
+    }
+
     fun requestGpsFix() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(gpsStatus = GpsStatus.Requesting)
@@ -297,7 +328,8 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
             trackedAllergens = state.thresholds.filterKeys { it in state.trackedAllergens },
             hasAsthma = state.hasAsthma,
             location = location,
-            medicineAssignments = medicineAssignments
+            medicineAssignments = medicineAssignments,
+            trackedSymptoms = state.trackedSymptoms
         )
 
         _uiState.value = state.copy(isSaving = true, validationError = null)

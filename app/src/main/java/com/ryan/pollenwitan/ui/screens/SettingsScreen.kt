@@ -211,7 +211,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                     onMorningHourChange = viewModel::setMorningBriefingHour,
                     onThresholdToggle = viewModel::setThresholdAlertsEnabled,
                     onCompoundRiskToggle = viewModel::setCompoundRiskAlertsEnabled,
-                    onPreSeasonToggle = viewModel::setPreSeasonAlertsEnabled
+                    onPreSeasonToggle = viewModel::setPreSeasonAlertsEnabled,
+                    onSymptomReminderToggle = viewModel::setSymptomReminderEnabled,
+                    onSymptomReminderHourChange = viewModel::setSymptomReminderHour
                 )
             }
         }
@@ -225,7 +227,9 @@ private fun NotificationSettings(
     onMorningHourChange: (Int) -> Unit,
     onThresholdToggle: (Boolean) -> Unit,
     onCompoundRiskToggle: (Boolean) -> Unit,
-    onPreSeasonToggle: (Boolean) -> Unit
+    onPreSeasonToggle: (Boolean) -> Unit,
+    onSymptomReminderToggle: (Boolean) -> Unit,
+    onSymptomReminderHourChange: (Int) -> Unit
 ) {
     // Morning briefing
     Row(
@@ -343,6 +347,60 @@ private fun NotificationSettings(
             checked = prefs.preSeasonAlertsEnabled,
             onCheckedChange = onPreSeasonToggle
         )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Symptom check-in reminder
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.settings_symptom_reminder), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                stringResource(R.string.settings_symptom_reminder_desc, String.format("%02d:00", prefs.symptomReminderHour)),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(
+            checked = prefs.symptomReminderEnabled,
+            onCheckedChange = onSymptomReminderToggle
+        )
+    }
+
+    // Symptom reminder hour selector
+    if (prefs.symptomReminderEnabled) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(stringResource(R.string.settings_hour), style = MaterialTheme.typography.bodyMedium)
+            listOf(18, 19, 20, 21).forEach { hour ->
+                val isSelected = prefs.symptomReminderHour == hour
+                if (isSelected) {
+                    Button(
+                        onClick = {},
+                        modifier = Modifier.weight(1f),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                    ) {
+                        Text("${hour}:00", style = MaterialTheme.typography.bodySmall)
+                    }
+                } else {
+                    OutlinedButton(
+                        onClick = { onSymptomReminderHourChange(hour) },
+                        modifier = Modifier.weight(1f),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                    ) {
+                        Text("${hour}:00", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        }
     }
 }
 

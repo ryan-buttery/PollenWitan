@@ -106,6 +106,14 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { notificationPrefsRepository.setPreSeasonAlertsEnabled(enabled) }
     }
 
+    fun setSymptomReminderEnabled(enabled: Boolean) {
+        viewModelScope.launch { notificationPrefsRepository.setSymptomReminderEnabled(enabled) }
+    }
+
+    fun setSymptomReminderHour(hour: Int) {
+        viewModelScope.launch { notificationPrefsRepository.setSymptomReminderHour(hour) }
+    }
+
     fun addMedicine(name: String, type: MedicineType) {
         viewModelScope.launch {
             medicineRepository.addMedicine(

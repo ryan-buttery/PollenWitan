@@ -23,6 +23,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -50,9 +52,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.domain.model.AllergenThreshold
+import com.ryan.pollenwitan.domain.model.DefaultSymptom
 import com.ryan.pollenwitan.domain.model.Medicine
 import com.ryan.pollenwitan.domain.model.PollenType
+import com.ryan.pollenwitan.domain.model.TrackedSymptom
 import com.ryan.pollenwitan.domain.model.UserProfile
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -213,6 +219,82 @@ fun ProfileEditScreen(
             }
             Spacer(modifier = Modifier.height(20.dp))
         }
+
+        // Symptoms section
+        Text(
+            text = stringResource(R.string.symptom_tracked_symptoms),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val trackedSymptomIds = uiState.trackedSymptoms.map { it.id }.toSet()
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            DefaultSymptom.entries.forEach { symptom ->
+                FilterChip(
+                    selected = symptom.name in trackedSymptomIds,
+                    onClick = { viewModel.toggleDefaultSymptom(symptom) },
+                    label = { Text(symptom.localizedName()) }
+                )
+            }
+        }
+
+        // Custom symptoms
+        val customSymptoms = uiState.trackedSymptoms.filter { !it.isDefault }
+        customSymptoms.forEach { symptom ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(symptom.displayName, style = MaterialTheme.typography.bodyLarge)
+                IconButton(onClick = { viewModel.removeCustomSymptom(symptom.id) }) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = stringResource(R.string.common_delete),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+
+        // Add custom symptom
+        var showAddSymptomDialog by remember { mutableStateOf(false) }
+        OutlinedButton(onClick = { showAddSymptomDialog = true }) {
+            Text(stringResource(R.string.symptom_add_custom))
+        }
+        if (showAddSymptomDialog) {
+            var customName by remember { mutableStateOf("") }
+            AlertDialog(
+                onDismissRequest = { showAddSymptomDialog = false },
+                title = { Text(stringResource(R.string.symptom_add_custom)) },
+                text = {
+                    OutlinedTextField(
+                        value = customName,
+                        onValueChange = { customName = it },
+                        label = { Text(stringResource(R.string.common_name)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.addCustomSymptom(customName)
+                        showAddSymptomDialog = false
+                    }) { Text(stringResource(R.string.common_save)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showAddSymptomDialog = false }) {
+                        Text(stringResource(R.string.common_cancel))
+                    }
+                }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Validation error
         uiState.validationError?.let { error ->

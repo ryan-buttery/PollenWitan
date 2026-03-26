@@ -35,6 +35,7 @@ import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.domain.model.CurrentConditions
 import com.ryan.pollenwitan.domain.model.PollenReading
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
+import com.ryan.pollenwitan.domain.model.SymptomDiaryEntry
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.components.ProfileSwitcher
 import com.ryan.pollenwitan.ui.theme.localizedName
@@ -46,7 +47,8 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun DashboardScreen(
-    viewModel: DashboardViewModel = viewModel()
+    viewModel: DashboardViewModel = viewModel(),
+    onNavigateToCheckIn: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -58,10 +60,12 @@ fun DashboardScreen(
             selectedProfile = uiState.selectedProfile,
             locationDisplayName = uiState.locationDisplayName,
             medicineSlots = uiState.medicineSlots,
+            todaySymptomEntry = uiState.todaySymptomEntry,
             onSelectProfile = viewModel::selectProfile,
             onRefresh = viewModel::refresh,
             onConfirmDose = viewModel::confirmDose,
-            onUnconfirmDose = viewModel::unconfirmDose
+            onUnconfirmDose = viewModel::unconfirmDose,
+            onNavigateToCheckIn = onNavigateToCheckIn
         )
         is WeatherState.Error -> ErrorContent(
             message = weather.message,
@@ -112,10 +116,12 @@ private fun DashboardContent(
     selectedProfile: UserProfile?,
     locationDisplayName: String,
     medicineSlots: List<MedicineSlot>,
+    todaySymptomEntry: SymptomDiaryEntry?,
     onSelectProfile: (String) -> Unit,
     onRefresh: () -> Unit,
     onConfirmDose: (String, Int) -> Unit,
-    onUnconfirmDose: (String, Int) -> Unit
+    onUnconfirmDose: (String, Int) -> Unit,
+    onNavigateToCheckIn: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -334,6 +340,54 @@ private fun DashboardContent(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Symptom check-in card
+        if (selectedProfile != null) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = stringResource(R.string.symptom_checkin_card),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    if (todaySymptomEntry != null) {
+                        val avgSeverity = todaySymptomEntry.ratings
+                            .map { it.severity }
+                            .average()
+                        Text(
+                            text = stringResource(R.string.symptom_logged_summary, todaySymptomEntry.ratings.size),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = stringResource(R.string.symptom_avg_severity, avgSeverity),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = onNavigateToCheckIn) {
+                            Text(stringResource(R.string.symptom_log_now))
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(R.string.symptom_not_logged),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = onNavigateToCheckIn) {
+                            Text(stringResource(R.string.symptom_log_now))
                         }
                     }
                 }

@@ -12,7 +12,9 @@ import com.ryan.pollenwitan.domain.model.AllergenThreshold
 import com.ryan.pollenwitan.domain.model.AppLocation
 import com.ryan.pollenwitan.domain.model.MedicineAssignment
 import com.ryan.pollenwitan.domain.model.PollenType
+import com.ryan.pollenwitan.domain.model.DefaultSymptom
 import com.ryan.pollenwitan.domain.model.ProfileLocation
+import com.ryan.pollenwitan.domain.model.TrackedSymptom
 import com.ryan.pollenwitan.domain.model.UserProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -41,6 +43,9 @@ class ProfileRepository(
         fun medDose(id: String, medId: String) = stringPreferencesKey("profile_${id}_med_${medId}_dose")
         fun medTimesPerDay(id: String, medId: String) = stringPreferencesKey("profile_${id}_med_${medId}_times_per_day")
         fun medReminderHours(id: String, medId: String) = stringSetPreferencesKey("profile_${id}_med_${medId}_reminder_hours")
+        fun symptomIds(id: String) = stringSetPreferencesKey("profile_${id}_symptom_ids")
+        fun symptomName(id: String, symptomId: String) = stringPreferencesKey("profile_${id}_symptom_${symptomId}_name")
+        fun symptomIsDefault(id: String, symptomId: String) = booleanPreferencesKey("profile_${id}_symptom_${symptomId}_default")
     }
 
     fun getProfiles(): Flow<List<UserProfile>> = dataStore.data
@@ -114,6 +119,13 @@ class ProfileRepository(
             prefs.remove(Keys.medReminderHours(id, medId))
         }
         prefs.remove(Keys.medicineIds(id))
+        // Clear symptom keys
+        val symptomIds = prefs[Keys.symptomIds(id)] ?: emptySet()
+        for (symptomId in symptomIds) {
+            prefs.remove(Keys.symptomName(id, symptomId))
+            prefs.remove(Keys.symptomIsDefault(id, symptomId))
+        }
+        prefs.remove(Keys.symptomIds(id))
     }
 
     private fun writeProfile(prefs: MutablePreferences, profile: UserProfile) {
@@ -143,6 +155,13 @@ class ProfileRepository(
             prefs[Keys.medDose(profile.id, assignment.medicineId)] = assignment.dose.toString()
             prefs[Keys.medTimesPerDay(profile.id, assignment.medicineId)] = assignment.timesPerDay.toString()
             prefs[Keys.medReminderHours(profile.id, assignment.medicineId)] = assignment.reminderHours.map { it.toString() }.toSet()
+        }
+        // Symptoms
+        val symptomIds = profile.trackedSymptoms.map { it.id }.toSet()
+        prefs[Keys.symptomIds(profile.id)] = symptomIds
+        profile.trackedSymptoms.forEach { symptom ->
+            prefs[Keys.symptomName(profile.id, symptom.id)] = symptom.displayName
+            prefs[Keys.symptomIsDefault(profile.id, symptom.id)] = symptom.isDefault
         }
     }
 
@@ -185,13 +204,26 @@ class ProfileRepository(
             )
         }
 
+        // Symptoms (backwards-compatible: missing key → defaults)
+        val trackedSymptoms = if (prefs[Keys.symptomIds(id)] != null) {
+            val sIds = prefs[Keys.symptomIds(id)] ?: emptySet()
+            sIds.mapNotNull { symptomId ->
+                val sName = prefs[Keys.symptomName(id, symptomId)] ?: return@mapNotNull null
+                val isDefault = prefs[Keys.symptomIsDefault(id, symptomId)] ?: false
+                TrackedSymptom(id = symptomId, displayName = sName, isDefault = isDefault)
+            }
+        } else {
+            UserProfile.defaultSymptoms()
+        }
+
         return UserProfile(
             id = id,
             displayName = name,
             trackedAllergens = trackedAllergens,
             hasAsthma = asthma,
             location = location,
-            medicineAssignments = medicineAssignments
+            medicineAssignments = medicineAssignments,
+            trackedSymptoms = trackedSymptoms
         )
     }
 

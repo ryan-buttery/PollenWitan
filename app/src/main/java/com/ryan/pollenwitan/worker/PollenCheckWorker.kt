@@ -10,6 +10,7 @@ import com.ryan.pollenwitan.data.repository.LocationRepository
 import com.ryan.pollenwitan.data.repository.MedicineRepository
 import com.ryan.pollenwitan.data.repository.NotificationPrefsRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
+import com.ryan.pollenwitan.data.repository.SymptomDiaryRepository
 import com.ryan.pollenwitan.domain.model.CurrentConditions
 import com.ryan.pollenwitan.domain.model.DoseConfirmation
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
@@ -35,6 +36,7 @@ class PollenCheckWorker(
     private val notificationPrefsRepository = NotificationPrefsRepository(applicationContext)
     private val medicineRepository = MedicineRepository(applicationContext)
     private val doseTrackingRepository = DoseTrackingRepository(applicationContext)
+    private val symptomDiaryRepository = SymptomDiaryRepository(applicationContext)
 
     override suspend fun doWork(): Result {
         val ctx = applicationContext
@@ -166,6 +168,22 @@ class PollenCheckWorker(
             }
         }
 
+        // Symptom check-in reminder
+        if (prefs.symptomReminderEnabled && currentHour == prefs.symptomReminderHour) {
+            profiles.forEachIndexed { index, profile ->
+                val todayEntry = symptomDiaryRepository.getEntryForDate(profile.id, today)
+                if (todayEntry == null) {
+                    NotificationHelper.sendNotification(
+                        context = ctx,
+                        channelId = NotificationHelper.CHANNEL_SYMPTOM_REMINDER,
+                        notificationId = SYMPTOM_REMINDER_BASE_ID + index,
+                        title = ctx.getString(R.string.notif_symptom_reminder_title, profile.displayName),
+                        text = ctx.getString(R.string.notif_symptom_reminder_text)
+                    )
+                }
+            }
+        }
+
         // Refresh home screen widgets with latest data
         PollenWidget().updateAll(applicationContext)
 
@@ -248,5 +266,6 @@ class PollenCheckWorker(
         private const val COMPOUND_RISK_BASE_ID = 3000
         private const val MEDICATION_REMINDER_BASE_ID = 4000
         private const val PRE_SEASON_ALERT_BASE_ID = 5000
+        private const val SYMPTOM_REMINDER_BASE_ID = 6000
     }
 }
