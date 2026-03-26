@@ -262,6 +262,11 @@
     <string name="symptom_severity_4">Silny</string>
     <string name="symptom_severity_5">Bardzo silny</string>
     <string name="symptom_checkin_card">Przegląd objawów</string>
+    <string name="symptom_checkin_subtitle_evening">Wieczorny przegląd objawów</string>
+    <string name="symptom_checkin_prompt_evening">Jak wyglądały dzisiaj Twoje alergie? Zapisz wieczorny przegląd.</string>
+    <string name="symptom_checkin_prompt_early">Wróć wieczorem, żeby zapisać dzisiejsze objawy.</string>
+    <string name="symptom_checkin_button_evening">Zapisz wieczorny przegląd</string>
+    <string name="symptom_checkin_button_update">Zaktualizuj przegląd</string>
     <string name="symptom_avg_severity">Śr. nasilenie: %1$.1f</string>
     <string name="nav_symptom_diary">Dziennik objawów</string>
     <string name="symptom_diary_title">Dziennik objawów</string>

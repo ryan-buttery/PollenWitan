@@ -264,6 +264,11 @@
     <string name="symptom_severity_4">Severe</string>
     <string name="symptom_severity_5">Very severe</string>
     <string name="symptom_checkin_card">Symptom Check-In</string>
+    <string name="symptom_checkin_subtitle_evening">Evening symptom review</string>
+    <string name="symptom_checkin_prompt_evening">How were your allergies today? Log your evening check-in.</string>
+    <string name="symptom_checkin_prompt_early">Check back this evening to log today\u2019s symptoms.</string>
+    <string name="symptom_checkin_button_evening">Log Evening Check-In</string>
+    <string name="symptom_checkin_button_update">Update Check-In</string>
     <string name="symptom_avg_severity">Avg severity: %1$.1f</string>
     <string name="nav_symptom_diary">Symptom Diary</string>
     <string name="symptom_diary_title">Symptom Diary</string>
