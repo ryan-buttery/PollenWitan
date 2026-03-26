@@ -3,14 +3,21 @@ package com.ryan.pollenwitan.ui.screens
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryan.pollenwitan.data.export.AppDataExporter
+import com.ryan.pollenwitan.data.export.AppDataImporter
+import com.ryan.pollenwitan.data.export.CsvSymptomExporter
 import com.ryan.pollenwitan.data.location.GpsLocationProvider
 import com.ryan.pollenwitan.data.repository.LocationRepository
 import com.ryan.pollenwitan.data.repository.MedicineRepository
 import com.ryan.pollenwitan.data.repository.NotificationPrefs
 import com.ryan.pollenwitan.data.repository.NotificationPrefsRepository
+import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.domain.model.LocationMode
 import com.ryan.pollenwitan.domain.model.Medicine
 import com.ryan.pollenwitan.domain.model.MedicineType
+import com.ryan.pollenwitan.domain.model.UserProfile
+import java.io.InputStream
+import java.io.OutputStream
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,7 +33,8 @@ data class SettingsUiState(
     val manualDisplayName: String = "",
     val gpsStatus: GpsStatus = GpsStatus.Idle,
     val notificationPrefs: NotificationPrefs = NotificationPrefs(),
-    val medicines: List<Medicine> = emptyList()
+    val medicines: List<Medicine> = emptyList(),
+    val profiles: List<UserProfile> = emptyList()
 )
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
@@ -35,6 +43,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val gpsLocationProvider = GpsLocationProvider(application)
     private val notificationPrefsRepository = NotificationPrefsRepository(application)
     private val medicineRepository = MedicineRepository(application)
+    private val profileRepository = ProfileRepository(application)
+
+    private val exporter = AppDataExporter(application)
+    private val importer = AppDataImporter(application)
+    private val csvExporter = CsvSymptomExporter(application)
 
     private val _gpsStatus = MutableStateFlow<GpsStatus>(GpsStatus.Idle)
 
@@ -43,8 +56,17 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         locationRepository.getLocation(),
         _gpsStatus,
         notificationPrefsRepository.getPrefs(),
-        medicineRepository.getMedicines()
-    ) { mode, location, gpsStatus, notifPrefs, medicines ->
+        medicineRepository.getMedicines(),
+        profileRepository.getProfiles()
+    ) { values ->
+        val mode = values[0] as LocationMode
+        val location = values[1] as com.ryan.pollenwitan.domain.model.AppLocation
+        val gpsStatus = values[2] as GpsStatus
+        val notifPrefs = values[3] as NotificationPrefs
+        @Suppress("UNCHECKED_CAST")
+        val medicines = values[4] as List<Medicine>
+        @Suppress("UNCHECKED_CAST")
+        val profiles = values[5] as List<UserProfile>
         SettingsUiState(
             locationMode = mode,
             manualLatitude = if (mode == LocationMode.Manual) location.latitude.toString() else "",
@@ -52,7 +74,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             manualDisplayName = if (mode == LocationMode.Manual) location.displayName else "",
             gpsStatus = gpsStatus,
             notificationPrefs = notifPrefs,
-            medicines = medicines
+            medicines = medicines,
+            profiles = profiles
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -128,5 +151,38 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun deleteMedicine(medicineId: String) {
         viewModelScope.launch { medicineRepository.deleteMedicine(medicineId) }
+    }
+
+    fun exportAllData(outputStream: OutputStream, onResult: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            try {
+                exporter.export(outputStream)
+                onResult(Result.success(Unit))
+            } catch (e: Exception) {
+                onResult(Result.failure(e))
+            }
+        }
+    }
+
+    fun importAllData(inputStream: InputStream, onResult: (Result<String>) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val summary = importer.import(inputStream)
+                onResult(Result.success(summary))
+            } catch (e: Exception) {
+                onResult(Result.failure(e))
+            }
+        }
+    }
+
+    fun exportSymptomCsv(profileId: String, outputStream: OutputStream, onResult: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            try {
+                csvExporter.export(profileId, outputStream)
+                onResult(Result.success(Unit))
+            } catch (e: Exception) {
+                onResult(Result.failure(e))
+            }
+        }
     }
 }

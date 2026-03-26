@@ -290,6 +290,25 @@
     <string name="trends_day_detail_title">Szczegóły za %1$s</string>
     <string name="trends_tap_hint">Dotknij wykres aby zobaczyć szczegóły dnia</string>
 
+    <!-- Data Management -->
+    <string name="settings_data_management">Zarządzanie danymi</string>
+    <string name="settings_export_all">Eksportuj wszystkie dane</string>
+    <string name="settings_export_all_desc">Zapisz pełną kopię zapasową jako JSON</string>
+    <string name="settings_import_data">Importuj dane</string>
+    <string name="settings_import_data_desc">Przywróć z kopii zapasowej JSON</string>
+    <string name="settings_export_csv">Eksportuj objawy CSV</string>
+    <string name="settings_export_csv_desc">Eksportuj dziennik objawów dla lekarza</string>
+    <string name="settings_import_confirm_title">Zastąpić wszystkie dane?</string>
+    <string name="settings_import_confirm_message">Import zastąpi wszystkie istniejące profile, leki, historię dawkowania i wpisy z dziennika objawów. Tej operacji nie można cofnąć.</string>
+    <string name="settings_import_confirm">Importuj</string>
+    <string name="settings_export_success">Dane wyeksportowane pomyślnie</string>
+    <string name="settings_import_success">%1$s</string>
+    <string name="settings_export_error">Eksport nieudany: %1$s</string>
+    <string name="settings_import_error">Import nieudany: %1$s</string>
+    <string name="settings_csv_success">CSV objawów wyeksportowany pomyślnie</string>
+    <string name="settings_csv_error">Eksport CSV nieudany: %1$s</string>
+    <string name="settings_select_profile">Wybierz profil</string>
+
     <!-- Widget -->
     <string name="widget_description">Aktualne poziomy pyłków dla Twojego profilu</string>
     <string name="widget_loading">Ładowanie…</string>

@@ -60,6 +60,10 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
     val context = LocalContext.current
 
     var permissionDeniedPermanently by remember { mutableStateOf(false) }
+    var statusMessage by remember { mutableStateOf<String?>(null) }
+    var showImportConfirm by remember { mutableStateOf(false) }
+    var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
+    var showCsvProfilePicker by remember { mutableStateOf(false) }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -77,6 +81,121 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { _ -> }
+
+    // SAF launchers for export/import
+    val exportJsonLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let {
+            context.contentResolver.openOutputStream(it)?.let { stream ->
+                viewModel.exportAllData(stream) { result ->
+                    result.onSuccess {
+                        statusMessage = context.getString(R.string.settings_export_success)
+                    }.onFailure { e ->
+                        statusMessage = context.getString(R.string.settings_export_error, e.message ?: "Unknown")
+                    }
+                }
+            }
+        }
+    }
+
+    val importJsonLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            pendingImportUri = it
+            showImportConfirm = true
+        }
+    }
+
+    var csvProfileId by remember { mutableStateOf<String?>(null) }
+    val exportCsvLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        uri?.let {
+            val profileId = csvProfileId ?: return@let
+            context.contentResolver.openOutputStream(it)?.let { stream ->
+                viewModel.exportSymptomCsv(profileId, stream) { result ->
+                    result.onSuccess {
+                        statusMessage = context.getString(R.string.settings_csv_success)
+                    }.onFailure { e ->
+                        statusMessage = context.getString(R.string.settings_csv_error, e.message ?: "Unknown")
+                    }
+                }
+            }
+        }
+    }
+
+    // Import confirmation dialog
+    if (showImportConfirm) {
+        AlertDialog(
+            onDismissRequest = {
+                showImportConfirm = false
+                pendingImportUri = null
+            },
+            title = { Text(stringResource(R.string.settings_import_confirm_title)) },
+            text = { Text(stringResource(R.string.settings_import_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showImportConfirm = false
+                    pendingImportUri?.let { uri ->
+                        context.contentResolver.openInputStream(uri)?.let { stream ->
+                            viewModel.importAllData(stream) { result ->
+                                result.onSuccess { summary ->
+                                    statusMessage = context.getString(R.string.settings_import_success, summary)
+                                }.onFailure { e ->
+                                    statusMessage = context.getString(R.string.settings_import_error, e.message ?: "Unknown")
+                                }
+                            }
+                        }
+                    }
+                    pendingImportUri = null
+                }) {
+                    Text(stringResource(R.string.settings_import_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showImportConfirm = false
+                    pendingImportUri = null
+                }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
+
+    // CSV profile picker dialog
+    if (showCsvProfilePicker) {
+        AlertDialog(
+            onDismissRequest = { showCsvProfilePicker = false },
+            title = { Text(stringResource(R.string.settings_select_profile)) },
+            text = {
+                Column {
+                    uiState.profiles.forEach { profile ->
+                        TextButton(
+                            onClick = {
+                                showCsvProfilePicker = false
+                                csvProfileId = profile.id
+                                val profileName = profile.displayName.replace(" ", "-").lowercase()
+                                val date = java.time.LocalDate.now()
+                                exportCsvLauncher.launch("pollenwitan-symptoms-$profileName-$date.csv")
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(profile.displayName, modifier = Modifier.fillMaxWidth())
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showCsvProfilePicker = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -215,6 +334,94 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                     onSymptomReminderToggle = viewModel::setSymptomReminderEnabled,
                     onSymptomReminderHourChange = viewModel::setSymptomReminderHour
                 )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Data Management section
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = stringResource(R.string.settings_data_management),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        val date = java.time.LocalDate.now()
+                        exportJsonLauncher.launch("pollenwitan-backup-$date.json")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.settings_export_all))
+                }
+                Text(
+                    text = stringResource(R.string.settings_export_all_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        importJsonLauncher.launch(arrayOf("application/json"))
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.settings_import_data))
+                }
+                Text(
+                    text = stringResource(R.string.settings_import_data_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        if (uiState.profiles.size == 1) {
+                            csvProfileId = uiState.profiles.first().id
+                            val profileName = uiState.profiles.first().displayName.replace(" ", "-").lowercase()
+                            val date = java.time.LocalDate.now()
+                            exportCsvLauncher.launch("pollenwitan-symptoms-$profileName-$date.csv")
+                        } else if (uiState.profiles.size > 1) {
+                            showCsvProfilePicker = true
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = uiState.profiles.isNotEmpty()
+                ) {
+                    Text(stringResource(R.string.settings_export_csv))
+                }
+                Text(
+                    text = stringResource(R.string.settings_export_csv_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // Status message
+                statusMessage?.let { message ->
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (message.contains("failed", ignoreCase = true) || message.contains("nieudany", ignoreCase = true))
+                            MaterialTheme.colorScheme.error
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }

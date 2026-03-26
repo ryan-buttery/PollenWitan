@@ -23,8 +23,8 @@ android {
         applicationId = "com.ryan.pollenwitan"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.6.0"
+        versionCode = 4
+        versionName = "0.8.0"
     }
 
     signingConfigs {
@@ -93,6 +93,11 @@ dependencies {
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
+
+    // Room encryption (SQLCipher)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("net.zetetic:sqlcipher-android:4.14.0")
+    implementation("androidx.sqlite:sqlite-ktx:2.4.0")
 
     // Glance (home screen widget)
     implementation("androidx.glance:glance-appwidget:1.1.1")
