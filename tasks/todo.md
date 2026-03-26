@@ -31,5 +31,5 @@
 
 - [x] **DataStore Encryption** — Encrypt sensitive DataStore files (profiles, medicines, dose_tracking, location) using EncryptedSharedPreferences
 - [x] **Location-Aware Profiles** — Auto-detect travel and switch forecast location
-- [ ] **Positive Reinforcement** — Display a random encouraging phrase when the user completes all their medications for the day or logs their daily symptom check-in. Pool of varied phrases (localised EN/PL) to keep it fresh
+- [x] **Positive Reinforcement** — Display a random encouraging phrase when the user completes all their medications for the day or logs their daily symptom check-in. Pool of varied phrases (localised EN/PL) to keep it fresh
 - [ ] **Threshold Auto-Calibration** — Use symptom diary data to suggest personalised threshold adjustments
