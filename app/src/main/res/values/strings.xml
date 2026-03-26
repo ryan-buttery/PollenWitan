@@ -356,6 +356,29 @@
     <string name="widget_meds_status">Meds: %1$d/%2$d taken</string>
     <string name="widget_refresh">Refresh</string>
 
+    <!-- Threshold Calibration -->
+    <string name="calibration_title">Threshold Calibration</string>
+    <string name="calibration_description">Analyses your symptom diary to suggest personalised threshold adjustments based on the last 90 days of data.</string>
+    <string name="calibration_button">Calibrate from diary data</string>
+    <string name="calibration_no_allergens">No allergens tracked. Add allergens in your profile to enable calibration.</string>
+    <string name="calibration_no_suggestions">Your current thresholds look well-matched to your diary data.</string>
+    <string name="calibration_no_data">No pollen readings found for %1$s in the last 90 days. Calibration works best during pollen season.</string>
+    <string name="calibration_insufficient_entries">Not enough diary data for %1$s yet. Log at least 10 days with pollen readings to get suggestions.</string>
+    <string name="calibration_insufficient_symptom_days">Not enough days with moderate symptoms recorded for %1$s. Keep logging your symptom diary to build up data.</string>
+    <string name="calibration_insufficient_clean_days">Most diary days had poor air quality, which makes it difficult to isolate pollen sensitivity. Try again when you have more clean-air data.</string>
+    <string name="calibration_thresholds_match">Your %1$s thresholds are well-aligned with your diary data.</string>
+    <string name="calibration_suggestion_lower">You tend to report %1$s symptoms when %2$s is around %3$d grains/m\u00B3, but your current threshold is %4$d. Lowering it to %3$d would give you earlier warnings.</string>
+    <string name="calibration_suggestion_higher">Your symptoms suggest you may be less sensitive to %1$s at the %2$s level. Consider raising the threshold from %3$d to %4$d.</string>
+    <string name="calibration_threshold_label">threshold</string>
+    <string name="calibration_based_on_days">Based on %1$d days of data</string>
+    <string name="calibration_confidence_low">limited data</string>
+    <string name="calibration_confidence_moderate">moderate confidence</string>
+    <string name="calibration_confidence_high">high confidence</string>
+    <string name="calibration_medication_caveat">Most data recorded while on medication \u2014 actual sensitivity may be higher.</string>
+    <string name="calibration_apply">Apply</string>
+    <string name="calibration_dismiss">Dismiss</string>
+    <string name="calibration_applied_message">%1$s threshold updated to %2$d grains/m\u00B3</string>
+
     <!-- About -->
     <string name="about_title">PollenWitan</string>
     <string name="about_description">A privacy-respecting pollen and air quality forecast tailored to each household member\u2019s specific allergenic triggers. Track six pollen types individually, log daily symptoms, monitor medication adherence, and identify which pollens affect you most through long-term trend analysis. No ads, no tracking, no accounts.</string>

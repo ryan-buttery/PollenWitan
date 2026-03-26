@@ -57,6 +57,7 @@ import com.ryan.pollenwitan.domain.model.Medicine
 import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.TrackedSymptom
 import com.ryan.pollenwitan.domain.model.UserProfile
+import com.ryan.pollenwitan.ui.navigation.Screen
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 
@@ -173,6 +174,21 @@ fun ProfileEditScreen(
             onAddAllergen = { viewModel.toggleAllergen(it) }
         )
         Spacer(modifier = Modifier.height(20.dp))
+
+        // Calibrate from diary data button (existing profiles only)
+        if (!uiState.isNewProfile && uiState.trackedAllergens.isNotEmpty()) {
+            OutlinedButton(
+                onClick = {
+                    profileId?.let {
+                        navController.navigate(Screen.ThresholdCalibration.createRoute(it))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.calibration_button))
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         // Threshold configuration per selected allergen
         uiState.trackedAllergens.forEach { type ->
