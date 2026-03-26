@@ -40,16 +40,20 @@ import com.ryan.pollenwitan.domain.model.DefaultSymptom
 import com.ryan.pollenwitan.domain.model.TrackedSymptom
 import com.ryan.pollenwitan.ui.theme.SeverityColors
 import com.ryan.pollenwitan.ui.theme.localizedName
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
 @Composable
 fun SymptomCheckInScreen(
+    dateString: String? = null,
     viewModel: SymptomCheckInViewModel = viewModel(),
     onSaved: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(dateString) {
+        viewModel.setTargetDate(dateString)
+    }
 
     LaunchedEffect(uiState.savedSuccessfully) {
         if (uiState.savedSuccessfully) onSaved()
@@ -69,12 +73,13 @@ fun SymptomCheckInScreen(
             .padding(16.dp)
     ) {
         Text(
-            text = stringResource(R.string.symptom_checkin_title),
+            text = if (uiState.isBackfill) stringResource(R.string.symptom_diary_backfill_title)
+                   else stringResource(R.string.symptom_checkin_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)),
+            text = uiState.targetDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

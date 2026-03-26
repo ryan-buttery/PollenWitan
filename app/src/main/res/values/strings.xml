@@ -273,6 +273,9 @@
     <string name="nav_symptom_diary">Symptom Diary</string>
     <string name="symptom_diary_title">Symptom Diary</string>
     <string name="symptom_no_entries">No entries yet</string>
+    <string name="symptom_diary_add_entry">Add Entry</string>
+    <string name="symptom_diary_select_date">Select date</string>
+    <string name="symptom_diary_backfill_title">Log Past Entry</string>
     <string name="symptom_peak_pollen">Peak pollen</string>
     <string name="settings_symptom_reminder">Symptom check-in reminder</string>
     <string name="settings_symptom_reminder_desc">Daily reminder at %1$s to log symptoms</string>
@@ -322,4 +325,9 @@
     <string name="widget_no_data">No data available</string>
     <string name="widget_no_profiles">No profiles configured</string>
     <string name="widget_aqi_format">AQI: %1$d (%2$s)</string>
+
+    <!-- About -->
+    <string name="about_title">PollenWitan</string>
+    <string name="about_description">A privacy-respecting pollen and air quality forecast tailored to each household member\u2019s specific allergenic triggers. Track six pollen types individually, log daily symptoms, monitor medication adherence, and identify which pollens affect you most through long-term trend analysis. No ads, no tracking, no accounts.</string>
+    <string name="about_data_source">Pollen and air quality data provided by Open-Meteo (CAMS European model).</string>
 </resources>

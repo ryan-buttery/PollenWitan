@@ -26,7 +26,9 @@ data class SymptomCheckInUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val savedSuccessfully: Boolean = false,
-    val profileName: String = ""
+    val profileName: String = "",
+    val targetDate: LocalDate = LocalDate.now(),
+    val isBackfill: Boolean = false
 )
 
 class SymptomCheckInViewModel(application: Application) : AndroidViewModel(application) {
@@ -36,10 +38,19 @@ class SymptomCheckInViewModel(application: Application) : AndroidViewModel(appli
     private val airQualityRepository = AirQualityRepository(application)
     private val locationRepository = LocationRepository(application)
 
+    private var targetDate: LocalDate = LocalDate.now()
+
     private val _uiState = MutableStateFlow(SymptomCheckInUiState())
     val uiState: StateFlow<SymptomCheckInUiState> = _uiState.asStateFlow()
 
     init {
+        loadData()
+    }
+
+    fun setTargetDate(dateString: String?) {
+        val date = dateString?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: LocalDate.now()
+        if (date == targetDate) return
+        targetDate = date
         loadData()
     }
 
@@ -50,8 +61,7 @@ class SymptomCheckInViewModel(application: Application) : AndroidViewModel(appli
             val profile = profiles.find { it.id == selectedId } ?: profiles.firstOrNull() ?: return@launch
 
             val symptoms = profile.trackedSymptoms
-            val today = LocalDate.now()
-            val existing = symptomDiaryRepository.getEntryForDate(profile.id, today)
+            val existing = symptomDiaryRepository.getEntryForDate(profile.id, targetDate)
 
             val ratings = if (existing != null) {
                 existing.ratings.associate { it.symptomId to it.severity }
@@ -63,7 +73,9 @@ class SymptomCheckInViewModel(application: Application) : AndroidViewModel(appli
                 trackedSymptoms = symptoms,
                 ratings = ratings,
                 isLoading = false,
-                profileName = profile.displayName
+                profileName = profile.displayName,
+                targetDate = targetDate,
+                isBackfill = targetDate != LocalDate.now()
             )
         }
     }
@@ -87,24 +99,25 @@ class SymptomCheckInViewModel(application: Application) : AndroidViewModel(appli
             val globalLocation = locationRepository.getLocation().first()
             val location = ProfileRepository.resolveLocation(profile, globalLocation)
 
-            // Fetch today's peaks from cached forecast data
+            // Fetch environmental peaks — only reliable for today (API is forecast-only)
             var peakPollenJson = "{}"
             var peakAqi = 0
             var peakPm25 = 0.0
             var peakPm10 = 0.0
 
-            val forecastResult = airQualityRepository.getForecast(location.latitude, location.longitude, days = 1)
-            forecastResult.getOrNull()?.firstOrNull()?.let { today ->
-                val pollenMap = today.peakPollenReadings.associate { it.type.name to it.value }
-                peakPollenJson = Json.encodeToString(pollenMap)
-                peakAqi = today.peakAqi
-            }
+            if (targetDate == LocalDate.now()) {
+                val forecastResult = airQualityRepository.getForecast(location.latitude, location.longitude, days = 1)
+                forecastResult.getOrNull()?.firstOrNull()?.let { today ->
+                    val pollenMap = today.peakPollenReadings.associate { it.type.name to it.value }
+                    peakPollenJson = Json.encodeToString(pollenMap)
+                    peakAqi = today.peakAqi
+                }
 
-            // Also get current PM values
-            val conditionsResult = airQualityRepository.getCurrentConditions(location.latitude, location.longitude)
-            conditionsResult.getOrNull()?.let { conditions ->
-                peakPm25 = conditions.pm25
-                peakPm10 = conditions.pm10
+                val conditionsResult = airQualityRepository.getCurrentConditions(location.latitude, location.longitude)
+                conditionsResult.getOrNull()?.let { conditions ->
+                    peakPm25 = conditions.pm25
+                    peakPm10 = conditions.pm10
+                }
             }
 
             val displayNameLookup = buildDisplayNameLookup(state.trackedSymptoms)
@@ -118,7 +131,7 @@ class SymptomCheckInViewModel(application: Application) : AndroidViewModel(appli
 
             val entry = SymptomDiaryEntry(
                 profileId = profile.id,
-                date = LocalDate.now(),
+                date = targetDate,
                 ratings = ratings,
                 loggedAtMillis = System.currentTimeMillis(),
                 peakPollenJson = peakPollenJson,

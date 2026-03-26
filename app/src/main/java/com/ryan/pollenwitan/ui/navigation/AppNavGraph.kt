@@ -122,7 +122,7 @@ fun AppNavGraph(
     val currentLabelRes = when {
         currentRoute == Screen.ProfileCreate.route -> R.string.nav_new_profile
         currentRoute?.startsWith("profiles/edit/") == true -> R.string.nav_edit_profile
-        currentRoute == Screen.SymptomCheckIn.route -> R.string.symptom_checkin_title
+        currentRoute?.startsWith("symptom-checkin") == true -> R.string.symptom_checkin_title
         else -> navItems.find { item ->
             currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
         }?.labelRes ?: R.string.nav_dashboard
@@ -297,19 +297,34 @@ fun AppNavGraph(
                 composable(Screen.Dashboard.route) {
                     DashboardScreen(
                         onNavigateToCheckIn = {
-                            navController.navigate(Screen.SymptomCheckIn.route)
+                            navController.navigate(Screen.SymptomCheckIn.createRoute())
                         }
                     )
                 }
                 composable(Screen.Forecast.route) { ForecastScreen() }
                 composable(Screen.CrossReactivity.route) { CrossReactivityScreen() }
                 composable(Screen.PollenCalendar.route) { PollenCalendarScreen() }
-                composable(Screen.SymptomCheckIn.route) {
+                composable(
+                    Screen.SymptomCheckIn.route,
+                    arguments = listOf(navArgument("date") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    })
+                ) { backStackEntry ->
+                    val dateString = backStackEntry.arguments?.getString("date")
                     SymptomCheckInScreen(
+                        dateString = dateString,
                         onSaved = { navController.popBackStack() }
                     )
                 }
-                composable(Screen.SymptomDiary.route) { SymptomDiaryScreen() }
+                composable(Screen.SymptomDiary.route) {
+                    SymptomDiaryScreen(
+                        onNavigateToCheckIn = { dateString ->
+                            navController.navigate(Screen.SymptomCheckIn.createRoute(dateString))
+                        }
+                    )
+                }
                 composable(Screen.SymptomTrends.route) { SymptomTrendsScreen() }
                 composable(Screen.Settings.route) { SettingsScreen() }
                 composable(Screen.ProfileList.route) {
