@@ -1,6 +1,7 @@
 package com.ryan.pollenwitan.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,14 +19,25 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,14 +50,20 @@ import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.domain.model.SymptomDiaryEntry
 import com.ryan.pollenwitan.ui.components.ProfileSwitcher
 import com.ryan.pollenwitan.ui.theme.SeverityColors
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SymptomDiaryScreen(
-    viewModel: SymptomDiaryViewModel = viewModel()
+    viewModel: SymptomDiaryViewModel = viewModel(),
+    onNavigateToCheckIn: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showDatePicker by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -70,6 +88,22 @@ fun SymptomDiaryScreen(
         if (uiState.profiles.size > 1) {
             Spacer(modifier = Modifier.height(16.dp))
         }
+
+        // Add entry button
+        OutlinedButton(
+            onClick = { showDatePicker = true },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Filled.Add,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.symptom_diary_add_entry))
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Date range navigation
         Row(
@@ -106,17 +140,71 @@ fun SymptomDiaryScreen(
             )
         } else {
             uiState.entries.sortedByDescending { it.date }.forEach { entry ->
-                DiaryEntryCard(entry)
+                DiaryEntryCard(
+                    entry = entry,
+                    onClick = { onNavigateToCheckIn(entry.date.toString()) }
+                )
                 Spacer(modifier = Modifier.height(12.dp))
             }
+        }
+    }
+
+    if (showDatePicker) {
+        val todayMillis = LocalDate.now().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = todayMillis,
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                    return utcTimeMillis <= todayMillis
+                }
+            }
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDatePicker = false
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val date = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneOffset.UTC)
+                                .toLocalDate()
+                            onNavigateToCheckIn(date.toString())
+                        }
+                    }
+                ) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        ) {
+            DatePicker(
+                state = datePickerState,
+                title = {
+                    Text(
+                        text = stringResource(R.string.symptom_diary_select_date),
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp)
+                    )
+                }
+            )
         }
     }
 }
 
 @Composable
-private fun DiaryEntryCard(entry: SymptomDiaryEntry) {
+private fun DiaryEntryCard(
+    entry: SymptomDiaryEntry,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )

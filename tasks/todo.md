@@ -24,7 +24,7 @@
 - [x] **Data Export/Import** — Export/import profiles, medication history, symptom diary, and settings as JSON. Room database encrypted with SQLCipher. CSV symptom export for medical practitioners
 - [ ] **Widget Enhancements** — Add daily peak pollen values to the widget display, include a manual refresh button in the widget corner (Glance `ActionCallback`), and review layout for additional useful fields (AQI, medication status)
 - [ ] **Notification Enhancements** — Combine daily notifications for all profiles into a single grouped notification instead of one per profile. Add PendingIntents so tapping a notification navigates to the relevant screen (e.g., morning briefing → dashboard, medication reminder → dashboard, symptom reminder → check-in screen)
-- [ ] **Symptom Diary Back-Fill** — Allow users to log symptom entries for past dates from the diary browser screen, not just the current day. Date picker to select the target date, pre-fill if an entry already exists for that date
+- [x] **Symptom Diary Back-Fill** — Allow users to log symptom entries for past dates from the diary browser screen, not just the current day. Date picker to select the target date, pre-fill if an entry already exists for that date
 - [x] **Evening Check-In UX** — Make it clearer on the dashboard card that the daily symptom check-in is intended for the evening (e.g., subtitle text, time-aware messaging like "Log your evening check-in" vs "Check back this evening")
 
 ## Future
