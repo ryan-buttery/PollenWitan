@@ -1,46 +1,40 @@
 package com.ryan.pollenwitan.data.repository
 
 import android.content.Context
-import androidx.datastore.preferences.core.MutablePreferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import android.content.SharedPreferences
 import com.ryan.pollenwitan.data.local.AppDatabase
 import com.ryan.pollenwitan.data.local.DoseHistoryEntity
+import com.ryan.pollenwitan.data.security.EncryptedPrefsStore
 import com.ryan.pollenwitan.domain.model.DoseConfirmation
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 
-private val Context.doseTrackingDataStore by preferencesDataStore(name = "dose_tracking")
-
 class DoseTrackingRepository(
-    private val context: Context
+    context: Context
 ) {
 
-    private val dataStore get() = context.doseTrackingDataStore
+    private val store = EncryptedPrefsStore(context, "dose_tracking_encrypted")
     private val doseHistoryDao = AppDatabase.getInstance(context).doseHistoryDao()
 
     private object Keys {
-        val TRACKING_DATE = stringPreferencesKey("tracking_date")
+        const val TRACKING_DATE = "tracking_date"
         fun confirmed(profileId: String, medicineId: String, slotIndex: Int) =
-            booleanPreferencesKey("confirmed_${profileId}_${medicineId}_${slotIndex}")
+            "confirmed_${profileId}_${medicineId}_${slotIndex}"
     }
 
-    fun getConfirmations(profileId: String): Flow<Set<DoseConfirmation>> = dataStore.data.map { prefs ->
+    fun getConfirmations(profileId: String): Flow<Set<DoseConfirmation>> = store.data.map { prefs ->
         val today = LocalDate.now().toString()
-        val storedDate = prefs[Keys.TRACKING_DATE]
+        val storedDate = prefs.getString(Keys.TRACKING_DATE, null)
         if (storedDate != today) {
             return@map emptySet()
         }
-        prefs.asMap().entries
+        prefs.all.entries
             .filter { (key, value) ->
-                key.name.startsWith("confirmed_${profileId}_") && value == true
+                key.startsWith("confirmed_${profileId}_") && value == true
             }
             .mapNotNull { (key, _) ->
-                // Parse confirmed_{profileId}_{medicineId}_{slotIndex}
-                val parts = key.name.removePrefix("confirmed_${profileId}_").split("_")
+                val parts = key.removePrefix("confirmed_${profileId}_").split("_")
                 if (parts.size >= 2) {
                     val medicineId = parts.dropLast(1).joinToString("_")
                     val slotIndex = parts.last().toIntOrNull() ?: return@mapNotNull null
@@ -59,9 +53,9 @@ class DoseTrackingRepository(
         medicineType: String,
         reminderHour: Int
     ) {
-        dataStore.edit { prefs ->
-            resetIfNewDay(prefs)
-            prefs[Keys.confirmed(profileId, medicineId, slotIndex)] = true
+        store.edit {
+            resetIfNewDay(this)
+            putBoolean(Keys.confirmed(profileId, medicineId, slotIndex), true)
         }
         doseHistoryDao.upsert(
             DoseHistoryEntity(
@@ -88,9 +82,9 @@ class DoseTrackingRepository(
         medicineType: String,
         reminderHour: Int
     ) {
-        dataStore.edit { prefs ->
-            resetIfNewDay(prefs)
-            prefs.remove(Keys.confirmed(profileId, medicineId, slotIndex))
+        store.edit {
+            resetIfNewDay(this)
+            remove(Keys.confirmed(profileId, medicineId, slotIndex))
         }
         doseHistoryDao.upsert(
             DoseHistoryEntity(
@@ -124,14 +118,13 @@ class DoseTrackingRepository(
         )
     }
 
-    private fun resetIfNewDay(prefs: MutablePreferences) {
+    private fun resetIfNewDay(editor: SharedPreferences.Editor) {
         val today = LocalDate.now().toString()
-        val storedDate = prefs[Keys.TRACKING_DATE]
+        val storedDate = store.prefs.getString(Keys.TRACKING_DATE, null)
         if (storedDate != today) {
-            // Clear all confirmed_ keys
-            val keysToRemove = prefs.asMap().keys.filter { it.name.startsWith("confirmed_") }
-            keysToRemove.forEach { prefs.remove(it) }
-            prefs[Keys.TRACKING_DATE] = today
+            val keysToRemove = store.prefs.all.keys.filter { it.startsWith("confirmed_") }
+            keysToRemove.forEach { editor.remove(it) }
+            editor.putString(Keys.TRACKING_DATE, today)
         }
     }
 }
