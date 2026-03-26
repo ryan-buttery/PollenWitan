@@ -106,6 +106,7 @@
     <string name="settings_location_found">Location: %1$s</string>
     <string name="settings_location_permission_denied">Location permission denied. Grant it in app settings to use GPS.</string>
     <string name="settings_open_app_settings">Open App Settings</string>
+    <string name="settings_gps_auto_refresh">Location updates automatically every 6 hours and on widget refresh</string>
     <string name="settings_getting_location">Getting location…</string>
     <string name="settings_located">Located: %1$s</string>
     <string name="settings_notifications">Notifications</string>

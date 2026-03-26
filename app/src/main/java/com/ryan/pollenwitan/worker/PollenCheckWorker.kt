@@ -1,9 +1,13 @@
 package com.ryan.pollenwitan.worker
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.ryan.pollenwitan.R
+import com.ryan.pollenwitan.data.location.GpsLocationProvider
 import com.ryan.pollenwitan.data.repository.AirQualityRepository
 import com.ryan.pollenwitan.data.repository.DoseTrackingRepository
 import com.ryan.pollenwitan.data.repository.LocationRepository
@@ -13,6 +17,7 @@ import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.data.repository.SymptomDiaryRepository
 import com.ryan.pollenwitan.domain.model.CurrentConditions
 import com.ryan.pollenwitan.domain.model.DoseConfirmation
+import com.ryan.pollenwitan.domain.model.LocationMode
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
@@ -38,9 +43,14 @@ class PollenCheckWorker(
     private val medicineRepository = MedicineRepository(applicationContext)
     private val doseTrackingRepository = DoseTrackingRepository(applicationContext)
     private val symptomDiaryRepository = SymptomDiaryRepository(applicationContext)
+    private val gpsLocationProvider = GpsLocationProvider(applicationContext)
 
     override suspend fun doWork(): Result {
         val ctx = applicationContext
+
+        // Refresh GPS location if in GPS mode and enough time has elapsed
+        refreshGpsIfDue(ctx)
+
         val prefs = notificationPrefsRepository.getPrefs().first()
         val globalLocation = locationRepository.getLocation().first()
         val profiles = profileRepository.getProfiles().first()
@@ -339,8 +349,24 @@ class PollenCheckWorker(
         return null
     }
 
+    private suspend fun refreshGpsIfDue(ctx: Context) {
+        val mode = locationRepository.getLocationMode().first()
+        if (mode != LocationMode.Gps) return
+        if (!locationRepository.isGpsRefreshDue(GPS_REFRESH_INTERVAL_MS)) return
+
+        val hasPermission = ContextCompat.checkSelfPermission(
+            ctx, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasPermission) return
+
+        val location = gpsLocationProvider.requestSingleUpdate() ?: return
+        locationRepository.updateGpsLocation(location.latitude, location.longitude, location.displayName)
+    }
+
     companion object {
         const val WORK_NAME = "pollen_check"
+        private const val GPS_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000L // 6 hours
         private const val MORNING_BRIEFING_BASE_ID = 1000
         private const val THRESHOLD_ALERT_BASE_ID = 2000
         private const val COMPOUND_RISK_BASE_ID = 3000
