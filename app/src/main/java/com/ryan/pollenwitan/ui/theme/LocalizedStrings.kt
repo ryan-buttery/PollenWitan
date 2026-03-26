@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.domain.model.DayPeriod
+import com.ryan.pollenwitan.domain.model.DefaultSymptom
 import com.ryan.pollenwitan.domain.model.MedicineType
 import com.ryan.pollenwitan.domain.model.PollenType
 
@@ -46,6 +47,25 @@ fun PollenType.localizedAbbreviation(context: Context): String = when (this) {
     PollenType.Mugwort -> context.getString(R.string.pollen_mugwort_abbr)
     PollenType.Ragweed -> context.getString(R.string.pollen_ragweed_abbr)
     PollenType.Olive -> context.getString(R.string.pollen_olive_abbr)
+}
+
+// ── DefaultSymptom ──────────────────────────────────────────
+
+@Composable
+fun DefaultSymptom.localizedName(): String = when (this) {
+    DefaultSymptom.Sneezing -> stringResource(R.string.symptom_sneezing)
+    DefaultSymptom.ItchyWateryEyes -> stringResource(R.string.symptom_itchy_watery_eyes)
+    DefaultSymptom.NasalCongestion -> stringResource(R.string.symptom_nasal_congestion)
+    DefaultSymptom.RunnyNose -> stringResource(R.string.symptom_runny_nose)
+    DefaultSymptom.ItchyThroat -> stringResource(R.string.symptom_itchy_throat)
+}
+
+fun DefaultSymptom.localizedName(context: Context): String = when (this) {
+    DefaultSymptom.Sneezing -> context.getString(R.string.symptom_sneezing)
+    DefaultSymptom.ItchyWateryEyes -> context.getString(R.string.symptom_itchy_watery_eyes)
+    DefaultSymptom.NasalCongestion -> context.getString(R.string.symptom_nasal_congestion)
+    DefaultSymptom.RunnyNose -> context.getString(R.string.symptom_runny_nose)
+    DefaultSymptom.ItchyThroat -> context.getString(R.string.symptom_itchy_throat)
 }
 
 // ── DayPeriod ───────────────────────────────────────────────

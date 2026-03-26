@@ -8,10 +8,12 @@ import com.ryan.pollenwitan.data.repository.DoseTrackingRepository
 import com.ryan.pollenwitan.data.repository.LocationRepository
 import com.ryan.pollenwitan.data.repository.MedicineRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
+import com.ryan.pollenwitan.data.repository.SymptomDiaryRepository
 import com.ryan.pollenwitan.domain.model.CurrentConditions
 import com.ryan.pollenwitan.domain.model.DoseConfirmation
 import com.ryan.pollenwitan.domain.model.Medicine
 import com.ryan.pollenwitan.domain.model.MedicineType
+import com.ryan.pollenwitan.domain.model.SymptomDiaryEntry
 import com.ryan.pollenwitan.domain.model.UserProfile
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,7 +47,8 @@ data class DashboardUiState(
     val profiles: List<UserProfile> = emptyList(),
     val selectedProfileId: String = "",
     val locationDisplayName: String = "",
-    val medicineSlots: List<MedicineSlot> = emptyList()
+    val medicineSlots: List<MedicineSlot> = emptyList(),
+    val todaySymptomEntry: SymptomDiaryEntry? = null
 ) {
     val selectedProfile: UserProfile?
         get() = profiles.find { it.id == selectedProfileId }
@@ -58,6 +61,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val locationRepository = LocationRepository(application)
     private val medicineRepository = MedicineRepository(application)
     private val doseTrackingRepository = DoseTrackingRepository(application)
+    private val symptomDiaryRepository = SymptomDiaryRepository(application)
 
     private val _weatherState = MutableStateFlow<WeatherState>(WeatherState.Loading)
 
@@ -82,14 +86,24 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             medicines
         )
     }.flatMapLatest { (baseState, selectedProfile, medicines) ->
-        if (selectedProfile == null || selectedProfile.medicineAssignments.isEmpty()) {
+        if (selectedProfile == null) {
             flowOf(baseState)
         } else {
-            doseTrackingRepository.getConfirmations(selectedProfile.id).combine(
-                flowOf(Unit)
-            ) { confirmations, _ ->
-                val slots = buildMedicineSlots(selectedProfile, medicines, confirmations)
-                baseState.copy(medicineSlots = slots)
+            val doseFlow = if (selectedProfile.medicineAssignments.isNotEmpty()) {
+                doseTrackingRepository.getConfirmations(selectedProfile.id)
+            } else {
+                flowOf(emptySet())
+            }
+            val symptomFlow = symptomDiaryRepository.observeTodayEntry(selectedProfile.id)
+
+            combine(doseFlow, symptomFlow) { confirmations, symptomEntry ->
+                val slots = if (selectedProfile.medicineAssignments.isNotEmpty()) {
+                    buildMedicineSlots(selectedProfile, medicines, confirmations)
+                } else emptyList()
+                baseState.copy(
+                    medicineSlots = slots,
+                    todaySymptomEntry = symptomEntry
+                )
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState())

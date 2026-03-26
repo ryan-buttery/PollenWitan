@@ -17,6 +17,7 @@ object NotificationHelper {
     const val CHANNEL_THRESHOLD_ALERT = "threshold_alert"
     const val CHANNEL_COMPOUND_RISK = "compound_risk"
     const val CHANNEL_MEDICATION_REMINDER = "medication_reminder"
+    const val CHANNEL_SYMPTOM_REMINDER = "symptom_reminder"
 
     fun createChannels(context: Context) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -49,6 +50,13 @@ object NotificationHelper {
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = context.getString(R.string.notif_channel_medication_reminder_desc)
+            },
+            NotificationChannel(
+                CHANNEL_SYMPTOM_REMINDER,
+                context.getString(R.string.notif_channel_symptom_reminder),
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = context.getString(R.string.notif_channel_symptom_reminder_desc)
             }
         )
 

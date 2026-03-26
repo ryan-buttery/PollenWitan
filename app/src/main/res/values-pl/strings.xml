@@ -242,6 +242,38 @@
     <string name="calendar_legend_off_season">Poza sezonem</string>
     <string name="calendar_disclaimer">Daty są przybliżone i oparte na typowych danych aerobiologicznych dla Europy Środkowej. Rzeczywisty termin sezonu różni się w zależności od roku i warunków pogodowych.</string>
 
+    <!-- Symptoms -->
+    <string name="symptom_sneezing">Kichanie</string>
+    <string name="symptom_itchy_watery_eyes">Swędzące/łzawiące oczy</string>
+    <string name="symptom_nasal_congestion">Zatkany nos</string>
+    <string name="symptom_runny_nose">Katar</string>
+    <string name="symptom_itchy_throat">Swędzące gardło</string>
+    <string name="symptom_tracked_symptoms">Śledzone objawy</string>
+    <string name="symptom_add_custom">Dodaj własny objaw</string>
+    <string name="symptom_checkin_title">Wieczorny przegląd</string>
+    <string name="symptom_not_logged">Jeszcze nie zapisano</string>
+    <string name="symptom_log_now">Zapisz teraz</string>
+    <string name="symptom_logged_summary">Zapisano %1$d objawów</string>
+    <string name="symptom_saved">Przegląd zapisany</string>
+    <string name="symptom_severity_0">Brak</string>
+    <string name="symptom_severity_1">Bardzo łagodny</string>
+    <string name="symptom_severity_2">Łagodny</string>
+    <string name="symptom_severity_3">Umiarkowany</string>
+    <string name="symptom_severity_4">Silny</string>
+    <string name="symptom_severity_5">Bardzo silny</string>
+    <string name="symptom_checkin_card">Przegląd objawów</string>
+    <string name="symptom_avg_severity">Śr. nasilenie: %1$.1f</string>
+    <string name="nav_symptom_diary">Dziennik objawów</string>
+    <string name="symptom_diary_title">Dziennik objawów</string>
+    <string name="symptom_no_entries">Brak wpisów</string>
+    <string name="symptom_peak_pollen">Szczyt pyłków</string>
+    <string name="settings_symptom_reminder">Przypomnienie o objawach</string>
+    <string name="settings_symptom_reminder_desc">Codzienne przypomnienie o %1$s o zapisaniu objawów</string>
+    <string name="notif_channel_symptom_reminder">Przypomnienia o objawach</string>
+    <string name="notif_channel_symptom_reminder_desc">Wieczorne przypomnienia o zapisaniu objawów alergii</string>
+    <string name="notif_symptom_reminder_title">%1$s: Jak Twoje alergie dziś?</string>
+    <string name="notif_symptom_reminder_text">Dotknij aby zapisać wieczorny przegląd objawów</string>
+
     <!-- Widget -->
     <string name="widget_description">Aktualne poziomy pyłków dla Twojego profilu</string>
     <string name="widget_loading">Ładowanie…</string>
