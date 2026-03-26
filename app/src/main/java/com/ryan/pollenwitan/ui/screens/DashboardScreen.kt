@@ -42,6 +42,7 @@ import com.ryan.pollenwitan.ui.theme.localizedName
 import com.ryan.pollenwitan.ui.theme.localizedUnitLabel
 import com.ryan.pollenwitan.ui.theme.toColor
 import com.ryan.pollenwitan.ui.theme.toLabel
+import java.time.LocalTime
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.format.DateTimeFormatter
 
@@ -348,6 +349,7 @@ private fun DashboardContent(
 
         // Symptom check-in card
         if (selectedProfile != null) {
+            val isEvening = LocalTime.now().hour >= 17
             Spacer(modifier = Modifier.height(16.dp))
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -360,6 +362,11 @@ private fun DashboardContent(
                         text = stringResource(R.string.symptom_checkin_card),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = stringResource(R.string.symptom_checkin_subtitle_evening),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     if (todaySymptomEntry != null) {
@@ -377,18 +384,24 @@ private fun DashboardContent(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(onClick = onNavigateToCheckIn) {
-                            Text(stringResource(R.string.symptom_log_now))
+                            Text(stringResource(R.string.symptom_checkin_button_update))
                         }
-                    } else {
+                    } else if (isEvening) {
                         Text(
-                            text = stringResource(R.string.symptom_not_logged),
+                            text = stringResource(R.string.symptom_checkin_prompt_evening),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(onClick = onNavigateToCheckIn) {
-                            Text(stringResource(R.string.symptom_log_now))
+                            Text(stringResource(R.string.symptom_checkin_button_evening))
                         }
+                    } else {
+                        Text(
+                            text = stringResource(R.string.symptom_checkin_prompt_early),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
