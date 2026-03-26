@@ -354,6 +354,29 @@
     <string name="widget_meds_status">Leki: %1$d/%2$d wzięte</string>
     <string name="widget_refresh">Odśwież</string>
 
+    <!-- Threshold Calibration -->
+    <string name="calibration_title">Kalibracja progów</string>
+    <string name="calibration_description">Analizuje dziennik objawów z ostatnich 90 dni, aby zaproponować spersonalizowane korekty progów.</string>
+    <string name="calibration_button">Kalibruj z dziennika objawów</string>
+    <string name="calibration_no_allergens">Brak śledzonych alergenów. Dodaj alergeny w profilu, aby włączyć kalibrację.</string>
+    <string name="calibration_no_suggestions">Twoje obecne progi dobrze odpowiadają danym z dziennika.</string>
+    <string name="calibration_no_data">Brak odczytów pyłków dla %1$s w ostatnich 90 dniach. Kalibracja działa najlepiej w sezonie pylenia.</string>
+    <string name="calibration_insufficient_entries">Za mało danych z dziennika dla %1$s. Zapisz co najmniej 10 dni z odczytami pyłków, aby uzyskać sugestie.</string>
+    <string name="calibration_insufficient_symptom_days">Za mało dni z umiarkowanymi objawami dla %1$s. Kontynuuj zapisywanie dziennika objawów.</string>
+    <string name="calibration_insufficient_clean_days">Większość dni w dzienniku miała złą jakość powietrza, co utrudnia ocenę wrażliwości na pyłki. Spróbuj ponownie, gdy zbierzesz więcej danych z dni o czystym powietrzu.</string>
+    <string name="calibration_thresholds_match">Progi dla %1$s są dobrze dopasowane do danych z dziennika.</string>
+    <string name="calibration_suggestion_lower">Zwykle zgłaszasz %1$s objawy, gdy %2$s wynosi około %3$d ziaren/m\u00B3, ale Twój obecny próg to %4$d. Obniżenie do %3$d zapewni wcześniejsze ostrzeżenia.</string>
+    <string name="calibration_suggestion_higher">Twoje objawy sugerują, że możesz być mniej wrażliwy/a na %1$s na poziomie %2$s. Rozważ podniesienie progu z %3$d do %4$d.</string>
+    <string name="calibration_threshold_label">próg</string>
+    <string name="calibration_based_on_days">Na podstawie %1$d dni danych</string>
+    <string name="calibration_confidence_low">ograniczone dane</string>
+    <string name="calibration_confidence_moderate">umiarkowana pewność</string>
+    <string name="calibration_confidence_high">wysoka pewność</string>
+    <string name="calibration_medication_caveat">Większość danych zapisana podczas przyjmowania leków \u2014 rzeczywista wrażliwość może być wyższa.</string>
+    <string name="calibration_apply">Zastosuj</string>
+    <string name="calibration_dismiss">Odrzuć</string>
+    <string name="calibration_applied_message">Próg %1$s zaktualizowany do %2$d ziaren/m\u00B3</string>
+
     <!-- About -->
     <string name="about_title">PollenWitan</string>
     <string name="about_description">Prognoza pyłków i jakości powietrza z poszanowaniem prywatności, dostosowana do konkretnych alergenów każdego domownika. Śledź sześć typów pyłków indywidualnie, zapisuj codzienne objawy, monitoruj przyjmowanie leków i sprawdzaj, które pyłki wpływają na Ciebie najbardziej dzięki analizie długoterminowych trendów. Bez reklam, bez śledzenia, bez kont.</string>

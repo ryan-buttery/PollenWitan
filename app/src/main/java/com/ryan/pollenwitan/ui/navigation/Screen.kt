@@ -17,5 +17,8 @@ sealed class Screen(val route: String) {
     }
     data object SymptomDiary : Screen("symptom-diary")
     data object SymptomTrends : Screen("symptom-trends")
+    data object ThresholdCalibration : Screen("profiles/{profileId}/calibrate") {
+        fun createRoute(profileId: String) = "profiles/$profileId/calibrate"
+    }
     data object Onboarding : Screen("onboarding")
 }
