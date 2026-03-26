@@ -276,6 +276,22 @@
     <string name="notif_symptom_reminder_title">%1$s: How are your allergies today?</string>
     <string name="notif_symptom_reminder_text">Tap to log your evening symptom check-in</string>
 
+    <!-- Symptom Trends -->
+    <string name="nav_symptom_trends">Symptom Trends</string>
+    <string name="trends_title">Symptom Trends</string>
+    <string name="trends_range_week">7 days</string>
+    <string name="trends_range_month">30 days</string>
+    <string name="trends_range_quarter">90 days</string>
+    <string name="trends_symptoms_title">Symptom Severity</string>
+    <string name="trends_pollen_title">Peak Pollen Levels</string>
+    <string name="trends_aqi_title">Air Quality</string>
+    <string name="trends_pm25_label">PM2.5</string>
+    <string name="trends_medication_title">Medication Adherence</string>
+    <string name="trends_adherence_percent">%1$d%% adherence</string>
+    <string name="trends_no_data">No symptom data recorded for this period</string>
+    <string name="trends_day_detail_title">Details for %1$s</string>
+    <string name="trends_tap_hint">Tap any chart to view daily details</string>
+
     <!-- Widget -->
     <string name="widget_description">Current pollen levels for your profile</string>
     <string name="widget_loading">Loading…</string>

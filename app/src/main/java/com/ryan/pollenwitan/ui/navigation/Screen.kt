@@ -13,5 +13,6 @@ sealed class Screen(val route: String) {
     data object PollenCalendar : Screen("pollen-calendar")
     data object SymptomCheckIn : Screen("symptom-checkin")
     data object SymptomDiary : Screen("symptom-diary")
+    data object SymptomTrends : Screen("symptom-trends")
     data object Onboarding : Screen("onboarding")
 }

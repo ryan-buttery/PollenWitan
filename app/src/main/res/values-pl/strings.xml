@@ -274,6 +274,22 @@
     <string name="notif_symptom_reminder_title">%1$s: Jak Twoje alergie dziś?</string>
     <string name="notif_symptom_reminder_text">Dotknij aby zapisać wieczorny przegląd objawów</string>
 
+    <!-- Symptom Trends -->
+    <string name="nav_symptom_trends">Trendy objawów</string>
+    <string name="trends_title">Trendy objawów</string>
+    <string name="trends_range_week">7 dni</string>
+    <string name="trends_range_month">30 dni</string>
+    <string name="trends_range_quarter">90 dni</string>
+    <string name="trends_symptoms_title">Nasilenie objawów</string>
+    <string name="trends_pollen_title">Szczytowe poziomy pyłków</string>
+    <string name="trends_aqi_title">Jakość powietrza</string>
+    <string name="trends_pm25_label">PM2.5</string>
+    <string name="trends_medication_title">Stosowanie leków</string>
+    <string name="trends_adherence_percent">%1$d%% stosowanie</string>
+    <string name="trends_no_data">Brak danych o objawach w tym okresie</string>
+    <string name="trends_day_detail_title">Szczegóły za %1$s</string>
+    <string name="trends_tap_hint">Dotknij wykres aby zobaczyć szczegóły dnia</string>
+
     <!-- Widget -->
     <string name="widget_description">Aktualne poziomy pyłków dla Twojego profilu</string>
     <string name="widget_loading">Ładowanie…</string>
