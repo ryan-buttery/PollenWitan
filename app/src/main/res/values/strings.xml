@@ -292,6 +292,25 @@
     <string name="trends_day_detail_title">Details for %1$s</string>
     <string name="trends_tap_hint">Tap any chart to view daily details</string>
 
+    <!-- Data Management -->
+    <string name="settings_data_management">Data Management</string>
+    <string name="settings_export_all">Export All Data</string>
+    <string name="settings_export_all_desc">Save a full backup as JSON</string>
+    <string name="settings_import_data">Import Data</string>
+    <string name="settings_import_data_desc">Restore from a JSON backup</string>
+    <string name="settings_export_csv">Export Symptom CSV</string>
+    <string name="settings_export_csv_desc">Export symptom diary for a medical practitioner</string>
+    <string name="settings_import_confirm_title">Replace all data?</string>
+    <string name="settings_import_confirm_message">Importing will replace all existing profiles, medicines, medication history, and symptom diary entries. This cannot be undone.</string>
+    <string name="settings_import_confirm">Import</string>
+    <string name="settings_export_success">Data exported successfully</string>
+    <string name="settings_import_success">%1$s</string>
+    <string name="settings_export_error">Export failed: %1$s</string>
+    <string name="settings_import_error">Import failed: %1$s</string>
+    <string name="settings_csv_success">Symptom CSV exported successfully</string>
+    <string name="settings_csv_error">CSV export failed: %1$s</string>
+    <string name="settings_select_profile">Select Profile</string>
+
     <!-- Widget -->
     <string name="widget_description">Current pollen levels for your profile</string>
     <string name="widget_loading">Loading…</string>

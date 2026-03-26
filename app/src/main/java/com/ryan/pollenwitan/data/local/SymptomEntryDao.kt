@@ -33,4 +33,13 @@ interface SymptomEntryDao {
 
     @Query("DELETE FROM symptom_entries WHERE date < :beforeDate")
     suspend fun deleteOlderThan(beforeDate: String)
+
+    @Query("SELECT * FROM symptom_entries ORDER BY date DESC")
+    suspend fun getAll(): List<SymptomEntryEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(entities: List<SymptomEntryEntity>)
+
+    @Query("DELETE FROM symptom_entries")
+    suspend fun deleteAll()
 }

@@ -21,10 +21,14 @@
 - [x] **Medication History** — Persist daily dose confirmations to Room so medication adherence is available for historical review
 - [x] **Symptom Diary** — Configurable symptoms per profile (defaults + custom via Settings), daily evening check-in (in-app + notification) with 0–5 severity rating per symptom, auto-logs daily peak pollen/AQI values alongside entries
 - [x] **Long-Term Symptom View** — Graphical timeline screen combining symptom severity trends, daily peak pollen levels, AQI, and medication adherence over configurable date ranges (7d / 30d / 90d / season). Line charts for symptom averages and pollen counts, bar overlays for dose adherence. Per-profile, scrollable, with tap-to-inspect day detail. Helps users identify which pollens trigger their symptoms by correlating visual trends. Replaces the History Screen / Season Comparison concept.
-- [ ] **Data Export/Import** — Export/import profiles, medication history, symptom diary, and settings as JSON
+- [x] **Data Export/Import** — Export/import profiles, medication history, symptom diary, and settings as JSON. Room database encrypted with SQLCipher. CSV symptom export for medical practitioners
 - [ ] **Widget Enhancements** — Add daily peak pollen values to the widget display, include a manual refresh button in the widget corner (Glance `ActionCallback`), and review layout for additional useful fields (AQI, medication status)
+- [ ] **Notification Enhancements** — Combine daily notifications for all profiles into a single grouped notification instead of one per profile. Add PendingIntents so tapping a notification navigates to the relevant screen (e.g., morning briefing → dashboard, medication reminder → dashboard, symptom reminder → check-in screen)
+- [ ] **Symptom Diary Back-Fill** — Allow users to log symptom entries for past dates from the diary browser screen, not just the current day. Date picker to select the target date, pre-fill if an entry already exists for that date
+- [ ] **Evening Check-In UX** — Make it clearer on the dashboard card that the daily symptom check-in is intended for the evening (e.g., subtitle text, time-aware messaging like "Log your evening check-in" vs "Check back this evening")
 
 ## Future
 
+- [ ] **DataStore Encryption** — Encrypt sensitive DataStore files (profiles, medicines, dose_tracking, location) using EncryptedSharedPreferences
 - [ ] **Location-Aware Profiles** — Auto-detect travel and switch forecast location
 - [ ] **Threshold Auto-Calibration** — Use symptom diary data to suggest personalised threshold adjustments

@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.ryan.pollenwitan.data.security.DatabaseEncryption
 
 @Database(
     entities = [CachedForecastEntity::class, DoseHistoryEntity::class, SymptomEntryEntity::class],
@@ -90,6 +91,11 @@ abstract class AppDatabase : RoomDatabase() {
                     "pollenwitan.db"
                 )
                     .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .apply {
+                        DatabaseEncryption.getSupportFactory()?.let {
+                            openHelperFactory(it)
+                        }
+                    }
                     .build()
                     .also { INSTANCE = it }
             }

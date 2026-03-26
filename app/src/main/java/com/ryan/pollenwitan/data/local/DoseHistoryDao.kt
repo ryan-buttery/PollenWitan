@@ -49,4 +49,13 @@ interface DoseHistoryDao {
 
     @Query("DELETE FROM dose_history WHERE date < :beforeDate")
     suspend fun deleteOlderThan(beforeDate: String)
+
+    @Query("SELECT * FROM dose_history ORDER BY date DESC, reminderHour ASC")
+    suspend fun getAll(): List<DoseHistoryEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(entities: List<DoseHistoryEntity>)
+
+    @Query("DELETE FROM dose_history")
+    suspend fun deleteAll()
 }
