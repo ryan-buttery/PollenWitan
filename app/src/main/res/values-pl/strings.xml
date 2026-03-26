@@ -281,6 +281,11 @@
     <string name="notif_channel_symptom_reminder_desc">Wieczorne przypomnienia o zapisaniu objawów alergii</string>
     <string name="notif_symptom_reminder_title">%1$s: Jak Twoje alergie dziś?</string>
     <string name="notif_symptom_reminder_text">Dotknij aby zapisać wieczorny przegląd objawów</string>
+    <string name="notif_group_morning_briefing">Poranny raport — %1$d profili</string>
+    <string name="notif_group_threshold_alert">Alert wysokich pyłków — %1$d profili</string>
+    <string name="notif_group_compound_risk">Ryzyko oddechowe — %1$d profili</string>
+    <string name="notif_group_medication">Przypomnienia o lekach — %1$d przypomnień</string>
+    <string name="notif_group_symptom_reminder">Przegląd objawów — %1$d profili</string>
 
     <!-- Symptom Trends -->
     <string name="nav_symptom_trends">Trendy objawów</string>

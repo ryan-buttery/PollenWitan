@@ -283,6 +283,11 @@
     <string name="notif_channel_symptom_reminder_desc">Evening reminders to log your allergy symptoms</string>
     <string name="notif_symptom_reminder_title">%1$s: How are your allergies today?</string>
     <string name="notif_symptom_reminder_text">Tap to log your evening symptom check-in</string>
+    <string name="notif_group_morning_briefing">Morning Briefing — %1$d profiles</string>
+    <string name="notif_group_threshold_alert">High Pollen Alert — %1$d profiles</string>
+    <string name="notif_group_compound_risk">Respiratory Risk — %1$d profiles</string>
+    <string name="notif_group_medication">Medication Reminders — %1$d reminders</string>
+    <string name="notif_group_symptom_reminder">Symptom Check-In — %1$d profiles</string>
 
     <!-- Symptom Trends -->
     <string name="nav_symptom_trends">Symptom Trends</string>

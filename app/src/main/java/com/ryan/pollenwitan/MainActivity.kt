@@ -1,5 +1,6 @@
 package com.ryan.pollenwitan
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -11,18 +12,26 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.ryan.pollenwitan.data.repository.ThemePrefsRepository
 import com.ryan.pollenwitan.ui.navigation.AppNavGraph
 import com.ryan.pollenwitan.ui.theme.ForestTheme
 import com.ryan.pollenwitan.ui.theme.PollenWitanTheme
+import com.ryan.pollenwitan.worker.NotificationHelper
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
+
+    private var navigateTo by mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applySystemBars(dark = true)
+
+        navigateTo = intent.getStringExtra(NotificationHelper.EXTRA_NAVIGATE_TO)
 
         val themePrefsRepository = ThemePrefsRepository(this)
 
@@ -43,11 +52,17 @@ class MainActivity : AppCompatActivity() {
                         isDarkTheme = isDark,
                         onToggleTheme = { newValue ->
                             lifecycleScope.launch { themePrefsRepository.setDarkTheme(newValue) }
-                        }
+                        },
+                        initialRoute = navigateTo
                     )
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        navigateTo = intent.getStringExtra(NotificationHelper.EXTRA_NAVIGATE_TO)
     }
 
     private fun applySystemBars(dark: Boolean) {

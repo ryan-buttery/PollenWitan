@@ -17,6 +17,7 @@ import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.domain.model.PollenSeasonCalendar
+import com.ryan.pollenwitan.ui.navigation.Screen
 import com.ryan.pollenwitan.ui.theme.localizedName
 import androidx.glance.appwidget.updateAll
 import com.ryan.pollenwitan.widget.PollenWidget
@@ -59,6 +60,7 @@ class PollenCheckWorker(
         }
 
         val now = LocalDateTime.now()
+        val multiProfile = profiles.size > 1
 
         // Morning briefing: send once per day, on the first run at or after the configured hour
         val today = now.toLocalDate()
@@ -70,6 +72,10 @@ class PollenCheckWorker(
         if (shouldSendBriefing) {
             notificationPrefsRepository.setLastBriefingDate(today)
         }
+
+        var briefingCount = 0
+        var thresholdCount = 0
+        var compoundCount = 0
 
         profiles.forEachIndexed { index, profile ->
             val loc = ProfileRepository.resolveLocation(profile, globalLocation)
@@ -83,8 +89,11 @@ class PollenCheckWorker(
                     channelId = NotificationHelper.CHANNEL_MORNING_BRIEFING,
                     notificationId = MORNING_BRIEFING_BASE_ID + index,
                     title = ctx.getString(R.string.notif_good_morning, profile.displayName),
-                    text = summary
+                    text = summary,
+                    targetRoute = Screen.Dashboard.route,
+                    groupKey = if (multiProfile) NotificationHelper.GROUP_MORNING_BRIEFING else null
                 )
+                briefingCount++
             }
 
             // Threshold breach alerts
@@ -99,8 +108,11 @@ class PollenCheckWorker(
                         channelId = NotificationHelper.CHANNEL_THRESHOLD_ALERT,
                         notificationId = THRESHOLD_ALERT_BASE_ID + index,
                         title = ctx.getString(R.string.notif_high_pollen_alert, profile.displayName),
-                        text = text
+                        text = text,
+                        targetRoute = Screen.Dashboard.route,
+                        groupKey = if (multiProfile) NotificationHelper.GROUP_THRESHOLD_ALERT else null
                     )
+                    thresholdCount++
                 }
             }
 
@@ -113,15 +125,53 @@ class PollenCheckWorker(
                         channelId = NotificationHelper.CHANNEL_COMPOUND_RISK,
                         notificationId = COMPOUND_RISK_BASE_ID + index,
                         title = ctx.getString(R.string.notif_respiratory_risk, profile.displayName),
-                        text = compoundRisk
+                        text = compoundRisk,
+                        targetRoute = Screen.Dashboard.route,
+                        groupKey = if (multiProfile) NotificationHelper.GROUP_COMPOUND_RISK else null
                     )
+                    compoundCount++
                 }
+            }
+        }
+
+        // Send group summaries for multi-profile households
+        if (multiProfile) {
+            if (briefingCount > 1) {
+                NotificationHelper.sendGroupSummary(
+                    context = ctx,
+                    channelId = NotificationHelper.CHANNEL_MORNING_BRIEFING,
+                    groupKey = NotificationHelper.GROUP_MORNING_BRIEFING,
+                    summaryId = NotificationHelper.GROUP_SUMMARY_MORNING_ID,
+                    title = ctx.getString(R.string.notif_group_morning_briefing, briefingCount),
+                    targetRoute = Screen.Dashboard.route
+                )
+            }
+            if (thresholdCount > 1) {
+                NotificationHelper.sendGroupSummary(
+                    context = ctx,
+                    channelId = NotificationHelper.CHANNEL_THRESHOLD_ALERT,
+                    groupKey = NotificationHelper.GROUP_THRESHOLD_ALERT,
+                    summaryId = NotificationHelper.GROUP_SUMMARY_THRESHOLD_ID,
+                    title = ctx.getString(R.string.notif_group_threshold_alert, thresholdCount),
+                    targetRoute = Screen.Dashboard.route
+                )
+            }
+            if (compoundCount > 1) {
+                NotificationHelper.sendGroupSummary(
+                    context = ctx,
+                    channelId = NotificationHelper.CHANNEL_COMPOUND_RISK,
+                    groupKey = NotificationHelper.GROUP_COMPOUND_RISK,
+                    summaryId = NotificationHelper.GROUP_SUMMARY_COMPOUND_ID,
+                    title = ctx.getString(R.string.notif_group_compound_risk, compoundCount),
+                    targetRoute = Screen.Dashboard.route
+                )
             }
         }
 
         // Medication reminders
         val currentHour = now.hour
         val medicines = medicineRepository.getMedicines().first()
+        var medicationCount = 0
         profiles.forEachIndexed { index, profile ->
             if (profile.medicineAssignments.isEmpty()) return@forEachIndexed
             val confirmations = doseTrackingRepository.getConfirmations(profile.id).first()
@@ -136,12 +186,26 @@ class PollenCheckWorker(
                                 channelId = NotificationHelper.CHANNEL_MEDICATION_REMINDER,
                                 notificationId = MEDICATION_REMINDER_BASE_ID + index * 100 + assignmentIndex * 10 + slotIndex,
                                 title = ctx.getString(R.string.notif_medication_reminder, profile.displayName),
-                                text = ctx.getString(R.string.notif_time_to_take, medicine.name, assignment.dose, medicine.type.localizedUnitLabel(ctx))
+                                text = ctx.getString(R.string.notif_time_to_take, medicine.name, assignment.dose, medicine.type.localizedUnitLabel(ctx)),
+                                targetRoute = Screen.Dashboard.route,
+                                groupKey = if (multiProfile) NotificationHelper.GROUP_MEDICATION_REMINDER else null
                             )
+                            medicationCount++
                         }
                     }
                 }
             }
+        }
+
+        if (multiProfile && medicationCount > 1) {
+            NotificationHelper.sendGroupSummary(
+                context = ctx,
+                channelId = NotificationHelper.CHANNEL_MEDICATION_REMINDER,
+                groupKey = NotificationHelper.GROUP_MEDICATION_REMINDER,
+                summaryId = NotificationHelper.GROUP_SUMMARY_MEDICATION_ID,
+                title = ctx.getString(R.string.notif_group_medication, medicationCount),
+                targetRoute = Screen.Dashboard.route
+            )
         }
 
         // Pre-season medication alerts
@@ -162,13 +226,15 @@ class PollenCheckWorker(
                         channelId = NotificationHelper.CHANNEL_MEDICATION_REMINDER,
                         notificationId = PRE_SEASON_ALERT_BASE_ID + index * 10 + type.ordinal,
                         title = ctx.getString(R.string.notif_pre_season_title, profile.displayName),
-                        text = ctx.getString(R.string.notif_pre_season_text, type.localizedName(ctx), seasonDate)
+                        text = ctx.getString(R.string.notif_pre_season_text, type.localizedName(ctx), seasonDate),
+                        targetRoute = Screen.Dashboard.route
                     )
                 }
             }
         }
 
         // Symptom check-in reminder
+        var symptomCount = 0
         if (prefs.symptomReminderEnabled && currentHour == prefs.symptomReminderHour) {
             profiles.forEachIndexed { index, profile ->
                 val todayEntry = symptomDiaryRepository.getEntryForDate(profile.id, today)
@@ -178,9 +244,23 @@ class PollenCheckWorker(
                         channelId = NotificationHelper.CHANNEL_SYMPTOM_REMINDER,
                         notificationId = SYMPTOM_REMINDER_BASE_ID + index,
                         title = ctx.getString(R.string.notif_symptom_reminder_title, profile.displayName),
-                        text = ctx.getString(R.string.notif_symptom_reminder_text)
+                        text = ctx.getString(R.string.notif_symptom_reminder_text),
+                        targetRoute = Screen.SymptomCheckIn.createRoute(),
+                        groupKey = if (multiProfile) NotificationHelper.GROUP_SYMPTOM_REMINDER else null
                     )
+                    symptomCount++
                 }
+            }
+
+            if (multiProfile && symptomCount > 1) {
+                NotificationHelper.sendGroupSummary(
+                    context = ctx,
+                    channelId = NotificationHelper.CHANNEL_SYMPTOM_REMINDER,
+                    groupKey = NotificationHelper.GROUP_SYMPTOM_REMINDER,
+                    summaryId = NotificationHelper.GROUP_SUMMARY_SYMPTOM_ID,
+                    title = ctx.getString(R.string.notif_group_symptom_reminder, symptomCount),
+                    targetRoute = Screen.SymptomCheckIn.createRoute()
+                )
             }
         }
 
