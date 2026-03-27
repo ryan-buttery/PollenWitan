@@ -150,44 +150,96 @@ fun ProfileEditScreen(
         }
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Allergen picker
-        Text(
-            text = stringResource(R.string.profile_tracked_allergens),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+        // Discovery mode toggle
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            PollenType.entries.forEach { type ->
-                FilterChip(
-                    selected = type in uiState.trackedAllergens,
-                    onClick = { viewModel.toggleAllergen(type) },
-                    label = { Text(type.localizedName()) }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.discovery_mode_label), style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = stringResource(R.string.discovery_mode_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+            Switch(
+                checked = uiState.discoveryMode,
+                onCheckedChange = viewModel::setDiscoveryMode
+            )
         }
-        CrossReactivityHints(
-            selectedAllergens = uiState.trackedAllergens,
-            onAddAllergen = { viewModel.toggleAllergen(it) }
-        )
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Calibrate from diary data button (existing profiles only)
-        if (!uiState.isNewProfile && uiState.trackedAllergens.isNotEmpty()) {
-            OutlinedButton(
-                onClick = {
-                    profileId?.let {
-                        navController.navigate(Screen.ThresholdCalibration.createRoute(it))
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
+        if (uiState.discoveryMode) {
+            // Discovery mode info card
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
             ) {
-                Text(stringResource(R.string.calibration_button))
+                Text(
+                    text = stringResource(R.string.discovery_profile_info),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(12.dp)
+                )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // View discovery analysis button (existing profiles only)
+            if (!uiState.isNewProfile) {
+                OutlinedButton(
+                    onClick = {
+                        profileId?.let {
+                            navController.navigate(Screen.AllergenDiscovery.createRoute(it))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.discovery_view_analysis))
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        } else {
+            // Allergen picker
+            Text(
+                text = stringResource(R.string.profile_tracked_allergens),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                PollenType.entries.forEach { type ->
+                    FilterChip(
+                        selected = type in uiState.trackedAllergens,
+                        onClick = { viewModel.toggleAllergen(type) },
+                        label = { Text(type.localizedName()) }
+                    )
+                }
+            }
+            CrossReactivityHints(
+                selectedAllergens = uiState.trackedAllergens,
+                onAddAllergen = { viewModel.toggleAllergen(it) }
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Calibrate from diary data button (existing profiles only)
+            if (!uiState.isNewProfile && uiState.trackedAllergens.isNotEmpty()) {
+                OutlinedButton(
+                    onClick = {
+                        profileId?.let {
+                            navController.navigate(Screen.ThresholdCalibration.createRoute(it))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.calibration_button))
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
         // Threshold configuration per selected allergen

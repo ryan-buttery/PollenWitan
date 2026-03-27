@@ -66,6 +66,7 @@ import com.ryan.pollenwitan.ui.screens.OnboardingScreen
 import com.ryan.pollenwitan.ui.screens.ProfileEditScreen
 import com.ryan.pollenwitan.ui.screens.ProfileListScreen
 import com.ryan.pollenwitan.ui.screens.SettingsScreen
+import com.ryan.pollenwitan.ui.screens.AllergenDiscoveryScreen
 import com.ryan.pollenwitan.ui.screens.ThresholdCalibrationScreen
 import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.ui.theme.ForestTheme
@@ -135,6 +136,7 @@ fun AppNavGraph(
         currentRoute == Screen.ProfileCreate.route -> R.string.nav_new_profile
         currentRoute?.startsWith("profiles/edit/") == true -> R.string.nav_edit_profile
         currentRoute?.endsWith("/calibrate") == true -> R.string.calibration_title
+        currentRoute?.endsWith("/discovery") == true -> R.string.discovery_title
         currentRoute?.startsWith("symptom-checkin") == true -> R.string.symptom_checkin_title
         else -> navItems.find { item ->
             currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
@@ -311,6 +313,9 @@ fun AppNavGraph(
                     DashboardScreen(
                         onNavigateToCheckIn = {
                             navController.navigate(Screen.SymptomCheckIn.createRoute())
+                        },
+                        onNavigateToDiscovery = { profileId ->
+                            navController.navigate(Screen.AllergenDiscovery.createRoute(profileId))
                         }
                     )
                 }
@@ -359,6 +364,13 @@ fun AppNavGraph(
                 ) { backStackEntry ->
                     val profileId = backStackEntry.arguments?.getString("profileId") ?: return@composable
                     ThresholdCalibrationScreen(profileId = profileId)
+                }
+                composable(
+                    Screen.AllergenDiscovery.route,
+                    arguments = listOf(navArgument("profileId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val profileId = backStackEntry.arguments?.getString("profileId") ?: return@composable
+                    AllergenDiscoveryScreen(profileId = profileId)
                 }
             }
         }

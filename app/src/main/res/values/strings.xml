@@ -379,6 +379,40 @@
     <string name="calibration_dismiss">Dismiss</string>
     <string name="calibration_applied_message">%1$s threshold updated to %2$d grains/m\u00B3</string>
 
+    <!-- Allergen Discovery Mode -->
+    <string name="discovery_title">Allergen Discovery</string>
+    <string name="discovery_description">This analysis compares your symptom diary entries with pollen levels over the last 90 days to identify which pollens may be triggering your symptoms.</string>
+    <string name="discovery_disclaimer">This is not a medical diagnosis. The app identifies statistical correlations only. Please consult an allergist or immunologist for proper allergy testing and diagnosis.</string>
+    <string name="discovery_results_title">Analysis Results</string>
+    <string name="discovery_data_progress">Diary entries: %1$d / %2$d needed</string>
+    <string name="discovery_entries_remaining">%1$d more entries needed for analysis</string>
+    <string name="discovery_insufficient_data">Not enough symptom diary entries yet. Keep logging your daily symptoms — the analysis needs at least 14 days of data.</string>
+    <string name="discovery_correlation_score">Correlation</string>
+    <string name="discovery_symptom_days">%1$d symptom days out of %2$d with this pollen present</string>
+    <string name="discovery_confidence">Confidence: %1$s</string>
+    <string name="discovery_strong">Strong</string>
+    <string name="discovery_moderate">Moderate</string>
+    <string name="discovery_weak">Weak</string>
+    <string name="discovery_none">None</string>
+    <string name="discovery_add_allergen">Add to Profile</string>
+    <string name="discovery_allergen_added">Added to your tracked allergens</string>
+    <string name="discovery_exit_mode">Exit Discovery Mode</string>
+    <string name="discovery_view_analysis">View Discovery Analysis</string>
+    <string name="discovery_mode_label">Discovery mode</string>
+    <string name="discovery_mode_hint">Track all pollens and use symptom diary to identify your triggers</string>
+    <string name="discovery_profile_info">Discovery mode is active. All six pollen types will be shown on the dashboard. Log your symptoms daily — the app will correlate them with pollen data to help identify your allergies.</string>
+    <string name="discovery_banner_title">Discovery Mode Active</string>
+    <string name="discovery_banner_description">Log your symptoms daily. The app will analyse your diary to help identify which pollens affect you.</string>
+    <string name="discovery_path_title">Do you know your allergies?</string>
+    <string name="discovery_path_known">I know my allergies</string>
+    <string name="discovery_path_known_desc">Select which pollens you react to</string>
+    <string name="discovery_path_unknown">I\u2019m not sure yet</string>
+    <string name="discovery_path_unknown_desc">Track all pollens and identify triggers from your symptom diary</string>
+    <string name="onboarding_profile_subtitle_discovery">Set up your profile. Discovery mode will track all pollens and help identify your triggers over time.</string>
+    <string name="discovery_onboarding_info">Discovery mode will show all six pollen types on your dashboard. Log your symptoms daily using the evening check-in, and the app will analyse the data to suggest which pollens may be affecting you.</string>
+    <string name="discovery_done_explanation">Discovery mode is active. All pollen types will be displayed on your dashboard. Log your symptoms every evening to build up data for analysis.</string>
+    <string name="discovery_done_tip">Tip: You need at least 14 diary entries for the discovery analysis to produce results. The more data you log, the more accurate the results will be.</string>
+
     <!-- About -->
     <string name="about_title">PollenWitan</string>
     <string name="about_description">A privacy-respecting pollen and air quality forecast tailored to each household member\u2019s specific allergenic triggers. Track six pollen types individually, log daily symptoms, monitor medication adherence, and identify which pollens affect you most through long-term trend analysis. No ads, no tracking, no accounts.</string>

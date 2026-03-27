@@ -21,7 +21,8 @@ data class UserProfile(
     val hasAsthma: Boolean,
     val location: ProfileLocation? = null,
     val medicineAssignments: List<MedicineAssignment> = emptyList(),
-    val trackedSymptoms: List<TrackedSymptom> = defaultSymptoms()
+    val trackedSymptoms: List<TrackedSymptom> = defaultSymptoms(),
+    val discoveryMode: Boolean = false
 ) {
     companion object {
         fun defaultSymptoms(): List<TrackedSymptom> = DefaultSymptom.entries.map {

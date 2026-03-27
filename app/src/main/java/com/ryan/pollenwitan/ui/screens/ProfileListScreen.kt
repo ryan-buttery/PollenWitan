@@ -172,9 +172,13 @@ private fun ProfileCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
-                val allergenText = profile.trackedAllergens.keys
-                    .map { it.localizedName() }.joinToString(", ")
-                    .ifEmpty { stringResource(R.string.profile_list_no_allergens) }
+                val allergenText = if (profile.discoveryMode) {
+                    stringResource(R.string.discovery_mode_label)
+                } else {
+                    profile.trackedAllergens.keys
+                        .map { it.localizedName() }.joinToString(", ")
+                        .ifEmpty { stringResource(R.string.profile_list_no_allergens) }
+                }
                 val subtitle = if (profile.hasAsthma) "$allergenText · ${stringResource(R.string.profile_list_asthma_suffix)}" else allergenText
                 Text(
                     text = subtitle,

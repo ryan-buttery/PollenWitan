@@ -28,6 +28,7 @@ data class ProfileEditUiState(
     val profileId: String = "",
     val displayName: String = "",
     val hasAsthma: Boolean = false,
+    val discoveryMode: Boolean = false,
     val trackedAllergens: Set<PollenType> = emptySet(),
     val thresholds: Map<PollenType, AllergenThreshold> = emptyMap(),
     val useCustomThresholds: Map<PollenType, Boolean> = emptyMap(),
@@ -91,6 +92,7 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
                 profileId = profile.id,
                 displayName = profile.displayName,
                 hasAsthma = profile.hasAsthma,
+                discoveryMode = profile.discoveryMode,
                 trackedAllergens = profile.trackedAllergens.keys,
                 thresholds = profile.trackedAllergens,
                 useCustomThresholds = profile.trackedAllergens.mapValues { (type, threshold) ->
@@ -113,6 +115,10 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
 
     fun setHasAsthma(value: Boolean) {
         _uiState.value = _uiState.value.copy(hasAsthma = value)
+    }
+
+    fun setDiscoveryMode(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(discoveryMode = enabled, validationError = null)
     }
 
     fun toggleAllergen(type: PollenType) {
@@ -297,7 +303,7 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
             _uiState.value = state.copy(validationError = getApplication<Application>().getString(R.string.validation_name_empty))
             return
         }
-        if (state.trackedAllergens.isEmpty()) {
+        if (!state.discoveryMode && state.trackedAllergens.isEmpty()) {
             _uiState.value = state.copy(validationError = getApplication<Application>().getString(R.string.validation_select_allergen))
             return
         }
@@ -329,7 +335,8 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
             hasAsthma = state.hasAsthma,
             location = location,
             medicineAssignments = medicineAssignments,
-            trackedSymptoms = state.trackedSymptoms
+            trackedSymptoms = state.trackedSymptoms,
+            discoveryMode = state.discoveryMode
         )
 
         _uiState.value = state.copy(isSaving = true, validationError = null)

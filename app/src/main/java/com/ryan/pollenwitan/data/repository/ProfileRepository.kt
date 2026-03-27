@@ -38,6 +38,7 @@ class ProfileRepository(
         fun symptomIds(id: String) = "profile_${id}_symptom_ids"
         fun symptomName(id: String, symptomId: String) = "profile_${id}_symptom_${symptomId}_name"
         fun symptomIsDefault(id: String, symptomId: String) = "profile_${id}_symptom_${symptomId}_default"
+        fun discoveryMode(id: String) = "profile_${id}_discovery_mode"
     }
 
     fun getProfiles(): Flow<List<UserProfile>> = store.data
@@ -113,6 +114,7 @@ class ProfileRepository(
             editor.remove(Keys.symptomIsDefault(id, symptomId))
         }
         editor.remove(Keys.symptomIds(id))
+        editor.remove(Keys.discoveryMode(id))
     }
 
     private fun writeProfile(editor: SharedPreferences.Editor, profile: UserProfile) {
@@ -157,6 +159,7 @@ class ProfileRepository(
             editor.putString(Keys.symptomName(profile.id, symptom.id), symptom.displayName)
             editor.putBoolean(Keys.symptomIsDefault(profile.id, symptom.id), symptom.isDefault)
         }
+        editor.putBoolean(Keys.discoveryMode(profile.id), profile.discoveryMode)
     }
 
     private fun readProfile(prefs: SharedPreferences, id: String): UserProfile? {
@@ -215,6 +218,8 @@ class ProfileRepository(
             UserProfile.defaultSymptoms()
         }
 
+        val discoveryMode = prefs.getBoolean(Keys.discoveryMode(id), false)
+
         return UserProfile(
             id = id,
             displayName = name,
@@ -222,7 +227,8 @@ class ProfileRepository(
             hasAsthma = asthma,
             location = location,
             medicineAssignments = medicineAssignments,
-            trackedSymptoms = trackedSymptoms
+            trackedSymptoms = trackedSymptoms,
+            discoveryMode = discoveryMode
         )
     }
 

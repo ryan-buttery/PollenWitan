@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -88,17 +90,22 @@ fun OnboardingScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             when (uiState.currentStep) {
-                OnboardingStep.Welcome -> WelcomeStep()
+                OnboardingStep.Welcome -> WelcomeStep(
+                    selectedPath = uiState.onboardingPath,
+                    onPathSelected = viewModel::setOnboardingPath
+                )
                 OnboardingStep.Location -> LocationStep(
                     uiState = uiState,
                     viewModel = viewModel
                 )
                 OnboardingStep.Profile -> ProfileStep(
                     uiState = uiState,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    isDiscoveryMode = uiState.onboardingPath == OnboardingPath.DiscoveryMode
                 )
                 OnboardingStep.Done -> DoneStep(
                     uiState = uiState,
+                    isDiscoveryMode = uiState.onboardingPath == OnboardingPath.DiscoveryMode,
                     onGoToDashboard = onFinished
                 )
             }
@@ -150,7 +157,10 @@ private fun StepIndicator(
 }
 
 @Composable
-private fun WelcomeStep() {
+private fun WelcomeStep(
+    selectedPath: OnboardingPath,
+    onPathSelected: (OnboardingPath) -> Unit
+) {
     val currentLocale = AppCompatDelegate.getApplicationLocales().toLanguageTags()
     val isPolish = currentLocale.startsWith("pl")
 
@@ -212,6 +222,60 @@ private fun WelcomeStep() {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Allergy knowledge path selector
+        Text(
+            text = stringResource(R.string.discovery_path_title),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            RadioButton(
+                selected = selectedPath == OnboardingPath.KnownAllergies,
+                onClick = { onPathSelected(OnboardingPath.KnownAllergies) }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                Text(
+                    text = stringResource(R.string.discovery_path_known),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(R.string.discovery_path_known_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            RadioButton(
+                selected = selectedPath == OnboardingPath.DiscoveryMode,
+                onClick = { onPathSelected(OnboardingPath.DiscoveryMode) }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                Text(
+                    text = stringResource(R.string.discovery_path_unknown),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(R.string.discovery_path_unknown_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
@@ -385,7 +449,8 @@ private fun LocationStep(
 @Composable
 private fun ProfileStep(
     uiState: OnboardingUiState,
-    viewModel: OnboardingViewModel
+    viewModel: OnboardingViewModel,
+    isDiscoveryMode: Boolean
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -395,7 +460,10 @@ private fun ProfileStep(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = stringResource(R.string.onboarding_profile_subtitle),
+            text = stringResource(
+                if (isDiscoveryMode) R.string.onboarding_profile_subtitle_discovery
+                else R.string.onboarding_profile_subtitle
+            ),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -423,28 +491,42 @@ private fun ProfileStep(
         }
         Spacer(modifier = Modifier.height(20.dp))
 
-        Text(
-            text = stringResource(R.string.onboarding_tracked_allergens),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            PollenType.entries.forEach { type ->
-                FilterChip(
-                    selected = type in uiState.selectedAllergens,
-                    onClick = { viewModel.toggleAllergen(type) },
-                    label = { Text(type.localizedName()) }
+        if (isDiscoveryMode) {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Text(
+                    text = stringResource(R.string.discovery_onboarding_info),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(12.dp)
                 )
             }
+        } else {
+            Text(
+                text = stringResource(R.string.onboarding_tracked_allergens),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                PollenType.entries.forEach { type ->
+                    FilterChip(
+                        selected = type in uiState.selectedAllergens,
+                        onClick = { viewModel.toggleAllergen(type) },
+                        label = { Text(type.localizedName()) }
+                    )
+                }
+            }
+            CrossReactivityHints(
+                selectedAllergens = uiState.selectedAllergens,
+                onAddAllergen = { viewModel.toggleAllergen(it) }
+            )
         }
-        CrossReactivityHints(
-            selectedAllergens = uiState.selectedAllergens,
-            onAddAllergen = { viewModel.toggleAllergen(it) }
-        )
 
         uiState.validationError?.let { error ->
             Spacer(modifier = Modifier.height(12.dp))
@@ -460,6 +542,7 @@ private fun ProfileStep(
 @Composable
 private fun DoneStep(
     uiState: OnboardingUiState,
+    isDiscoveryMode: Boolean,
     onGoToDashboard: () -> Unit
 ) {
     Column(
@@ -479,24 +562,46 @@ private fun DoneStep(
             style = MaterialTheme.typography.bodyLarge
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = stringResource(R.string.onboarding_done_tracking, uiState.selectedAllergens.map { it.localizedName() }.joinToString(", ")),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        if (uiState.hasAsthma) {
+
+        if (isDiscoveryMode) {
             Text(
-                text = stringResource(R.string.onboarding_done_asthma_enabled),
+                text = stringResource(R.string.discovery_done_explanation),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                )
+            ) {
+                Text(
+                    text = stringResource(R.string.discovery_done_tip),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+        } else {
+            Text(
+                text = stringResource(R.string.onboarding_done_tracking, uiState.selectedAllergens.map { it.localizedName() }.joinToString(", ")),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (uiState.hasAsthma) {
+                Text(
+                    text = stringResource(R.string.onboarding_done_asthma_enabled),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = stringResource(R.string.onboarding_done_medicine_tip),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            text = stringResource(R.string.onboarding_done_medicine_tip),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+
         Spacer(modifier = Modifier.height(32.dp))
         Button(onClick = onGoToDashboard) {
             Text(stringResource(R.string.onboarding_go_to_dashboard))

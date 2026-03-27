@@ -377,6 +377,40 @@
     <string name="calibration_dismiss">Odrzuć</string>
     <string name="calibration_applied_message">Próg %1$s zaktualizowany do %2$d ziaren/m\u00B3</string>
 
+    <!-- Allergen Discovery Mode -->
+    <string name="discovery_title">Odkrywanie alergenów</string>
+    <string name="discovery_description">Ta analiza porównuje wpisy z dziennika objawów z poziomami pyłków z ostatnich 90 dni, aby zidentyfikować, które pyłki mogą wywoływać Twoje objawy.</string>
+    <string name="discovery_disclaimer">To nie jest diagnoza medyczna. Aplikacja identyfikuje jedynie korelacje statystyczne. Skonsultuj się z alergologiem lub immunologiem w celu właściwych testów alergicznych i diagnozy.</string>
+    <string name="discovery_results_title">Wyniki analizy</string>
+    <string name="discovery_data_progress">Wpisy w dzienniku: %1$d / %2$d potrzebnych</string>
+    <string name="discovery_entries_remaining">Potrzeba jeszcze %1$d wpisów do analizy</string>
+    <string name="discovery_insufficient_data">Za mało wpisów w dzienniku objawów. Kontynuuj codzienne zapisywanie objawów \u2014 analiza wymaga co najmniej 14 dni danych.</string>
+    <string name="discovery_correlation_score">Korelacja</string>
+    <string name="discovery_symptom_days">%1$d dni z objawami z %2$d dni z obecnością tego pyłku</string>
+    <string name="discovery_confidence">Pewność: %1$s</string>
+    <string name="discovery_strong">Silna</string>
+    <string name="discovery_moderate">Umiarkowana</string>
+    <string name="discovery_weak">Słaba</string>
+    <string name="discovery_none">Brak</string>
+    <string name="discovery_add_allergen">Dodaj do profilu</string>
+    <string name="discovery_allergen_added">Dodano do śledzonych alergenów</string>
+    <string name="discovery_exit_mode">Zakończ tryb odkrywania</string>
+    <string name="discovery_view_analysis">Zobacz analizę odkrywania</string>
+    <string name="discovery_mode_label">Tryb odkrywania</string>
+    <string name="discovery_mode_hint">Śledź wszystkie pyłki i użyj dziennika objawów do identyfikacji wyzwalaczy</string>
+    <string name="discovery_profile_info">Tryb odkrywania jest aktywny. Wszystkie sześć typów pyłków będzie wyświetlane na pulpicie. Zapisuj objawy codziennie \u2014 aplikacja skoreluje je z danymi o pyłkach, aby pomóc zidentyfikować Twoje alergie.</string>
+    <string name="discovery_banner_title">Tryb odkrywania aktywny</string>
+    <string name="discovery_banner_description">Zapisuj objawy codziennie. Aplikacja przeanalizuje dziennik, aby pomóc zidentyfikować, które pyłki Cię dotyczą.</string>
+    <string name="discovery_path_title">Czy znasz swoje alergie?</string>
+    <string name="discovery_path_known">Znam moje alergie</string>
+    <string name="discovery_path_known_desc">Wybierz pyłki, na które reagujesz</string>
+    <string name="discovery_path_unknown">Jeszcze nie jestem pewien/pewna</string>
+    <string name="discovery_path_unknown_desc">Śledź wszystkie pyłki i zidentyfikuj wyzwalacze z dziennika objawów</string>
+    <string name="onboarding_profile_subtitle_discovery">Skonfiguruj swój profil. Tryb odkrywania będzie śledzić wszystkie pyłki i pomoże zidentyfikować Twoje wyzwalacze z czasem.</string>
+    <string name="discovery_onboarding_info">Tryb odkrywania pokaże wszystkie sześć typów pyłków na pulpicie. Zapisuj objawy codziennie podczas wieczornego sprawdzenia, a aplikacja przeanalizuje dane, aby zasugerować, które pyłki mogą na Ciebie wpływać.</string>
+    <string name="discovery_done_explanation">Tryb odkrywania jest aktywny. Wszystkie typy pyłków będą wyświetlane na pulpicie. Zapisuj objawy co wieczór, aby zebrać dane do analizy.</string>
+    <string name="discovery_done_tip">Wskazówka: Potrzebujesz co najmniej 14 wpisów w dzienniku, aby analiza odkrywania dała wyniki. Im więcej danych zapiszesz, tym dokładniejsze będą wyniki.</string>
+
     <!-- About -->
     <string name="about_title">PollenWitan</string>
     <string name="about_description">Prognoza pyłków i jakości powietrza z poszanowaniem prywatności, dostosowana do konkretnych alergenów każdego domownika. Śledź sześć typów pyłków indywidualnie, zapisuj codzienne objawy, monitoruj przyjmowanie leków i sprawdzaj, które pyłki wpływają na Ciebie najbardziej dzięki analizie długoterminowych trendów. Bez reklam, bez śledzenia, bez kont.</string>
