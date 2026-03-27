@@ -140,10 +140,17 @@ private fun DashboardContent(
     ) {
         // Header
         Text(
-            text = locationDisplayName.ifEmpty { stringResource(R.string.common_loading) },
+            text = selectedProfile?.displayName ?: locationDisplayName.ifEmpty { stringResource(R.string.common_loading) },
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
+        if (selectedProfile != null && locationDisplayName.isNotEmpty()) {
+            Text(
+                text = locationDisplayName,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         Text(
             text = stringResource(R.string.dashboard_current_conditions, conditions.timestamp.format(DateTimeFormatter.ofPattern("EEEE d MMMM, HH:mm"))),
             style = MaterialTheme.typography.bodyMedium,

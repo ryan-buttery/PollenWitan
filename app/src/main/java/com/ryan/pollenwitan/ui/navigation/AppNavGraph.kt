@@ -36,8 +36,10 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -121,9 +123,14 @@ fun AppNavGraph(
     val scope = rememberCoroutineScope()
     val colors = ForestTheme.current
 
-    // Redirect to onboarding if no profiles exist
+    // Redirect to onboarding if no profiles exist on first run.
+    // hasHadProfiles prevents mid-session redirects (e.g. while import is clearing data).
+    var hasHadProfiles by remember { mutableStateOf(false) }
     LaunchedEffect(profiles) {
-        if (profiles != null && profiles!!.isEmpty()) {
+        val currentProfiles = profiles ?: return@LaunchedEffect
+        if (currentProfiles.isNotEmpty()) {
+            hasHadProfiles = true
+        } else if (!hasHadProfiles) {
             navController.navigate(Screen.Onboarding.route) {
                 popUpTo(Screen.Dashboard.route) { inclusive = true }
             }
