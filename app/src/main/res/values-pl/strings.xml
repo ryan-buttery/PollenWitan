@@ -406,6 +406,12 @@
     <string name="discovery_path_known_desc">Wybierz pyłki, na które reagujesz</string>
     <string name="discovery_path_unknown">Jeszcze nie jestem pewien/pewna</string>
     <string name="discovery_path_unknown_desc">Śledź wszystkie pyłki i zidentyfikuj wyzwalacze z dziennika objawów</string>
+    <string name="import_path_title">Mam kopię zapasową</string>
+    <string name="import_path_desc">Przywróć profile i dane z poprzedniego eksportu</string>
+    <string name="onboarding_import_select_file">Wybierz plik kopii zapasowej</string>
+    <string name="onboarding_import_importing">Importowanie…</string>
+    <string name="onboarding_import_error">Import nieudany: %1$s</string>
+    <string name="onboarding_import_retry">Spróbuj ponownie</string>
     <string name="onboarding_profile_subtitle_discovery">Skonfiguruj swój profil. Tryb odkrywania będzie śledzić wszystkie pyłki i pomoże zidentyfikować Twoje wyzwalacze z czasem.</string>
     <string name="discovery_onboarding_info">Tryb odkrywania pokaże wszystkie sześć typów pyłków na pulpicie. Zapisuj objawy codziennie podczas wieczornego sprawdzenia, a aplikacja przeanalizuje dane, aby zasugerować, które pyłki mogą na Ciebie wpływać.</string>
     <string name="discovery_done_explanation">Tryb odkrywania jest aktywny. Wszystkie typy pyłków będą wyświetlane na pulpicie. Zapisuj objawy co wieczór, aby zebrać dane do analizy.</string>

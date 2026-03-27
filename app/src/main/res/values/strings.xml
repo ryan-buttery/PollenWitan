@@ -408,6 +408,12 @@
     <string name="discovery_path_known_desc">Select which pollens you react to</string>
     <string name="discovery_path_unknown">I\u2019m not sure yet</string>
     <string name="discovery_path_unknown_desc">Track all pollens and identify triggers from your symptom diary</string>
+    <string name="import_path_title">I have a backup</string>
+    <string name="import_path_desc">Restore profiles and data from a previous export</string>
+    <string name="onboarding_import_select_file">Select Backup File</string>
+    <string name="onboarding_import_importing">Importing…</string>
+    <string name="onboarding_import_error">Import failed: %1$s</string>
+    <string name="onboarding_import_retry">Try Again</string>
     <string name="onboarding_profile_subtitle_discovery">Set up your profile. Discovery mode will track all pollens and help identify your triggers over time.</string>
     <string name="discovery_onboarding_info">Discovery mode will show all six pollen types on your dashboard. Log your symptoms daily using the evening check-in, and the app will analyse the data to suggest which pollens may be affecting you.</string>
     <string name="discovery_done_explanation">Discovery mode is active. All pollen types will be displayed on your dashboard. Log your symptoms every evening to build up data for analysis.</string>

@@ -3,6 +3,7 @@ package com.ryan.pollenwitan.ui.screens
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryan.pollenwitan.data.export.AppDataImporter
 import com.ryan.pollenwitan.data.location.GpsLocationProvider
 import com.ryan.pollenwitan.data.repository.LocationRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
@@ -15,12 +16,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.io.InputStream
 import java.util.UUID
 
 enum class OnboardingStep { Welcome, Location, Profile, Done }
 enum class LocationChoice { Default, Gps, Manual }
 
-enum class OnboardingPath { KnownAllergies, DiscoveryMode }
+enum class OnboardingPath { KnownAllergies, DiscoveryMode, ImportBackup }
+
+sealed interface ImportStatus {
+    data object Idle : ImportStatus
+    data object Importing : ImportStatus
+    data class Success(val summary: String) : ImportStatus
+    data class Error(val message: String) : ImportStatus
+}
 
 data class OnboardingUiState(
     val currentStep: OnboardingStep = OnboardingStep.Welcome,
@@ -35,7 +44,8 @@ data class OnboardingUiState(
     val selectedAllergens: Set<PollenType> = emptySet(),
     val isSaving: Boolean = false,
     val isComplete: Boolean = false,
-    val validationError: String? = null
+    val validationError: String? = null,
+    val importStatus: ImportStatus = ImportStatus.Idle
 )
 
 class OnboardingViewModel(application: Application) : AndroidViewModel(application) {
@@ -43,14 +53,31 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
     private val locationRepository = LocationRepository(application)
     private val profileRepository = ProfileRepository(application)
     private val gpsLocationProvider = GpsLocationProvider(application)
+    private val importer = AppDataImporter(application)
 
     private val _uiState = MutableStateFlow(OnboardingUiState())
     val uiState: StateFlow<OnboardingUiState> = _uiState.asStateFlow()
+
+    fun importData(inputStream: InputStream, onSuccess: () -> Unit) {
+        _uiState.value = _uiState.value.copy(importStatus = ImportStatus.Importing)
+        viewModelScope.launch {
+            try {
+                val summary = importer.import(inputStream)
+                _uiState.value = _uiState.value.copy(importStatus = ImportStatus.Success(summary))
+                onSuccess()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    importStatus = ImportStatus.Error(e.message ?: "Unknown error")
+                )
+            }
+        }
+    }
 
     fun nextStep() {
         val state = _uiState.value
         when (state.currentStep) {
             OnboardingStep.Welcome -> {
+                if (state.onboardingPath == OnboardingPath.ImportBackup) return
                 _uiState.value = state.copy(currentStep = OnboardingStep.Location)
             }
             OnboardingStep.Location -> {
@@ -120,7 +147,11 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     fun setOnboardingPath(path: OnboardingPath) {
-        _uiState.value = _uiState.value.copy(onboardingPath = path, validationError = null)
+        _uiState.value = _uiState.value.copy(
+            onboardingPath = path,
+            validationError = null,
+            importStatus = ImportStatus.Idle
+        )
     }
 
     fun toggleAllergen(type: PollenType) {

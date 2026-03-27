@@ -34,4 +34,4 @@
 - [x] **Positive Reinforcement** — Display a random encouraging phrase when the user completes all their medications for the day or logs their daily symptom check-in. Pool of varied phrases (localised EN/PL) to keep it fresh
 - [x] **Threshold Auto-Calibration** — Use symptom diary data to suggest personalised threshold adjustments
 - [x] **Allergen Discovery Mode** — Functionality for users who don't know their specific allergies to track all pollens and use symptom diary correlation to help identify triggers over time. Clear medical disclaimers that the app is not a diagnostic tool and recommends consulting a specialist
-- [ ] **Onboarding Wizard Improvements** — Streamlined flow for returning users importing JSON data; restructure wizard to support both "I know my allergies" and "help me figure it out" paths
+- [x] **Onboarding Wizard Improvements** — Streamlined flow for returning users importing JSON data; restructure wizard to support both "I know my allergies" and "help me figure it out" paths

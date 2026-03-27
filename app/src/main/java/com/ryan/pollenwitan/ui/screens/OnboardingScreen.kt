@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.ryan.pollenwitan.R
 import androidx.compose.ui.text.font.FontWeight
@@ -63,6 +64,17 @@ fun OnboardingScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = ForestTheme.current
+    val context = LocalContext.current
+
+    val importJsonLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            context.contentResolver.openInputStream(it)?.let { stream ->
+                viewModel.importData(stream, onSuccess = onFinished)
+            }
+        }
+    }
 
     LaunchedEffect(uiState.isComplete) {
         if (uiState.isComplete && uiState.currentStep == OnboardingStep.Done) {
@@ -92,7 +104,9 @@ fun OnboardingScreen(
             when (uiState.currentStep) {
                 OnboardingStep.Welcome -> WelcomeStep(
                     selectedPath = uiState.onboardingPath,
-                    onPathSelected = viewModel::setOnboardingPath
+                    onPathSelected = viewModel::setOnboardingPath,
+                    importStatus = uiState.importStatus,
+                    onPickFile = { importJsonLauncher.launch(arrayOf("application/json")) }
                 )
                 OnboardingStep.Location -> LocationStep(
                     uiState = uiState,
@@ -111,8 +125,10 @@ fun OnboardingScreen(
             }
         }
 
-        // Bottom navigation (not shown on Done step)
-        if (uiState.currentStep != OnboardingStep.Done) {
+        // Bottom navigation (not shown on Done step or when import path selected)
+        val hideBottomNav = uiState.currentStep == OnboardingStep.Done ||
+            (uiState.currentStep == OnboardingStep.Welcome && uiState.onboardingPath == OnboardingPath.ImportBackup)
+        if (!hideBottomNav) {
             Spacer(modifier = Modifier.height(16.dp))
             BottomNavButtons(
                 currentStep = uiState.currentStep,
@@ -159,7 +175,9 @@ private fun StepIndicator(
 @Composable
 private fun WelcomeStep(
     selectedPath: OnboardingPath,
-    onPathSelected: (OnboardingPath) -> Unit
+    onPathSelected: (OnboardingPath) -> Unit,
+    importStatus: ImportStatus,
+    onPickFile: () -> Unit
 ) {
     val currentLocale = AppCompatDelegate.getApplicationLocales().toLanguageTags()
     val isPolish = currentLocale.startsWith("pl")
@@ -274,6 +292,70 @@ private fun WelcomeStep(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            RadioButton(
+                selected = selectedPath == OnboardingPath.ImportBackup,
+                onClick = { onPathSelected(OnboardingPath.ImportBackup) }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Column {
+                Text(
+                    text = stringResource(R.string.import_path_title),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = stringResource(R.string.import_path_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        if (selectedPath == OnboardingPath.ImportBackup) {
+            Spacer(modifier = Modifier.height(12.dp))
+            when (importStatus) {
+                is ImportStatus.Idle -> {
+                    OutlinedButton(
+                        onClick = onPickFile,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.onboarding_import_select_file))
+                    }
+                }
+                is ImportStatus.Importing -> {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.onboarding_import_importing))
+                    }
+                }
+                is ImportStatus.Error -> {
+                    Text(
+                        text = stringResource(R.string.onboarding_import_error, importStatus.message),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = onPickFile,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(stringResource(R.string.onboarding_import_retry))
+                    }
+                }
+                is ImportStatus.Success -> {
+                    // Navigation happens immediately on success
+                }
             }
         }
     }
