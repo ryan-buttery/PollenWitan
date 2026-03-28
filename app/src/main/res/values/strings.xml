@@ -419,6 +419,23 @@
     <string name="discovery_done_explanation">Discovery mode is active. All pollen types will be displayed on your dashboard. Log your symptoms every evening to build up data for analysis.</string>
     <string name="discovery_done_tip">Tip: You need at least 14 diary entries for the discovery analysis to produce results. The more data you log, the more accurate the results will be.</string>
 
+    <!-- Legal Disclaimer -->
+    <string name="legal_title">Legal Disclaimer</string>
+    <string name="legal_intro">Please read the following carefully before using PollenWitan.</string>
+    <string name="legal_not_medical_advice_title">Not Medical Advice</string>
+    <string name="legal_not_medical_advice_body">PollenWitan is an informational tool only. It does not provide medical advice, diagnosis, or treatment. Pollen forecasts, allergen discovery results, threshold calibration suggestions, and cross-reactivity information are based on statistical models and general data \u2014 they are not a substitute for professional medical advice. Always consult a qualified allergist or healthcare provider for diagnosis, treatment decisions, and medication management.</string>
+    <string name="legal_data_accuracy_title">Data Accuracy</string>
+    <string name="legal_data_accuracy_body">Pollen and air quality data is sourced from the Copernicus Atmosphere Monitoring Service (CAMS) European model via the Open-Meteo API. This data has a resolution of approximately 11 km and is based on atmospheric modelling, not direct local measurements. Actual pollen levels at your exact location may differ from the forecast. The app is designed for European locations only; data outside Europe may be unavailable or unreliable.</string>
+    <string name="legal_liability_title">Limitation of Liability</string>
+    <string name="legal_liability_body">PollenWitan is provided \u201Cas is\u201D without warranty of any kind. The developer is not liable for any harm, health outcomes, or damages arising from the use of or reliance on this app, including but not limited to missed notifications, inaccurate forecasts, or medication-related decisions made based on the app\u2019s information.</string>
+    <string name="legal_privacy_title">Privacy</string>
+    <string name="legal_privacy_body">All personal data \u2014 including profiles, symptom diary entries, medication records, and preferences \u2014 is stored locally on your device. No personal data is transmitted to any server. The only network requests are to the Open-Meteo API, which receives your location coordinates (latitude and longitude) to retrieve forecast data. No account, registration, or identifying information is required.</string>
+    <string name="legal_attribution_title">Data Attribution</string>
+    <string name="legal_attribution_body">Weather and air quality data provided by Open-Meteo (https://open-meteo.com/). Pollen data sourced from the Copernicus Atmosphere Monitoring Service (CAMS) \u2014 \u00A9 European Centre for Medium-Range Weather Forecasts (ECMWF). Licensed under CC BY 4.0.</string>
+    <string name="legal_agree">I Agree</string>
+    <string name="legal_disagree">Disagree</string>
+    <string name="legal_scroll_hint">Scroll down to read the full disclaimer</string>
+
     <!-- About -->
     <string name="about_title">PollenWitan</string>
     <string name="about_description">A privacy-respecting pollen and air quality forecast tailored to each household member\u2019s specific allergenic triggers. Track six pollen types individually, log daily symptoms, monitor medication adherence, and identify which pollens affect you most through long-term trend analysis. No ads, no tracking, no accounts.</string>
