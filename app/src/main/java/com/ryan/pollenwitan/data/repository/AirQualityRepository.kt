@@ -61,50 +61,7 @@ class AirQualityRepository(context: Context) {
         days: Int = 4
     ): Result<List<ForecastDay>> = runCatching {
         val response = fetchOrCache(latitude, longitude, forecastDays = days)
-        val hourly = response.hourly
-
-        val hourlyReadings = hourly.time.indices.map { i ->
-            val time = LocalDateTime.parse(hourly.time[i], DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-            val readings = parseReadingsAtIndex(hourly, i)
-            val aqi = hourly.europeanAqi?.getOrNull(i) ?: 0
-            HourlyReading(
-                hour = time,
-                pollenReadings = readings,
-                europeanAqi = aqi,
-                pm25 = hourly.pm25?.getOrNull(i) ?: 0.0,
-                pm10 = hourly.pm10?.getOrNull(i) ?: 0.0,
-                aqiSeverity = SeverityClassifier.aqiSeverity(aqi)
-            )
-        }
-
-        hourlyReadings
-            .groupBy { it.hour.toLocalDate() }
-            .entries
-            .sortedBy { it.key }
-            .map { (date, readings) ->
-                val periods = DayPeriod.entries.map { period ->
-                    val periodReadings = readings.filter { it.hour.hour in period.hourRange }
-                    PeriodSummary(
-                        period = period,
-                        peakPollenReadings = peakPollenReadings(periodReadings),
-                        avgAqi = if (periodReadings.isNotEmpty()) periodReadings.map { it.europeanAqi }.average().toInt() else 0,
-                        aqiSeverity = SeverityClassifier.aqiSeverity(
-                            if (periodReadings.isNotEmpty()) periodReadings.maxOf { it.europeanAqi } else 0
-                        )
-                    )
-                }
-
-                val peakAqi = readings.maxOfOrNull { it.europeanAqi } ?: 0
-
-                ForecastDay(
-                    date = date,
-                    periods = periods,
-                    peakPollenReadings = peakPollenReadings(readings),
-                    peakAqi = peakAqi,
-                    peakAqiSeverity = SeverityClassifier.aqiSeverity(peakAqi),
-                    hourlyReadings = readings
-                )
-            }
+        buildForecastDays(response.hourly)
     }
 
     private suspend fun fetchOrCache(
@@ -139,40 +96,85 @@ class AirQualityRepository(context: Context) {
         return response
     }
 
-    private fun roundCoord(value: Double): Double =
-        (value * 100).roundToInt() / 100.0
-
-    private fun parseReadingsAtIndex(hourly: HourlyData, index: Int): List<PollenReading> {
-        val birchValue = hourly.birchPollen?.getOrNull(index) ?: 0.0
-        val alderValue = hourly.alderPollen?.getOrNull(index) ?: 0.0
-        val grassValue = hourly.grassPollen?.getOrNull(index) ?: 0.0
-        val mugwortValue = hourly.mugwortPollen?.getOrNull(index) ?: 0.0
-        val ragweedValue = hourly.ragweedPollen?.getOrNull(index) ?: 0.0
-        val oliveValue = hourly.olivePollen?.getOrNull(index) ?: 0.0
-        return listOf(
-            PollenReading(PollenType.Birch, birchValue, SeverityClassifier.pollenSeverity(PollenType.Birch, birchValue)),
-            PollenReading(PollenType.Alder, alderValue, SeverityClassifier.pollenSeverity(PollenType.Alder, alderValue)),
-            PollenReading(PollenType.Grass, grassValue, SeverityClassifier.pollenSeverity(PollenType.Grass, grassValue)),
-            PollenReading(PollenType.Mugwort, mugwortValue, SeverityClassifier.pollenSeverity(PollenType.Mugwort, mugwortValue)),
-            PollenReading(PollenType.Ragweed, ragweedValue, SeverityClassifier.pollenSeverity(PollenType.Ragweed, ragweedValue)),
-            PollenReading(PollenType.Olive, oliveValue, SeverityClassifier.pollenSeverity(PollenType.Olive, oliveValue))
-        )
-    }
-
-    private fun peakPollenReadings(readings: List<HourlyReading>): List<PollenReading> {
-        if (readings.isEmpty()) {
-            return PollenType.entries.map { PollenReading(it, 0.0, SeverityClassifier.pollenSeverity(it, 0.0)) }
-        }
-        return PollenType.entries.map { type ->
-            val peakValue = readings.maxOf { hourly ->
-                hourly.pollenReadings.find { it.type == type }?.value ?: 0.0
-            }
-            PollenReading(type, peakValue, SeverityClassifier.pollenSeverity(type, peakValue))
-        }
-    }
-
     companion object {
-        private const val CACHE_MAX_AGE_MS = 60 * 60 * 1000L
-        private const val CACHE_CLEANUP_AGE_MS = 24 * 60 * 60 * 1000L
+        internal const val CACHE_MAX_AGE_MS = 60 * 60 * 1000L
+        internal const val CACHE_CLEANUP_AGE_MS = 24 * 60 * 60 * 1000L
+
+        internal fun roundCoord(value: Double): Double =
+            (value * 100).roundToInt() / 100.0
+
+        internal fun parseReadingsAtIndex(hourly: HourlyData, index: Int): List<PollenReading> {
+            val birchValue = hourly.birchPollen?.getOrNull(index) ?: 0.0
+            val alderValue = hourly.alderPollen?.getOrNull(index) ?: 0.0
+            val grassValue = hourly.grassPollen?.getOrNull(index) ?: 0.0
+            val mugwortValue = hourly.mugwortPollen?.getOrNull(index) ?: 0.0
+            val ragweedValue = hourly.ragweedPollen?.getOrNull(index) ?: 0.0
+            val oliveValue = hourly.olivePollen?.getOrNull(index) ?: 0.0
+            return listOf(
+                PollenReading(PollenType.Birch, birchValue, SeverityClassifier.pollenSeverity(PollenType.Birch, birchValue)),
+                PollenReading(PollenType.Alder, alderValue, SeverityClassifier.pollenSeverity(PollenType.Alder, alderValue)),
+                PollenReading(PollenType.Grass, grassValue, SeverityClassifier.pollenSeverity(PollenType.Grass, grassValue)),
+                PollenReading(PollenType.Mugwort, mugwortValue, SeverityClassifier.pollenSeverity(PollenType.Mugwort, mugwortValue)),
+                PollenReading(PollenType.Ragweed, ragweedValue, SeverityClassifier.pollenSeverity(PollenType.Ragweed, ragweedValue)),
+                PollenReading(PollenType.Olive, oliveValue, SeverityClassifier.pollenSeverity(PollenType.Olive, oliveValue))
+            )
+        }
+
+        internal fun peakPollenReadings(readings: List<HourlyReading>): List<PollenReading> {
+            if (readings.isEmpty()) {
+                return PollenType.entries.map { PollenReading(it, 0.0, SeverityClassifier.pollenSeverity(it, 0.0)) }
+            }
+            return PollenType.entries.map { type ->
+                val peakValue = readings.maxOf { hourly ->
+                    hourly.pollenReadings.find { it.type == type }?.value ?: 0.0
+                }
+                PollenReading(type, peakValue, SeverityClassifier.pollenSeverity(type, peakValue))
+            }
+        }
+
+        internal fun buildForecastDays(hourly: HourlyData): List<ForecastDay> {
+            val hourlyReadings = hourly.time.indices.map { i ->
+                val time = LocalDateTime.parse(hourly.time[i], DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                val readings = parseReadingsAtIndex(hourly, i)
+                val aqi = hourly.europeanAqi?.getOrNull(i) ?: 0
+                HourlyReading(
+                    hour = time,
+                    pollenReadings = readings,
+                    europeanAqi = aqi,
+                    pm25 = hourly.pm25?.getOrNull(i) ?: 0.0,
+                    pm10 = hourly.pm10?.getOrNull(i) ?: 0.0,
+                    aqiSeverity = SeverityClassifier.aqiSeverity(aqi)
+                )
+            }
+
+            return hourlyReadings
+                .groupBy { it.hour.toLocalDate() }
+                .entries
+                .sortedBy { it.key }
+                .map { (date, readings) ->
+                    val periods = DayPeriod.entries.map { period ->
+                        val periodReadings = readings.filter { it.hour.hour in period.hourRange }
+                        PeriodSummary(
+                            period = period,
+                            peakPollenReadings = peakPollenReadings(periodReadings),
+                            avgAqi = if (periodReadings.isNotEmpty()) periodReadings.map { it.europeanAqi }.average().toInt() else 0,
+                            aqiSeverity = SeverityClassifier.aqiSeverity(
+                                if (periodReadings.isNotEmpty()) periodReadings.maxOf { it.europeanAqi } else 0
+                            )
+                        )
+                    }
+
+                    val peakAqi = readings.maxOfOrNull { it.europeanAqi } ?: 0
+
+                    ForecastDay(
+                        date = date,
+                        periods = periods,
+                        peakPollenReadings = peakPollenReadings(readings),
+                        peakAqi = peakAqi,
+                        peakAqiSeverity = SeverityClassifier.aqiSeverity(peakAqi),
+                        hourlyReadings = readings
+                    )
+                }
+        }
     }
 }

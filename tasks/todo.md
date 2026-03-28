@@ -41,9 +41,9 @@ Incremental test coverage plan. Each task is a self-contained PR targeting `rele
 
 ### Batch 2 — Repository Logic (Requires Fake/In-Memory Implementations)
 
-- [ ] **Test: AirQualityRepository** — Cache key generation (coordinate rounding), cache expiry logic, `parseReadingsAtIndex()` for missing/null hourly values, period summary computation (morning 06–11, afternoon 12–17, evening 18–23), peak pollen detection across a 4-day forecast. JUnit 4 + MockK for `CachedForecastDao` + fake `AirQualityApi`.
+- [x] **Test: AirQualityRepository** — Cache key generation (coordinate rounding), cache expiry logic, `parseReadingsAtIndex()` for missing/null hourly values, period summary computation (morning 06–11, afternoon 12–17, evening 18–23), peak pollen detection across a 4-day forecast. Pure logic extracted to internal companion functions, tested without mocks.
 
-- [ ] **Test: DoseTrackingRepository** — `confirmDose()`/`unconfirmDose()` round-trip, date-based key isolation (yesterday's confirmations do not appear today), `getHistoryForDateRange()` boundary inclusivity. JUnit 4 + in-memory SharedPreferences fake + MockK for Room DAO.
+- [x] **Test: DoseTrackingRepository** — `confirmDose()`/`unconfirmDose()` round-trip via key symmetry, date-based key isolation, key parsing with edge cases (underscores in medicine IDs, cross-profile isolation). Pure key logic extracted to internal Keys object, tested without mocks.
 
 ### Batch 3 — Background Worker Logic
 
