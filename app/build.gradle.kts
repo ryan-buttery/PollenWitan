@@ -23,8 +23,8 @@ android {
         applicationId = "com.ryan.pollenwitan"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.0.0-indev"
+        versionCode = 9
+        versionName = "1.0.0"
     }
 
     signingConfigs {
