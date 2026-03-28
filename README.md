@@ -165,7 +165,7 @@ PollenWitan is distributed as a signed APK via [GitHub Releases](https://github.
 Before installing, it is recommended to verify the APK signature using [APK Signature Verification](https://github.com/nicehash/AppVerifier) or a similar tool. The release signing key fingerprint is:
 
 ```
-SHA-256 fingerprint: <TO BE FILLED IN AT RELEASE>
+68:DB:BB:02:74:35:60:8C:54:13:16:92:97:CF:2B:5E:DF:11:8B:5E:22:77:A3:44:65:F4:A3:CE:68:85:EA:8C
 ```
 
 ### Installing
