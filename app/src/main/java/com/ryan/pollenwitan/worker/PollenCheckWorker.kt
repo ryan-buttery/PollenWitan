@@ -16,10 +16,8 @@ import com.ryan.pollenwitan.data.repository.NotificationPrefsRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.data.repository.SymptomDiaryRepository
 import com.ryan.pollenwitan.domain.model.CurrentConditions
-import com.ryan.pollenwitan.domain.model.DoseConfirmation
 import com.ryan.pollenwitan.domain.model.LocationMode
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
-import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.domain.model.PollenSeasonCalendar
 import com.ryan.pollenwitan.ui.navigation.Screen
@@ -56,10 +54,7 @@ class PollenCheckWorker(
         val profiles = profileRepository.getProfiles().first()
 
         // Group profiles by effective location to avoid redundant API calls
-        val profilesByLocation = profiles.groupBy { profile ->
-            val loc = ProfileRepository.resolveLocation(profile, globalLocation)
-            loc.latitude to loc.longitude
-        }
+        val profilesByLocation = PollenCheckLogic.groupProfilesByLocation(profiles, globalLocation)
 
         // Fetch conditions once per unique location
         val conditionsByLocation = mutableMapOf<Pair<Double, Double>, CurrentConditions>()
@@ -75,9 +70,13 @@ class PollenCheckWorker(
         // Morning briefing: send once per day, on the first run at or after the configured hour
         val today = now.toLocalDate()
         val lastBriefingDate = notificationPrefsRepository.getLastBriefingDate()
-        val shouldSendBriefing = prefs.morningBriefingEnabled &&
-            lastBriefingDate != today &&
-            now.hour >= prefs.morningBriefingHour
+        val shouldSendBriefing = PollenCheckLogic.shouldSendMorningBriefing(
+            enabled = prefs.morningBriefingEnabled,
+            lastBriefingDate = lastBriefingDate,
+            today = today,
+            currentHour = now.hour,
+            configuredHour = prefs.morningBriefingHour
+        )
 
         if (shouldSendBriefing) {
             notificationPrefsRepository.setLastBriefingDate(today)
@@ -108,10 +107,10 @@ class PollenCheckWorker(
 
             // Threshold breach alerts
             if (prefs.thresholdAlertsEnabled) {
-                val breaches = findThresholdBreaches(ctx, profile, conditions)
+                val breaches = PollenCheckLogic.findThresholdBreaches(profile, conditions)
                 if (breaches.isNotEmpty()) {
                     val text = breaches.joinToString(". ") { breach ->
-                        ctx.getString(R.string.notif_threshold_breach, breach.typeName, breach.severityLabel, String.format("%.0f", breach.value))
+                        ctx.getString(R.string.notif_threshold_breach, breach.type.localizedName(ctx), breach.severity.toLabel(ctx), String.format("%.0f", breach.value))
                     }
                     NotificationHelper.sendNotification(
                         context = ctx,
@@ -128,8 +127,9 @@ class PollenCheckWorker(
 
             // Compound risk alerts (asthma profiles only)
             if (prefs.compoundRiskAlertsEnabled && profile.hasAsthma) {
-                val compoundRisk = checkCompoundRisk(ctx, profile, conditions)
-                if (compoundRisk != null) {
+                val hasRisk = PollenCheckLogic.hasCompoundRisk(profile, conditions)
+                if (hasRisk) {
+                    val compoundRisk = formatCompoundRisk(ctx, profile, conditions)
                     NotificationHelper.sendNotification(
                         context = ctx,
                         channelId = NotificationHelper.CHANNEL_COMPOUND_RISK,
@@ -185,25 +185,22 @@ class PollenCheckWorker(
         profiles.forEachIndexed { index, profile ->
             if (profile.medicineAssignments.isEmpty()) return@forEachIndexed
             val confirmations = doseTrackingRepository.getConfirmations(profile.id).first()
-            profile.medicineAssignments.forEachIndexed { assignmentIndex, assignment ->
-                val medicine = medicines.find { it.id == assignment.medicineId } ?: return@forEachIndexed
-                assignment.reminderHours.forEachIndexed { slotIndex, hour ->
-                    if (hour == currentHour) {
-                        val isConfirmed = DoseConfirmation(assignment.medicineId, slotIndex) in confirmations
-                        if (!isConfirmed) {
-                            NotificationHelper.sendNotification(
-                                context = ctx,
-                                channelId = NotificationHelper.CHANNEL_MEDICATION_REMINDER,
-                                notificationId = MEDICATION_REMINDER_BASE_ID + index * 100 + assignmentIndex * 10 + slotIndex,
-                                title = ctx.getString(R.string.notif_medication_reminder, profile.displayName),
-                                text = ctx.getString(R.string.notif_time_to_take, medicine.name, assignment.dose, medicine.type.localizedUnitLabel(ctx)),
-                                targetRoute = Screen.Dashboard.route,
-                                groupKey = if (multiProfile) NotificationHelper.GROUP_MEDICATION_REMINDER else null
-                            )
-                            medicationCount++
-                        }
-                    }
-                }
+            val pending = PollenCheckLogic.pendingMedicationReminders(
+                profile.medicineAssignments, confirmations, currentHour
+            )
+            for ((assignmentIndex, slotIndex, medicineId) in pending) {
+                val assignment = profile.medicineAssignments[assignmentIndex]
+                val medicine = medicines.find { it.id == medicineId } ?: continue
+                NotificationHelper.sendNotification(
+                    context = ctx,
+                    channelId = NotificationHelper.CHANNEL_MEDICATION_REMINDER,
+                    notificationId = MEDICATION_REMINDER_BASE_ID + index * 100 + assignmentIndex * 10 + slotIndex,
+                    title = ctx.getString(R.string.notif_medication_reminder, profile.displayName),
+                    text = ctx.getString(R.string.notif_time_to_take, medicine.name, assignment.dose, medicine.type.localizedUnitLabel(ctx)),
+                    targetRoute = Screen.Dashboard.route,
+                    groupKey = if (multiProfile) NotificationHelper.GROUP_MEDICATION_REMINDER else null
+                )
+                medicationCount++
             }
         }
 
@@ -227,9 +224,8 @@ class PollenCheckWorker(
                 )
                 for (type in alertTypes) {
                     val lastYear = notificationPrefsRepository.getLastPreSeasonAlertYear(type)
-                    val alertYear = today.year
-                    if (lastYear == alertYear) continue
-                    notificationPrefsRepository.setLastPreSeasonAlertYear(type, alertYear)
+                    if (!PollenCheckLogic.shouldSendPreSeasonAlert(lastYear, today.year)) continue
+                    notificationPrefsRepository.setLastPreSeasonAlertYear(type, today.year)
                     val seasonDate = PollenSeasonCalendar.seasonStartDisplay(type, today)
                     NotificationHelper.sendNotification(
                         context = ctx,
@@ -304,49 +300,20 @@ class PollenCheckWorker(
         return parts.joinToString(". ") + "."
     }
 
-    private data class ThresholdBreach(
-        val typeName: String,
-        val value: Double,
-        val severityLabel: String
-    )
-
-    private fun findThresholdBreaches(
+    private fun formatCompoundRisk(
         ctx: Context,
         profile: UserProfile,
         conditions: CurrentConditions
-    ): List<ThresholdBreach> {
-        return conditions.pollenReadings.mapNotNull { reading ->
-            val threshold = profile.trackedAllergens[reading.type] ?: return@mapNotNull null
-            val severity = SeverityClassifier.pollenSeverity(reading.value, threshold)
-            if (severity >= SeverityLevel.High) {
-                ThresholdBreach(reading.type.localizedName(ctx), reading.value, severity.toLabel(ctx))
-            } else null
-        }
-    }
-
-    private fun checkCompoundRisk(
-        ctx: Context,
-        profile: UserProfile,
-        conditions: CurrentConditions
-    ): String? {
-        val hasElevatedPollen = conditions.pollenReadings.any { reading ->
-            val threshold = profile.trackedAllergens[reading.type] ?: return@any false
-            SeverityClassifier.pollenSeverity(reading.value, threshold) >= SeverityLevel.Moderate
-        }
-        val hasElevatedPm = conditions.pm25 > 25 || conditions.pm10 > 50
-
-        if (hasElevatedPollen && hasElevatedPm) {
-            val pollenSummary = conditions.pollenReadings
-                .filter { it.type in profile.trackedAllergens }
-                .joinToString(", ") { "${it.type.localizedName(ctx)}: ${String.format("%.0f", it.value)}" }
-            return ctx.getString(
-                R.string.notif_compound_risk_text,
-                pollenSummary,
-                String.format("%.1f", conditions.pm25),
-                String.format("%.1f", conditions.pm10)
-            )
-        }
-        return null
+    ): String {
+        val pollenSummary = conditions.pollenReadings
+            .filter { it.type in profile.trackedAllergens }
+            .joinToString(", ") { "${it.type.localizedName(ctx)}: ${String.format("%.0f", it.value)}" }
+        return ctx.getString(
+            R.string.notif_compound_risk_text,
+            pollenSummary,
+            String.format("%.1f", conditions.pm25),
+            String.format("%.1f", conditions.pm10)
+        )
     }
 
     private suspend fun refreshGpsIfDue(ctx: Context) {
