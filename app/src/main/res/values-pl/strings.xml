@@ -431,6 +431,23 @@
     <string name="discovery_done_explanation">Tryb odkrywania jest aktywny. Wszystkie typy pyłków będą wyświetlane na pulpicie. Zapisuj objawy co wieczór, aby zebrać dane do analizy.</string>
     <string name="discovery_done_tip">Wskazówka: Potrzebujesz co najmniej 14 wpisów w dzienniku, aby analiza odkrywania dała wyniki. Im więcej danych zapiszesz, tym dokładniejsze będą wyniki.</string>
 
+    <!-- Legal Disclaimer -->
+    <string name="legal_title">Zastrzeżenia prawne</string>
+    <string name="legal_intro">Proszę uważnie przeczytać poniższe informacje przed korzystaniem z PollenWitan.</string>
+    <string name="legal_not_medical_advice_title">To nie jest porada medyczna</string>
+    <string name="legal_not_medical_advice_body">PollenWitan jest wyłącznie narzędziem informacyjnym. Nie udziela porad medycznych, nie stawia diagnoz ani nie zaleca leczenia. Prognozy pyłków, wyniki odkrywania alergenów, sugestie kalibracji progów i informacje o reakcjach krzyżowych opierają się na modelach statystycznych i ogólnych danych \u2014 nie zastępują profesjonalnej porady medycznej. Zawsze konsultuj się z wykwalifikowanym alergologiem lub lekarzem w sprawie diagnostyki, decyzji terapeutycznych i zarządzania lekami.</string>
+    <string name="legal_data_accuracy_title">Dokładność danych</string>
+    <string name="legal_data_accuracy_body">Dane o pyłkach i jakości powietrza pochodzą z europejskiego modelu Copernicus Atmosphere Monitoring Service (CAMS) za pośrednictwem API Open-Meteo. Dane te mają rozdzielczość około 11 km i opierają się na modelowaniu atmosferycznym, a nie na bezpośrednich pomiarach lokalnych. Rzeczywiste poziomy pyłków w Twojej dokładnej lokalizacji mogą różnić się od prognozy. Aplikacja jest przeznaczona wyłącznie dla lokalizacji europejskich; dane spoza Europy mogą być niedostępne lub niewiarygodne.</string>
+    <string name="legal_liability_title">Ograniczenie odpowiedzialności</string>
+    <string name="legal_liability_body">PollenWitan jest udostępniany \u201Etak jak jest\u201D, bez jakiejkolwiek gwarancji. Deweloper nie ponosi odpowiedzialności za jakiekolwiek szkody zdrowotne lub inne wynikające z korzystania z tej aplikacji lub polegania na niej, w tym między innymi za pominięte powiadomienia, niedokładne prognozy lub decyzje dotyczące leków podjęte na podstawie informacji z aplikacji.</string>
+    <string name="legal_privacy_title">Prywatność</string>
+    <string name="legal_privacy_body">Wszystkie dane osobowe \u2014 w tym profile, wpisy w dzienniku objawów, zapisy o lekach i preferencje \u2014 są przechowywane lokalnie na Twoim urządzeniu. Żadne dane osobowe nie są przesyłane na żaden serwer. Jedyne zapytania sieciowe kierowane są do API Open-Meteo, które otrzymuje Twoje współrzędne lokalizacji (szerokość i długość geograficzną) w celu pobrania danych prognostycznych. Nie jest wymagane żadne konto, rejestracja ani dane identyfikacyjne.</string>
+    <string name="legal_attribution_title">Atrybucja danych</string>
+    <string name="legal_attribution_body">Dane pogodowe i o jakości powietrza dostarczane przez Open-Meteo (https://open-meteo.com/). Dane o pyłkach pochodzą z Copernicus Atmosphere Monitoring Service (CAMS) \u2014 \u00A9 European Centre for Medium-Range Weather Forecasts (ECMWF). Licencja CC BY 4.0.</string>
+    <string name="legal_agree">Zgadzam się</string>
+    <string name="legal_disagree">Nie zgadzam się</string>
+    <string name="legal_scroll_hint">Przewiń w dół, aby przeczytać całe zastrzeżenie</string>
+
     <!-- About -->
     <string name="about_title">PollenWitan</string>
     <string name="about_description">Prognoza pyłków i jakości powietrza z poszanowaniem prywatności, dostosowana do konkretnych alergenów każdego domownika. Śledź sześć typów pyłków indywidualnie, zapisuj codzienne objawy, monitoruj przyjmowanie leków i sprawdzaj, które pyłki wpływają na Ciebie najbardziej dzięki analizie długoterminowych trendów. Bez reklam, bez śledzenia, bez kont.</string>
