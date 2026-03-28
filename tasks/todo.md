@@ -51,11 +51,11 @@ Incremental test coverage plan. Each task is a self-contained PR targeting `rele
 
 ### Batch 4 — ViewModel Logic (Requires `kotlinx-coroutines-test`)
 
-- [ ] **Test: DashboardViewModel** — Medicine slot construction from profile assignments and today's confirmations (confirmed/unconfirmed/time-locked states), `allDosesConfirmed` derived state, location resolution (profile-override vs global fallback). JUnit 4 + `TestScope`/`UnconfinedTestDispatcher` + MockK.
+- [x] **Test: DashboardViewModel** — Medicine slot construction from profile assignments and today's confirmations (confirmed/unconfirmed/time-locked states), `allDosesConfirmed` derived state, location resolution (profile-override vs global fallback). JUnit 4 + extracted `DashboardLogic` object, no mocks needed.
 
-- [ ] **Test: SymptomTrendsViewModel** — `DaySnapshot` aggregation from combined diary entries + dose history, pollen JSON round-trip parsing, date range boundary calculation for 7d/30d/90d, expected dose calculation per medicine per day. JUnit 4 + `TestScope` + MockK.
+- [x] **Test: SymptomTrendsViewModel** — `DaySnapshot` aggregation from combined diary entries + dose history, pollen JSON round-trip parsing, date range boundary calculation for 7d/30d/90d, expected dose calculation per medicine per day. JUnit 4 + extracted `SymptomTrendsLogic` object, no mocks needed.
 
-- [ ] **Test: ProfileEditViewModel** — Default threshold generation per pollen type, custom-threshold detection (diverges from defaults), medicine assignment add/remove/update, validation rejection (empty name, invalid threshold ordering), GPS location integration, save serialises all fields correctly. JUnit 4 + `TestScope` + MockK.
+- [x] **Test: ProfileEditViewModel** — Default threshold generation per pollen type, custom-threshold detection (diverges from defaults), medicine assignment add/remove/update, validation rejection (empty name, invalid threshold ordering), GPS location integration, save serialises all fields correctly. JUnit 4 + extracted `ProfileEditLogic` object, no mocks needed.
 
 ### Batch 5 — Data Export/Import
 
