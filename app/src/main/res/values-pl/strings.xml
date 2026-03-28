@@ -264,6 +264,20 @@
     <string name="calendar_legend_off_season">Poza sezonem</string>
     <string name="calendar_disclaimer">Daty są przybliżone i oparte na typowych danych aerobiologicznych dla Europy Środkowej. Rzeczywisty termin sezonu różni się w zależności od roku i warunków pogodowych.</string>
 
+    <!-- Useful Information -->
+    <string name="nav_useful_info">Przydatne informacje</string>
+    <string name="info_title">Przydatne informacje</string>
+    <string name="info_intro">Dowiedz się, jak działają alergie, dlaczego ta aplikacja śledzi poszczególne rodzaje pyłków i jak najlepiej wykorzystać jej funkcje.</string>
+    <string name="info_allergies_title">Jak działają alergie</string>
+    <string name="info_allergies_body">Kiedy wdychasz pyłek, Twój układ odpornościowy może błędnie potraktować go jako zagrożenie. Produkuje przeciwciała IgE, które powodują uwalnianie histaminy. Histamina wywołuje znane objawy \u2014 kichanie, swędzące oczy, katar i zatkany nos. Dlatego leki antyhistaminowe pomagają: blokują działanie histaminy na Twoje komórki.</string>
+    <string name="info_specificity_title">Dlaczego rodzaj pyłku ma znaczenie</string>
+    <string name="info_specificity_body">Różne rodzaje pyłków osiągają szczyt w różnych porach roku \u2014 pyłki drzew wiosną, trawy wczesnym latem, a chwasty jak bylica i ambrozja późnym latem. Ich zasięg geograficzny również się znacznie różni. Wiedza o tym, które pyłki wywołują Twoje objawy, pozwala przygotować się na właściwe sezony i zignorować te, które Ci nie szkodzą.</string>
+    <string name="info_specificity_cross_reactivity_link">Niektóre pyłki dzielą białka i mogą reagować krzyżowo ze sobą lub z niektórymi pokarmami. Zobacz ekran Reakcji krzyżowych w menu nawigacji po pełny przewodnik.</string>
+    <string name="info_medication_title">Leki zapobiegawczo vs na objawy</string>
+    <string name="info_medication_body">Leki antyhistaminowe i spraye do nosa działają najlepiej, gdy przyjmiesz je przed ekspozycją na alergen, a nie po wystąpieniu objawów. Przyjęcie leku rano \u2014 zanim poziom pyłków osiągnie szczyt \u2014 daje czas na zbudowanie ochrony. Poranne powiadomienie jest zaprojektowane tak, aby to wspierać: informuje Cię, jak wygląda dzień, abyś mógł leczyć się zapobiegawczo.</string>
+    <string name="info_features_title">Zaawansowane funkcje</string>
+    <string name="info_features_body">Adaptacyjne progi: Po kilku tygodniach rejestrowania objawów użyj kalibracji progów (w profilu), aby dostosować moment ostrzeżeń do Twojej rzeczywistej wrażliwości.\n\nŚledzenie leków: Dodaj leki w Ustawieniach, przypisz je do profili i ustaw godziny przypomnień. Pulpit pokazuje dzienny postęp dawkowania.\n\nTryb odkrywania alergenów: Nie wiesz, na co jesteś uczulony? Włącz tryb odkrywania podczas tworzenia profilu. Aplikacja będzie śledzić wszystkie sześć rodzajów pyłków w porównaniu z Twoim dziennikiem objawów i zasugeruje, które z nich korelują z Twoimi złymi dniami.</string>
+
     <!-- Symptoms -->
     <string name="symptom_sneezing">Kichanie</string>
     <string name="symptom_itchy_watery_eyes">Swędzące/łzawiące oczy</string>

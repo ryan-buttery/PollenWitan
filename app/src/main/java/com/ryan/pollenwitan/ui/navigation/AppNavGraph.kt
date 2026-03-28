@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.EventNote
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
@@ -70,6 +71,7 @@ import com.ryan.pollenwitan.ui.screens.ProfileListScreen
 import com.ryan.pollenwitan.ui.screens.SettingsScreen
 import com.ryan.pollenwitan.ui.screens.AllergenDiscoveryScreen
 import com.ryan.pollenwitan.ui.screens.ThresholdCalibrationScreen
+import com.ryan.pollenwitan.ui.screens.UsefulInfoScreen
 import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.ui.theme.ForestTheme
 import androidx.annotation.StringRes
@@ -88,6 +90,7 @@ private val navItems = listOf(
     NavItem(Screen.ProfileList, R.string.nav_profiles, Icons.Filled.Person),
     NavItem(Screen.CrossReactivity, R.string.nav_cross_reactivity, Icons.Filled.Link),
     NavItem(Screen.PollenCalendar, R.string.nav_pollen_calendar, Icons.Filled.EventNote),
+    NavItem(Screen.UsefulInfo, R.string.nav_useful_info, Icons.Filled.Info),
     NavItem(Screen.SymptomDiary, R.string.nav_symptom_diary, Icons.Filled.EditNote),
     NavItem(Screen.SymptomTrends, R.string.nav_symptom_trends, Icons.Filled.Timeline),
     NavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings)
@@ -329,6 +332,7 @@ fun AppNavGraph(
                 composable(Screen.Forecast.route) { ForecastScreen() }
                 composable(Screen.CrossReactivity.route) { CrossReactivityScreen() }
                 composable(Screen.PollenCalendar.route) { PollenCalendarScreen() }
+                composable(Screen.UsefulInfo.route) { UsefulInfoScreen() }
                 composable(
                     Screen.SymptomCheckIn.route,
                     arguments = listOf(navArgument("date") {

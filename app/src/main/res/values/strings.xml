@@ -266,6 +266,20 @@
     <string name="calendar_legend_off_season">Off season</string>
     <string name="calendar_disclaimer">Dates are approximate and based on typical aerobiological data for Central Europe. Actual season timing varies by year and weather conditions.</string>
 
+    <!-- Useful Information -->
+    <string name="nav_useful_info">Useful Information</string>
+    <string name="info_title">Useful Information</string>
+    <string name="info_intro">Learn how allergies work, why this app tracks pollen types individually, and how to get the most out of its features.</string>
+    <string name="info_allergies_title">How Allergies Work</string>
+    <string name="info_allergies_body">When you breathe in pollen, your immune system can mistakenly treat it as a threat. It produces antibodies called IgE, which trigger cells to release histamine. Histamine causes the familiar symptoms \u2014 sneezing, itchy eyes, runny nose, and congestion. This is why antihistamines help: they block histamine from reaching your cells.</string>
+    <string name="info_specificity_title">Why Pollen Type Matters</string>
+    <string name="info_specificity_body">Different pollen types peak in different seasons \u2014 tree pollens in spring, grasses in early summer, and weeds like mugwort and ragweed in late summer. Their geographic ranges also vary widely. Knowing exactly which pollens trigger your symptoms lets you prepare for the right seasons and ignore the noise from pollens that don\u2019t affect you.</string>
+    <string name="info_specificity_cross_reactivity_link">Some pollens share proteins and can cross-react with each other or with certain foods. See the Cross-Reactivity screen in the navigation menu for the full guide.</string>
+    <string name="info_medication_title">Proactive vs Reactive Medication</string>
+    <string name="info_medication_body">Antihistamines and nasal sprays work best when taken before exposure, not after symptoms have already started. Taking your medication in the morning \u2014 before pollen levels peak \u2014 gives it time to build up protection. The morning briefing notification is designed to support this: it tells you what the day looks like so you can medicate proactively.</string>
+    <string name="info_features_title">Advanced Features</string>
+    <string name="info_features_body">Adaptive Thresholds: After logging symptoms for a couple of weeks, use Threshold Calibration (in your profile) to fine-tune when the app warns you, based on your actual sensitivity.\n\nMedication Tracker: Add medicines in Settings, assign them to profiles, and set reminder times. The dashboard shows your daily dose progress.\n\nAllergen Discovery Mode: Not sure what you\u2019re allergic to? Enable Discovery Mode when creating a profile. The app will track all six pollen types against your symptom diary and suggest which ones correlate with your bad days.</string>
+
     <!-- Symptoms -->
     <string name="symptom_sneezing">Sneezing</string>
     <string name="symptom_itchy_watery_eyes">Itchy/watery eyes</string>
