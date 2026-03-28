@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.EventNote
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
@@ -36,8 +37,10 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -54,6 +57,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.ryan.pollenwitan.data.repository.LegalPrefsRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.ui.screens.CrossReactivityScreen
 import com.ryan.pollenwitan.ui.screens.PollenCalendarScreen
@@ -67,7 +71,9 @@ import com.ryan.pollenwitan.ui.screens.ProfileEditScreen
 import com.ryan.pollenwitan.ui.screens.ProfileListScreen
 import com.ryan.pollenwitan.ui.screens.SettingsScreen
 import com.ryan.pollenwitan.ui.screens.AllergenDiscoveryScreen
+import com.ryan.pollenwitan.ui.screens.LegalDisclaimerScreen
 import com.ryan.pollenwitan.ui.screens.ThresholdCalibrationScreen
+import com.ryan.pollenwitan.ui.screens.UsefulInfoScreen
 import com.ryan.pollenwitan.R
 import com.ryan.pollenwitan.ui.theme.ForestTheme
 import androidx.annotation.StringRes
@@ -86,6 +92,7 @@ private val navItems = listOf(
     NavItem(Screen.ProfileList, R.string.nav_profiles, Icons.Filled.Person),
     NavItem(Screen.CrossReactivity, R.string.nav_cross_reactivity, Icons.Filled.Link),
     NavItem(Screen.PollenCalendar, R.string.nav_pollen_calendar, Icons.Filled.EventNote),
+    NavItem(Screen.UsefulInfo, R.string.nav_useful_info, Icons.Filled.Info),
     NavItem(Screen.SymptomDiary, R.string.nav_symptom_diary, Icons.Filled.EditNote),
     NavItem(Screen.SymptomTrends, R.string.nav_symptom_trends, Icons.Filled.Timeline),
     NavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings)
@@ -99,10 +106,12 @@ fun AppNavGraph(
 ) {
     val context = LocalContext.current
     val profileRepository = remember { ProfileRepository(context.applicationContext) }
+    val legalPrefsRepository = remember { LegalPrefsRepository(context.applicationContext) }
     val profiles by profileRepository.getProfiles().collectAsStateWithLifecycle(initialValue = null)
+    val legalAccepted by legalPrefsRepository.isDisclaimerAccepted().collectAsStateWithLifecycle(initialValue = null)
 
     // Loading guard — wait for DataStore to initialize
-    if (profiles == null) return
+    if (profiles == null || legalAccepted == null) return
 
     val navController = rememberNavController()
 
@@ -121,9 +130,25 @@ fun AppNavGraph(
     val scope = rememberCoroutineScope()
     val colors = ForestTheme.current
 
-    // Redirect to onboarding if no profiles exist
-    LaunchedEffect(profiles) {
-        if (profiles != null && profiles!!.isEmpty()) {
+    // Redirect to legal disclaimer if not yet accepted (or version changed).
+    LaunchedEffect(legalAccepted) {
+        if (legalAccepted == false) {
+            navController.navigate(Screen.LegalDisclaimer.route) {
+                popUpTo(Screen.Dashboard.route) { inclusive = true }
+            }
+        }
+    }
+
+    // Redirect to onboarding if no profiles exist on first run.
+    // hasHadProfiles prevents mid-session redirects (e.g. while import is clearing data).
+    // Only check after legal disclaimer is accepted.
+    var hasHadProfiles by remember { mutableStateOf(false) }
+    LaunchedEffect(profiles, legalAccepted) {
+        if (legalAccepted != true) return@LaunchedEffect
+        val currentProfiles = profiles ?: return@LaunchedEffect
+        if (currentProfiles.isNotEmpty()) {
+            hasHadProfiles = true
+        } else if (!hasHadProfiles) {
             navController.navigate(Screen.Onboarding.route) {
                 popUpTo(Screen.Dashboard.route) { inclusive = true }
             }
@@ -144,11 +169,11 @@ fun AppNavGraph(
     }
     val currentLabel = stringResource(currentLabelRes)
 
-    val isOnboarding = currentRoute == Screen.Onboarding.route
+    val isFullScreen = currentRoute == Screen.Onboarding.route || currentRoute == Screen.LegalDisclaimer.route
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = !isOnboarding,
+        gesturesEnabled = !isFullScreen,
         drawerContent = {
             ModalDrawerSheet(
                 drawerContainerColor = colors.Mid,
@@ -269,7 +294,7 @@ fun AppNavGraph(
                 .safeDrawingPadding(),
             containerColor = colors.Dark,
             topBar = {
-                if (!isOnboarding) {
+                if (!isFullScreen) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -300,6 +325,15 @@ fun AppNavGraph(
                 startDestination = Screen.Dashboard.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
+                composable(Screen.LegalDisclaimer.route) {
+                    LegalDisclaimerScreen(
+                        onAccepted = {
+                            navController.navigate(Screen.Dashboard.route) {
+                                popUpTo(Screen.LegalDisclaimer.route) { inclusive = true }
+                            }
+                        }
+                    )
+                }
                 composable(Screen.Onboarding.route) {
                     OnboardingScreen(
                         onFinished = {
@@ -322,6 +356,7 @@ fun AppNavGraph(
                 composable(Screen.Forecast.route) { ForecastScreen() }
                 composable(Screen.CrossReactivity.route) { CrossReactivityScreen() }
                 composable(Screen.PollenCalendar.route) { PollenCalendarScreen() }
+                composable(Screen.UsefulInfo.route) { UsefulInfoScreen() }
                 composable(
                     Screen.SymptomCheckIn.route,
                     arguments = listOf(navArgument("date") {

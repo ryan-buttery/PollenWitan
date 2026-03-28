@@ -11,6 +11,7 @@ sealed class Screen(val route: String) {
     }
     data object CrossReactivity : Screen("cross-reactivity")
     data object PollenCalendar : Screen("pollen-calendar")
+    data object UsefulInfo : Screen("useful-info")
     data object SymptomCheckIn : Screen("symptom-checkin?date={date}") {
         fun createRoute(date: String? = null) =
             if (date != null) "symptom-checkin?date=$date" else "symptom-checkin"
@@ -20,6 +21,7 @@ sealed class Screen(val route: String) {
     data object ThresholdCalibration : Screen("profiles/{profileId}/calibrate") {
         fun createRoute(profileId: String) = "profiles/$profileId/calibrate"
     }
+    data object LegalDisclaimer : Screen("legal-disclaimer")
     data object Onboarding : Screen("onboarding")
     data object AllergenDiscovery : Screen("profiles/{profileId}/discovery") {
         fun createRoute(profileId: String) = "profiles/$profileId/discovery"

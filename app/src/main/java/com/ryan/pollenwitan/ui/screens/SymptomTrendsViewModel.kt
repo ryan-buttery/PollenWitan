@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -89,8 +88,9 @@ class SymptomTrendsViewModel(application: Application) : AndroidViewModel(applic
         } else {
             val endDate = LocalDate.now()
             val startDate = endDate.minusDays(params.range.days)
-            val expectedDosesPerDay = profile.medicineAssignments
-                .sumOf { it.reminderHours.size }
+            val expectedDosesPerDay = SymptomTrendsLogic.expectedDosesPerDay(
+                profile.medicineAssignments
+            )
 
             val diaryFlow = symptomDiaryRepository.getHistory(profile.id, startDate, endDate)
             val doseFlow = if (expectedDosesPerDay > 0) {
@@ -100,33 +100,10 @@ class SymptomTrendsViewModel(application: Application) : AndroidViewModel(applic
             }
 
             combine(diaryFlow, doseFlow) { entries, doseHistory ->
-                val entryByDate = entries.associateBy { it.date }
-                val dosesByDate = doseHistory.groupBy { it.date }
-
-                val snapshots = (0..params.range.days).map { offset ->
-                    val date = startDate.plusDays(offset)
-                    val entry = entryByDate[date]
-                    val doses = dosesByDate[date.toString()] ?: emptyList()
-
-                    val pollenLevels = if (entry != null) {
-                        try {
-                            json.decodeFromString<Map<String, Double>>(entry.peakPollenJson)
-                        } catch (_: Exception) {
-                            emptyMap()
-                        }
-                    } else emptyMap()
-
-                    DaySnapshot(
-                        date = date,
-                        symptomRatings = entry?.ratings?.associate { it.symptomName to it.severity } ?: emptyMap(),
-                        pollenLevels = pollenLevels,
-                        peakAqi = entry?.peakAqi ?: 0,
-                        peakPm25 = entry?.peakPm25 ?: 0.0,
-                        peakPm10 = entry?.peakPm10 ?: 0.0,
-                        dosesConfirmed = doses.size,
-                        dosesExpected = expectedDosesPerDay
-                    )
-                }
+                val snapshots = SymptomTrendsLogic.buildSnapshots(
+                    entries, doseHistory, expectedDosesPerDay,
+                    startDate, params.range.days, json
+                )
 
                 val symptomNames = snapshots.flatMap { it.symptomRatings.keys }.distinct()
                 val allergenNames = profile.trackedAllergens.keys.map { it.name }

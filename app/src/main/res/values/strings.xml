@@ -266,6 +266,20 @@
     <string name="calendar_legend_off_season">Off season</string>
     <string name="calendar_disclaimer">Dates are approximate and based on typical aerobiological data for Central Europe. Actual season timing varies by year and weather conditions.</string>
 
+    <!-- Useful Information -->
+    <string name="nav_useful_info">Useful Information</string>
+    <string name="info_title">Useful Information</string>
+    <string name="info_intro">Learn how allergies work, why this app tracks pollen types individually, and how to get the most out of its features.</string>
+    <string name="info_allergies_title">How Allergies Work</string>
+    <string name="info_allergies_body">When you breathe in pollen, your immune system can mistakenly treat it as a threat. It produces antibodies called IgE, which trigger cells to release histamine. Histamine causes the familiar symptoms \u2014 sneezing, itchy eyes, runny nose, and congestion. This is why antihistamines help: they block histamine from reaching your cells.</string>
+    <string name="info_specificity_title">Why Pollen Type Matters</string>
+    <string name="info_specificity_body">Different pollen types peak in different seasons \u2014 tree pollens in spring, grasses in early summer, and weeds like mugwort and ragweed in late summer. Their geographic ranges also vary widely. Knowing exactly which pollens trigger your symptoms lets you prepare for the right seasons and ignore the noise from pollens that don\u2019t affect you.</string>
+    <string name="info_specificity_cross_reactivity_link">Some pollens share proteins and can cross-react with each other or with certain foods. See the Cross-Reactivity screen in the navigation menu for the full guide.</string>
+    <string name="info_medication_title">Proactive vs Reactive Medication</string>
+    <string name="info_medication_body">Antihistamines and nasal sprays work best when taken before exposure, not after symptoms have already started. Taking your medication in the morning \u2014 before pollen levels peak \u2014 gives it time to build up protection. The morning briefing notification is designed to support this: it tells you what the day looks like so you can medicate proactively.</string>
+    <string name="info_features_title">Advanced Features</string>
+    <string name="info_features_body">Adaptive Thresholds: After logging symptoms for a couple of weeks, use Threshold Calibration (in your profile) to fine-tune when the app warns you, based on your actual sensitivity.\n\nMedication Tracker: Add medicines in Settings, assign them to profiles, and set reminder times. The dashboard shows your daily dose progress.\n\nAllergen Discovery Mode: Not sure what you\u2019re allergic to? Enable Discovery Mode when creating a profile. The app will track all six pollen types against your symptom diary and suggest which ones correlate with your bad days.</string>
+
     <!-- Symptoms -->
     <string name="symptom_sneezing">Sneezing</string>
     <string name="symptom_itchy_watery_eyes">Itchy/watery eyes</string>
@@ -418,6 +432,23 @@
     <string name="discovery_onboarding_info">Discovery mode will show all six pollen types on your dashboard. Log your symptoms daily using the evening check-in, and the app will analyse the data to suggest which pollens may be affecting you.</string>
     <string name="discovery_done_explanation">Discovery mode is active. All pollen types will be displayed on your dashboard. Log your symptoms every evening to build up data for analysis.</string>
     <string name="discovery_done_tip">Tip: You need at least 14 diary entries for the discovery analysis to produce results. The more data you log, the more accurate the results will be.</string>
+
+    <!-- Legal Disclaimer -->
+    <string name="legal_title">Legal Disclaimer</string>
+    <string name="legal_intro">Please read the following carefully before using PollenWitan.</string>
+    <string name="legal_not_medical_advice_title">Not Medical Advice</string>
+    <string name="legal_not_medical_advice_body">PollenWitan is an informational tool only. It does not provide medical advice, diagnosis, or treatment. Pollen forecasts, allergen discovery results, threshold calibration suggestions, and cross-reactivity information are based on statistical models and general data \u2014 they are not a substitute for professional medical advice. Always consult a qualified allergist or healthcare provider for diagnosis, treatment decisions, and medication management.</string>
+    <string name="legal_data_accuracy_title">Data Accuracy</string>
+    <string name="legal_data_accuracy_body">Pollen and air quality data is sourced from the Copernicus Atmosphere Monitoring Service (CAMS) European model via the Open-Meteo API. This data has a resolution of approximately 11 km and is based on atmospheric modelling, not direct local measurements. Actual pollen levels at your exact location may differ from the forecast. The app is designed for European locations only; data outside Europe may be unavailable or unreliable.</string>
+    <string name="legal_liability_title">Limitation of Liability</string>
+    <string name="legal_liability_body">PollenWitan is provided \u201Cas is\u201D without warranty of any kind. The developer is not liable for any harm, health outcomes, or damages arising from the use of or reliance on this app, including but not limited to missed notifications, inaccurate forecasts, or medication-related decisions made based on the app\u2019s information.</string>
+    <string name="legal_privacy_title">Privacy</string>
+    <string name="legal_privacy_body">All personal data \u2014 including profiles, symptom diary entries, medication records, and preferences \u2014 is stored locally on your device. No personal data is transmitted to any server. The only network requests are to the Open-Meteo API, which receives your location coordinates (latitude and longitude) to retrieve forecast data. No account, registration, or identifying information is required.</string>
+    <string name="legal_attribution_title">Data Attribution</string>
+    <string name="legal_attribution_body">Weather and air quality data provided by Open-Meteo (https://open-meteo.com/). Pollen data sourced from the Copernicus Atmosphere Monitoring Service (CAMS) \u2014 \u00A9 European Centre for Medium-Range Weather Forecasts (ECMWF). Licensed under CC BY 4.0.</string>
+    <string name="legal_agree">I Agree</string>
+    <string name="legal_disagree">Disagree</string>
+    <string name="legal_scroll_hint">Scroll down to read the full disclaimer</string>
 
     <!-- About -->
     <string name="about_title">PollenWitan</string>

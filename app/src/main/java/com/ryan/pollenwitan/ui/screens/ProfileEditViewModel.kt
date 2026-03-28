@@ -9,11 +9,9 @@ import com.ryan.pollenwitan.data.repository.MedicineRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.domain.model.AllergenThreshold
 import com.ryan.pollenwitan.domain.model.Medicine
-import com.ryan.pollenwitan.domain.model.MedicineAssignment
 import com.ryan.pollenwitan.domain.model.MedicineType
 import com.ryan.pollenwitan.domain.model.DefaultSymptom
 import com.ryan.pollenwitan.domain.model.PollenType
-import com.ryan.pollenwitan.domain.model.ProfileLocation
 import com.ryan.pollenwitan.domain.model.TrackedSymptom
 import com.ryan.pollenwitan.domain.model.UserProfile
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -299,45 +297,20 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
 
     fun save() {
         val state = _uiState.value
-        if (state.displayName.isBlank()) {
-            _uiState.value = state.copy(validationError = getApplication<Application>().getString(R.string.validation_name_empty))
+        val validation = ProfileEditLogic.validate(state)
+        if (validation is ProfileEditLogic.ValidationResult.Invalid) {
+            val app = getApplication<Application>()
+            val errorMsg = when (validation.reason) {
+                ProfileEditLogic.ValidationReason.NameEmpty ->
+                    app.getString(R.string.validation_name_empty)
+                ProfileEditLogic.ValidationReason.NoAllergenOrDiscovery ->
+                    app.getString(R.string.validation_select_allergen)
+            }
+            _uiState.value = state.copy(validationError = errorMsg)
             return
         }
-        if (!state.discoveryMode && state.trackedAllergens.isEmpty()) {
-            _uiState.value = state.copy(validationError = getApplication<Application>().getString(R.string.validation_select_allergen))
-            return
-        }
 
-        val location = if (state.useCustomLocation) {
-            val lat = state.locationLatitude.toDoubleOrNull()
-            val lon = state.locationLongitude.toDoubleOrNull()
-            if (lat != null && lon != null && state.locationDisplayName.isNotBlank()) {
-                ProfileLocation(lat, lon, state.locationDisplayName.trim())
-            } else null
-        } else null
-
-        val medicineAssignments = state.medicineAssignments.mapNotNull { assignment ->
-            val dose = assignment.dose.toIntOrNull() ?: return@mapNotNull null
-            val timesPerDay = assignment.timesPerDay.toIntOrNull() ?: return@mapNotNull null
-            if (dose <= 0 || timesPerDay <= 0) return@mapNotNull null
-            MedicineAssignment(
-                medicineId = assignment.medicineId,
-                dose = dose,
-                timesPerDay = timesPerDay,
-                reminderHours = assignment.reminderHours
-            )
-        }
-
-        val profile = UserProfile(
-            id = state.profileId,
-            displayName = state.displayName.trim(),
-            trackedAllergens = state.thresholds.filterKeys { it in state.trackedAllergens },
-            hasAsthma = state.hasAsthma,
-            location = location,
-            medicineAssignments = medicineAssignments,
-            trackedSymptoms = state.trackedSymptoms,
-            discoveryMode = state.discoveryMode
-        )
+        val profile = ProfileEditLogic.buildProfile(state)
 
         _uiState.value = state.copy(isSaving = true, validationError = null)
         viewModelScope.launch {
