@@ -41,9 +41,9 @@ Incremental test coverage plan. Each task is a self-contained PR targeting `rele
 
 ### Batch 2 — Repository Logic (Requires Fake/In-Memory Implementations)
 
-- [ ] **Test: AirQualityRepository** — Cache key generation (coordinate rounding), cache expiry logic, `parseReadingsAtIndex()` for missing/null hourly values, period summary computation (morning 06–11, afternoon 12–17, evening 18–23), peak pollen detection across a 4-day forecast. JUnit 4 + MockK for `CachedForecastDao` + fake `AirQualityApi`.
+- [x] **Test: AirQualityRepository** — Cache key generation (coordinate rounding), cache expiry logic, `parseReadingsAtIndex()` for missing/null hourly values, period summary computation (morning 06–11, afternoon 12–17, evening 18–23), peak pollen detection across a 4-day forecast. Pure logic extracted to internal companion functions, tested without mocks.
 
-- [ ] **Test: DoseTrackingRepository** — `confirmDose()`/`unconfirmDose()` round-trip, date-based key isolation (yesterday's confirmations do not appear today), `getHistoryForDateRange()` boundary inclusivity. JUnit 4 + in-memory SharedPreferences fake + MockK for Room DAO.
+- [x] **Test: DoseTrackingRepository** — `confirmDose()`/`unconfirmDose()` round-trip via key symmetry, date-based key isolation, key parsing with edge cases (underscores in medicine IDs, cross-profile isolation). Pure key logic extracted to internal Keys object, tested without mocks.
 
 ### Batch 3 — Background Worker Logic
 
@@ -51,15 +51,15 @@ Incremental test coverage plan. Each task is a self-contained PR targeting `rele
 
 ### Batch 4 — ViewModel Logic (Requires `kotlinx-coroutines-test`)
 
-- [ ] **Test: DashboardViewModel** — Medicine slot construction from profile assignments and today's confirmations (confirmed/unconfirmed/time-locked states), `allDosesConfirmed` derived state, location resolution (profile-override vs global fallback). JUnit 4 + `TestScope`/`UnconfinedTestDispatcher` + MockK.
+- [x] **Test: DashboardViewModel** — Medicine slot construction from profile assignments and today's confirmations (confirmed/unconfirmed/time-locked states), `allDosesConfirmed` derived state, location resolution (profile-override vs global fallback). JUnit 4 + extracted `DashboardLogic` object, no mocks needed.
 
-- [ ] **Test: SymptomTrendsViewModel** — `DaySnapshot` aggregation from combined diary entries + dose history, pollen JSON round-trip parsing, date range boundary calculation for 7d/30d/90d, expected dose calculation per medicine per day. JUnit 4 + `TestScope` + MockK.
+- [x] **Test: SymptomTrendsViewModel** — `DaySnapshot` aggregation from combined diary entries + dose history, pollen JSON round-trip parsing, date range boundary calculation for 7d/30d/90d, expected dose calculation per medicine per day. JUnit 4 + extracted `SymptomTrendsLogic` object, no mocks needed.
 
-- [ ] **Test: ProfileEditViewModel** — Default threshold generation per pollen type, custom-threshold detection (diverges from defaults), medicine assignment add/remove/update, validation rejection (empty name, invalid threshold ordering), GPS location integration, save serialises all fields correctly. JUnit 4 + `TestScope` + MockK.
+- [x] **Test: ProfileEditViewModel** — Default threshold generation per pollen type, custom-threshold detection (diverges from defaults), medicine assignment add/remove/update, validation rejection (empty name, invalid threshold ordering), GPS location integration, save serialises all fields correctly. JUnit 4 + extracted `ProfileEditLogic` object, no mocks needed.
 
 ### Batch 5 — Data Export/Import
 
-- [ ] **Test: AppDataExporter / AppDataImporter** — Round-trip: export all data → import → verify domain models match originals. Version validation rejects unknown schema version. Order-dependent restoration (medicines before profiles). Error summary generation on partial failure. JUnit 4 + fake repositories.
+- [x] **Test: AppDataExporter / AppDataImporter** — Round-trip: export all data → import → verify domain models match originals. Version validation rejects unknown schema version. Order-dependent restoration (medicines before profiles). Error summary generation on partial failure. JUnit 4 + fake repositories.
 
 ### Test Infrastructure (Do First)
 

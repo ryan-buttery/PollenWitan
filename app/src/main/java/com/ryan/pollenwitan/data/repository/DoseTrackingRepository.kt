@@ -17,10 +17,20 @@ class DoseTrackingRepository(
     private val store = EncryptedPrefsStore(context, "dose_tracking_encrypted")
     private val doseHistoryDao = AppDatabase.getInstance(context).doseHistoryDao()
 
-    private object Keys {
+    internal object Keys {
         const val TRACKING_DATE = "tracking_date"
         fun confirmed(profileId: String, medicineId: String, slotIndex: Int) =
             "confirmed_${profileId}_${medicineId}_${slotIndex}"
+
+        fun parseConfirmation(profileId: String, key: String): DoseConfirmation? {
+            val prefix = "confirmed_${profileId}_"
+            if (!key.startsWith(prefix)) return null
+            val parts = key.removePrefix(prefix).split("_")
+            if (parts.size < 2) return null
+            val medicineId = parts.dropLast(1).joinToString("_")
+            val slotIndex = parts.last().toIntOrNull() ?: return null
+            return DoseConfirmation(medicineId, slotIndex)
+        }
     }
 
     fun getConfirmations(profileId: String): Flow<Set<DoseConfirmation>> = store.data.map { prefs ->
@@ -33,14 +43,7 @@ class DoseTrackingRepository(
             .filter { (key, value) ->
                 key.startsWith("confirmed_${profileId}_") && value == true
             }
-            .mapNotNull { (key, _) ->
-                val parts = key.removePrefix("confirmed_${profileId}_").split("_")
-                if (parts.size >= 2) {
-                    val medicineId = parts.dropLast(1).joinToString("_")
-                    val slotIndex = parts.last().toIntOrNull() ?: return@mapNotNull null
-                    DoseConfirmation(medicineId, slotIndex)
-                } else null
-            }
+            .mapNotNull { (key, _) -> Keys.parseConfirmation(profileId, key) }
             .toSet()
     }
 
