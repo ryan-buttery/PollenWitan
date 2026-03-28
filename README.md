@@ -1,6 +1,7 @@
 # PollenWitan
 
 [![Latest Release](https://img.shields.io/github/v/release/ryan-buttery/PollenWitan)](https://github.com/ryan-buttery/PollenWitan/releases/latest)
+[![Claude Code Review](https://github.com/ryan-buttery/PollenWitan/actions/workflows/claude-code-review.yml/badge.svg)](https://github.com/ryan-buttery/PollenWitan/actions/workflows/claude-code-review.yml)
 
 **Pollen & Air Quality Forecast** -- a privacy-respecting Android app that delivers personalised pollen and air quality forecasts tailored to the specific allergenic triggers of each household member.
 
