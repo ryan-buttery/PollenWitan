@@ -23,8 +23,8 @@ android {
         applicationId = "com.ryan.pollenwitan"
         minSdk = 26
         targetSdk = 35
-        versionCode = 7
-        versionName = "0.11.0"
+        versionCode = 8
+        versionName = "1.0.0-indev"
     }
 
     signingConfigs {
@@ -66,6 +66,10 @@ android {
 
     buildFeatures {
         buildConfig = true
+    }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
 }
 
@@ -115,6 +119,9 @@ dependencies {
 
     // kotlinx-serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
+    // Test
+    testImplementation("junit:junit:4.13.2")
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
