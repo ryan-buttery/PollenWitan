@@ -204,6 +204,7 @@ private fun DataProgressCard(totalEntries: Int, requiredEntries: Int) {
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
+                drawStopIndicator = {},
             )
             if (remaining > 0) {
                 Spacer(modifier = Modifier.height(4.dp))
