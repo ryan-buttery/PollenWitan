@@ -59,7 +59,7 @@ Incremental test coverage plan. Each task is a self-contained PR targeting `rele
 
 ### Batch 5 — Data Export/Import
 
-- [ ] **Test: AppDataExporter / AppDataImporter** — Round-trip: export all data → import → verify domain models match originals. Version validation rejects unknown schema version. Order-dependent restoration (medicines before profiles). Error summary generation on partial failure. JUnit 4 + fake repositories.
+- [x] **Test: AppDataExporter / AppDataImporter** — Round-trip: export all data → import → verify domain models match originals. Version validation rejects unknown schema version. Order-dependent restoration (medicines before profiles). Error summary generation on partial failure. JUnit 4 + fake repositories.
 
 ### Test Infrastructure (Do First)
 
