@@ -228,8 +228,13 @@
 
     <!-- Validation -->
     <string name="validation_name_empty">Name cannot be empty</string>
+    <string name="validation_name_too_long">Name must be %d characters or fewer</string>
     <string name="validation_select_allergen">Select at least one allergen</string>
     <string name="validation_gps_failed">Could not get location. Check GPS is enabled.</string>
+    <string name="validation_invalid_latitude">Latitude must be between -90 and 90</string>
+    <string name="validation_invalid_longitude">Longitude must be between -180 and 180</string>
+    <string name="validation_invalid_threshold">Threshold values must be positive and in ascending order</string>
+    <string name="validation_invalid_dose">Dose must be 1–999 and frequency 1–24 per day</string>
 
     <!-- Cross-reactivity -->
     <string name="nav_cross_reactivity">Cross-Reactivity</string>
