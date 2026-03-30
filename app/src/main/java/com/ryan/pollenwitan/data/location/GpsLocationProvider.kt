@@ -71,6 +71,6 @@ class GpsLocationProvider(private val context: Context) {
     private fun Location.toAppLocation() = AppLocation(
         latitude = latitude,
         longitude = longitude,
-        displayName = "%.4f, %.4f".format(latitude, longitude)
+        displayName = "%.4f, %.4f".format(java.util.Locale.ROOT, latitude, longitude)
     )
 }

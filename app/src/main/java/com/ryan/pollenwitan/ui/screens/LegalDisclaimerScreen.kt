@@ -102,7 +102,7 @@ fun LegalDisclaimerScreen(onAccepted: () -> Unit) {
             horizontalArrangement = Arrangement.End
         ) {
             OutlinedButton(
-                onClick = { (context as Activity).finishAffinity() }
+                onClick = { (context as? Activity)?.finishAffinity() }
             ) {
                 Text(stringResource(R.string.legal_disagree))
             }
