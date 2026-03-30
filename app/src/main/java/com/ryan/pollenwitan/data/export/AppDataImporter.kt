@@ -17,6 +17,7 @@ import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.ProfileLocation
 import com.ryan.pollenwitan.domain.model.TrackedSymptom
 import com.ryan.pollenwitan.domain.model.UserProfile
+import com.ryan.pollenwitan.ui.screens.ProfileEditLogic
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import java.io.InputStream
@@ -40,6 +41,8 @@ class AppDataImporter(private val context: Context) {
         require(data.version == 1) {
             "Unsupported export version: ${data.version}"
         }
+
+        validateImportData(data)
 
         // Clear existing data
         val profileRepo = ProfileRepository(context)
@@ -146,6 +149,94 @@ class AppDataImporter(private val context: Context) {
         }
     }
 
+    private fun validateImportData(data: ExportData) {
+        val errors = mutableListOf<String>()
+        val validPollenTypes = PollenType.entries.map { it.name }.toSet()
+        val validMedicineTypes = MedicineType.entries.map { it.name }.toSet()
+        val validLocationModes = LocationMode.entries.map { it.name }.toSet()
+        val thresholdRange = ProfileEditLogic.MIN_THRESHOLD..ProfileEditLogic.MAX_THRESHOLD
+
+        // Profile validation
+        for ((i, profile) in data.profiles.withIndex()) {
+            val prefix = "Profile[${i}] (${profile.id})"
+
+            if (profile.displayName.isBlank()) {
+                errors += "$prefix: displayName is blank"
+            } else if (profile.displayName.length > ProfileEditLogic.MAX_DISPLAY_NAME_LENGTH) {
+                errors += "$prefix: displayName exceeds ${ProfileEditLogic.MAX_DISPLAY_NAME_LENGTH} chars"
+            }
+
+            for ((key, threshold) in profile.trackedAllergens) {
+                if (key !in validPollenTypes) {
+                    errors += "$prefix: unknown allergen type '$key'"
+                }
+                val values = listOf(threshold.low, threshold.moderate, threshold.high, threshold.veryHigh)
+                if (values.any { it !in thresholdRange }) {
+                    errors += "$prefix: allergen '$key' has threshold outside ${ProfileEditLogic.MIN_THRESHOLD}–${ProfileEditLogic.MAX_THRESHOLD}"
+                }
+                if (threshold.low >= threshold.moderate || threshold.moderate >= threshold.high || threshold.high >= threshold.veryHigh) {
+                    errors += "$prefix: allergen '$key' thresholds must be in ascending order (low < moderate < high < veryHigh)"
+                }
+            }
+
+            profile.location?.let { loc ->
+                if (loc.latitude !in -90.0..90.0) {
+                    errors += "$prefix: latitude ${loc.latitude} out of range -90..90"
+                }
+                if (loc.longitude !in -180.0..180.0) {
+                    errors += "$prefix: longitude ${loc.longitude} out of range -180..180"
+                }
+                if (loc.displayName.isBlank()) {
+                    errors += "$prefix: location displayName is blank"
+                }
+            }
+
+            for ((j, assignment) in profile.medicineAssignments.withIndex()) {
+                val aPrefix = "$prefix medicineAssignment[$j]"
+                if (assignment.dose !in 1..ProfileEditLogic.MAX_DOSE) {
+                    errors += "$aPrefix: dose ${assignment.dose} out of range 1–${ProfileEditLogic.MAX_DOSE}"
+                }
+                if (assignment.timesPerDay !in 1..ProfileEditLogic.MAX_TIMES_PER_DAY) {
+                    errors += "$aPrefix: timesPerDay ${assignment.timesPerDay} out of range 1–${ProfileEditLogic.MAX_TIMES_PER_DAY}"
+                }
+                if (assignment.reminderHours.any { it !in 0..23 }) {
+                    errors += "$aPrefix: reminderHours contains value outside 0–23"
+                }
+            }
+        }
+
+        // Medicine validation
+        for ((i, med) in data.medicines.withIndex()) {
+            val prefix = "Medicine[$i] (${med.id})"
+
+            if (med.name.isBlank()) {
+                errors += "$prefix: name is blank"
+            } else if (med.name.length > ProfileEditLogic.MAX_MEDICINE_NAME_LENGTH) {
+                errors += "$prefix: name exceeds ${ProfileEditLogic.MAX_MEDICINE_NAME_LENGTH} chars"
+            }
+
+            if (med.type !in validMedicineTypes) {
+                errors += "$prefix: unknown type '${med.type}' (will fall back to Other)"
+            }
+        }
+
+        // Location settings validation
+        val loc = data.locationSettings
+        if (loc.mode !in validLocationModes) {
+            errors += "Location settings: unknown mode '${loc.mode}'"
+        }
+        if (loc.manualLatitude !in -90.0..90.0) {
+            errors += "Location settings: manualLatitude ${loc.manualLatitude} out of range -90..90"
+        }
+        if (loc.manualLongitude !in -180.0..180.0) {
+            errors += "Location settings: manualLongitude ${loc.manualLongitude} out of range -180..180"
+        }
+
+        if (errors.isNotEmpty()) {
+            throw ImportValidationException(errors)
+        }
+    }
+
     private fun ExportProfile.toDomain() = UserProfile(
         id = id,
         displayName = displayName,
@@ -180,3 +271,11 @@ class AppDataImporter(private val context: Context) {
         }
     )
 }
+
+/**
+ * Thrown when import data fails schema validation.
+ * Contains all validation errors found (not just the first).
+ */
+class ImportValidationException(
+    val errors: List<String>
+) : Exception("Import validation failed with ${errors.size} error(s):\n${errors.joinToString("\n") { "  • $it" }}")

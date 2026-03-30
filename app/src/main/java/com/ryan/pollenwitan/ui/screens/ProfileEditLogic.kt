@@ -12,8 +12,8 @@ internal object ProfileEditLogic {
     const val MAX_MEDICINE_NAME_LENGTH = 100
     const val MAX_CUSTOM_SYMPTOM_NAME_LENGTH = 100
     const val MAX_LOCATION_DISPLAY_NAME_LENGTH = 100
-    private const val MIN_THRESHOLD = 0.1
-    private const val MAX_THRESHOLD = 10_000.0
+    const val MIN_THRESHOLD = 0.1
+    const val MAX_THRESHOLD = 10_000.0
     const val MAX_DOSE = 999
     const val MAX_TIMES_PER_DAY = 24
 

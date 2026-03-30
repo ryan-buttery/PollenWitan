@@ -7,6 +7,7 @@ import com.ryan.pollenwitan.data.repository.MedicineRepository
 import com.ryan.pollenwitan.data.repository.NotificationPrefsRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.domain.model.UserProfile
+import com.ryan.pollenwitan.data.security.ExportCrypto
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -15,12 +16,13 @@ import java.time.Instant
 
 /**
  * Assembles all app data into [ExportData] and writes JSON to an [OutputStream].
+ * Optionally encrypts the export with a user-provided password.
  */
 class AppDataExporter(private val context: Context) {
 
     private val json = Json { prettyPrint = true; encodeDefaults = true }
 
-    suspend fun export(outputStream: OutputStream) {
+    suspend fun export(outputStream: OutputStream, password: String? = null) {
         val profileRepo = ProfileRepository(context)
         val medicineRepo = MedicineRepository(context)
         val locationRepo = LocationRepository(context)
@@ -89,8 +91,22 @@ class AppDataExporter(private val context: Context) {
             )
         )
 
-        outputStream.bufferedWriter().use { writer ->
-            writer.write(json.encodeToString(exportData))
+        val jsonString = json.encodeToString(exportData)
+
+        if (password != null) {
+            val cryptoEnvelope = ExportCrypto.encrypt(jsonString, password)
+            val exportEnvelope = EncryptedExportEnvelope(
+                salt = cryptoEnvelope.salt,
+                iv = cryptoEnvelope.iv,
+                ciphertext = cryptoEnvelope.ciphertext
+            )
+            outputStream.bufferedWriter().use { writer ->
+                writer.write(json.encodeToString(exportEnvelope))
+            }
+        } else {
+            outputStream.bufferedWriter().use { writer ->
+                writer.write(jsonString)
+            }
         }
     }
 
