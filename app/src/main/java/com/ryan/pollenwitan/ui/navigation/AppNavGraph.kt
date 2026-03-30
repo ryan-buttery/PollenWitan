@@ -3,6 +3,8 @@ package com.ryan.pollenwitan.ui.navigation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -179,6 +181,7 @@ fun AppNavGraph(
                 drawerContainerColor = colors.Mid,
                 modifier = Modifier.width(280.dp),
             ) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 // Drawer header
                 Column(
                     modifier = Modifier
@@ -284,6 +287,7 @@ fun AppNavGraph(
                             color = if (isSelected) colors.TextOnSelected else colors.Text,
                         )
                     }
+                }
                 }
             }
         }
