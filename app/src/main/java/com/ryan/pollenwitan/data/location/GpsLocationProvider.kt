@@ -8,6 +8,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
 import com.ryan.pollenwitan.domain.model.AppLocation
+import java.util.Locale
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
@@ -71,6 +72,6 @@ class GpsLocationProvider(private val context: Context) {
     private fun Location.toAppLocation() = AppLocation(
         latitude = latitude,
         longitude = longitude,
-        displayName = "%.4f, %.4f".format(java.util.Locale.ROOT, latitude, longitude)
+        displayName = "%.4f, %.4f".format(Locale.ROOT, latitude, longitude)
     )
 }

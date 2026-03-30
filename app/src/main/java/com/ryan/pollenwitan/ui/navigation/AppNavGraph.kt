@@ -181,7 +181,7 @@ fun AppNavGraph(
                 drawerContainerColor = colors.Mid,
                 modifier = Modifier.width(280.dp),
             ) {
-              Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 // Drawer header
                 Column(
                     modifier = Modifier
@@ -288,7 +288,7 @@ fun AppNavGraph(
                         )
                     }
                 }
-              }
+                }
             }
         }
     ) {
