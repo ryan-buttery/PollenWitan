@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Certificate pinning for the Open-Meteo Air Quality API.
+
+    Pins target the intermediate/root CAs in the trust chain, not the leaf cert
+    (leaf certs rotate frequently). The expiration date ensures the app falls back
+    to normal certificate validation if pins become stale, preventing lockout.
+
+    To refresh pins, run from a machine with network access:
+
+        openssl s_client -connect air-quality-api.open-meteo.com:443 \
+            -servername air-quality-api.open-meteo.com -showcerts </dev/null 2>/dev/null \
+        | awk '/-----BEGIN CERT/,/-----END CERT/' \
+        | csplit -z -f cert - '/-----BEGIN CERT/' '{*}'
+
+    Then for each cert file (cert00, cert01, ...):
+
+        openssl x509 -in certXX -pubkey -noout \
+        | openssl pkey -pubin -outform DER \
+        | openssl dgst -sha256 -binary \
+        | openssl enc -base64
+
+    Update the <pin> values below with the output and set a new expiration date
+    (recommend 6-12 months out).
+-->
+<network-security-config>
+    <!-- Default: trust system CAs for all other domains -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Pin the Open-Meteo API domain (Cloudflare-fronted) -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">open-meteo.com</domain>
+        <pin-set expiration="2027-01-01">
+            <!-- ISRG Root X1 (Let's Encrypt root) -->
+            <pin digest="SHA-256">C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</pin>
+            <!-- DigiCert Global Root G2 (Cloudflare chain) -->
+            <pin digest="SHA-256">i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=</pin>
+        </pin-set>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>
