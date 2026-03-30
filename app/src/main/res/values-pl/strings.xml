@@ -353,15 +353,30 @@
     <string name="settings_export_csv">Eksportuj objawy CSV</string>
     <string name="settings_export_csv_desc">Eksportuj dziennik objawów dla lekarza</string>
     <string name="settings_import_confirm_title">Zastąpić wszystkie dane?</string>
-    <string name="settings_import_confirm_message">Import zastąpi wszystkie istniejące profile, leki, historię dawkowania i wpisy z dziennika objawów. Tej operacji nie można cofnąć.</string>
+    <string name="settings_import_confirm_message">Import zastąpi wszystkie istniejące profile, leki, historię dawkowania i wpisy z dziennika objawów. Bieżące dane zostaną automatycznie zapisane i przywrócone w razie niepowodzenia.</string>
     <string name="settings_import_confirm">Importuj</string>
     <string name="settings_export_success">Dane wyeksportowane pomyślnie</string>
     <string name="settings_import_success">%1$s</string>
     <string name="settings_export_error">Eksport nieudany: %1$s</string>
     <string name="settings_import_error">Import nieudany: %1$s</string>
+    <string name="settings_import_rollback_success">Import nieudany — poprzednie dane zostały przywrócone</string>
+    <string name="settings_import_rollback_failure">Import nieudany — nie udało się przywrócić poprzednich danych</string>
     <string name="settings_csv_success">CSV objawów wyeksportowany pomyślnie</string>
     <string name="settings_csv_error">Eksport CSV nieudany: %1$s</string>
     <string name="settings_select_profile">Wybierz profil</string>
+    <string name="settings_export_password_title">Zaszyfrować kopię zapasową?</string>
+    <string name="settings_export_password_hint">Hasło</string>
+    <string name="settings_export_confirm_password_hint">Potwierdź hasło</string>
+    <string name="settings_export_passwords_mismatch">Hasła nie są zgodne</string>
+    <string name="settings_export_skip">Pomiń</string>
+    <string name="settings_export_plaintext_warning">Eksport bez hasła zapisuje dane zdrowotne jako zwykły tekst</string>
+    <string name="settings_export_encrypt">Zaszyfruj i eksportuj</string>
+    <string name="settings_import_password_title">Zaszyfrowana kopia zapasowa</string>
+    <string name="settings_import_password_hint">Hasło kopii zapasowej</string>
+    <string name="settings_import_decrypt">Odszyfruj i importuj</string>
+    <string name="settings_import_wrong_password">Nieprawidłowe hasło lub uszkodzony plik kopii zapasowej</string>
+    <string name="settings_import_validation_title">Nieprawidłowa kopia zapasowa</string>
+    <string name="settings_import_validation_message">Plik kopii zapasowej zawiera nieprawidłowe dane</string>
 
     <!-- Widget -->
     <string name="widget_description">Aktualne poziomy pyłków dla Twojego profilu</string>

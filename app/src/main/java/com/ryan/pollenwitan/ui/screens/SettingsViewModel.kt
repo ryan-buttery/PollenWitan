@@ -157,10 +157,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { medicineRepository.deleteMedicine(medicineId) }
     }
 
-    fun exportAllData(outputStream: OutputStream, onResult: (Result<Unit>) -> Unit) {
+    fun exportAllData(outputStream: OutputStream, password: String? = null, onResult: (Result<Unit>) -> Unit) {
         viewModelScope.launch {
             try {
-                exporter.export(outputStream)
+                exporter.export(outputStream, password)
                 onResult(Result.success(Unit))
             } catch (e: Exception) {
                 onResult(Result.failure(e))
@@ -168,10 +168,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun importAllData(inputStream: InputStream, onResult: (Result<String>) -> Unit) {
+    fun importAllData(inputStream: InputStream, password: String? = null, onResult: (Result<String>) -> Unit) {
         viewModelScope.launch {
             try {
-                val summary = importer.import(inputStream)
+                val summary = importer.import(inputStream, password)
                 onResult(Result.success(summary))
             } catch (e: Exception) {
                 onResult(Result.failure(e))

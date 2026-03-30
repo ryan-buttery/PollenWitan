@@ -355,15 +355,30 @@
     <string name="settings_export_csv">Export Symptom CSV</string>
     <string name="settings_export_csv_desc">Export symptom diary for a medical practitioner</string>
     <string name="settings_import_confirm_title">Replace all data?</string>
-    <string name="settings_import_confirm_message">Importing will replace all existing profiles, medicines, medication history, and symptom diary entries. This cannot be undone.</string>
+    <string name="settings_import_confirm_message">Importing will replace all existing profiles, medicines, medication history, and symptom diary entries. Your current data will be backed up automatically and restored if the import fails.</string>
     <string name="settings_import_confirm">Import</string>
     <string name="settings_export_success">Data exported successfully</string>
     <string name="settings_import_success">%1$s</string>
     <string name="settings_export_error">Export failed: %1$s</string>
     <string name="settings_import_error">Import failed: %1$s</string>
+    <string name="settings_import_rollback_success">Import failed — your previous data has been restored</string>
+    <string name="settings_import_rollback_failure">Import failed — could not restore previous data</string>
     <string name="settings_csv_success">Symptom CSV exported successfully</string>
     <string name="settings_csv_error">CSV export failed: %1$s</string>
     <string name="settings_select_profile">Select Profile</string>
+    <string name="settings_export_password_title">Encrypt backup?</string>
+    <string name="settings_export_password_hint">Password</string>
+    <string name="settings_export_confirm_password_hint">Confirm password</string>
+    <string name="settings_export_passwords_mismatch">Passwords do not match</string>
+    <string name="settings_export_skip">Skip</string>
+    <string name="settings_export_plaintext_warning">Exporting without a password stores health data in plaintext</string>
+    <string name="settings_export_encrypt">Encrypt &amp; Export</string>
+    <string name="settings_import_password_title">Encrypted backup</string>
+    <string name="settings_import_password_hint">Backup password</string>
+    <string name="settings_import_decrypt">Decrypt &amp; Import</string>
+    <string name="settings_import_wrong_password">Incorrect password or corrupted backup file</string>
+    <string name="settings_import_validation_title">Invalid backup</string>
+    <string name="settings_import_validation_message">The backup file contains invalid data</string>
 
     <!-- Widget -->
     <string name="widget_description">Current pollen levels for your profile</string>
