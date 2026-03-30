@@ -20,6 +20,7 @@ import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.screens.ProfileEditLogic
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
+import java.io.File
 import java.io.InputStream
 
 /**
@@ -30,9 +31,16 @@ class AppDataImporter(private val context: Context) {
 
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
+    companion object {
+        private const val ROLLBACK_FILENAME = "import_rollback.json"
+    }
+
+    private val rollbackFile get() = File(context.filesDir, ROLLBACK_FILENAME)
+
     /**
      * @return a summary string (e.g. "Imported 2 profiles, 3 medicines, 45 dose entries, 12 symptom entries")
      * @throws IllegalArgumentException if the JSON is invalid or version is unsupported
+     * @throws ImportValidationException if the import data fails schema validation
      */
     suspend fun import(inputStream: InputStream): String {
         val text = inputStream.bufferedReader().use { it.readText() }
@@ -44,7 +52,35 @@ class AppDataImporter(private val context: Context) {
 
         validateImportData(data)
 
-        // Clear existing data
+        // Auto-backup current state before destructive import
+        AppDataExporter(context).export(rollbackFile.outputStream())
+
+        try {
+            restoreData(data)
+        } catch (e: Exception) {
+            // Rollback: restore previous state from backup
+            try {
+                val backupText = rollbackFile.readText()
+                val backupData = json.decodeFromString<ExportData>(backupText)
+                restoreData(backupData)
+            } catch (_: Exception) {
+                // Rollback itself failed — nothing more we can do
+            }
+            rollbackFile.delete()
+            throw e
+        }
+
+        rollbackFile.delete()
+
+        return buildString {
+            append("Imported ${data.profiles.size} profiles")
+            append(", ${data.medicines.size} medicines")
+            append(", ${data.doseHistory.size} dose entries")
+            append(", ${data.symptomEntries.size} symptom entries")
+        }
+    }
+
+    private suspend fun restoreData(data: ExportData) {
         val profileRepo = ProfileRepository(context)
         val medicineRepo = MedicineRepository(context)
         val locationRepo = LocationRepository(context)
@@ -140,13 +176,6 @@ class AppDataImporter(private val context: Context) {
         notifRepo.setPreSeasonAlertsEnabled(np.preSeasonAlertsEnabled)
         notifRepo.setSymptomReminderEnabled(np.symptomReminderEnabled)
         notifRepo.setSymptomReminderHour(np.symptomReminderHour)
-
-        return buildString {
-            append("Imported ${data.profiles.size} profiles")
-            append(", ${data.medicines.size} medicines")
-            append(", ${data.doseHistory.size} dose entries")
-            append(", ${data.symptomEntries.size} symptom entries")
-        }
     }
 
     private fun validateImportData(data: ExportData) {
