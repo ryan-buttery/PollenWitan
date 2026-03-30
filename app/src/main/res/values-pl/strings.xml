@@ -226,8 +226,13 @@
 
     <!-- Validation -->
     <string name="validation_name_empty">Imię nie może być puste</string>
+    <string name="validation_name_too_long">Imię może mieć maksymalnie %d znaków</string>
     <string name="validation_select_allergen">Wybierz co najmniej jeden alergen</string>
     <string name="validation_gps_failed">Nie udało się uzyskać lokalizacji. Sprawdź czy GPS jest włączony.</string>
+    <string name="validation_invalid_latitude">Szerokość geograficzna musi być między -90 a 90</string>
+    <string name="validation_invalid_longitude">Długość geograficzna musi być między -180 a 180</string>
+    <string name="validation_invalid_threshold">Wartości progowe muszą być dodatnie i w kolejności rosnącej</string>
+    <string name="validation_invalid_dose">Dawka musi wynosić 1–999, a częstotliwość 1–24 razy dziennie</string>
 
     <!-- Cross-reactivity -->
     <string name="nav_cross_reactivity">Reakcje krzyżowe</string>
