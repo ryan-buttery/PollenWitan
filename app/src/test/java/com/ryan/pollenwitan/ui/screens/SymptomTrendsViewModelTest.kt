@@ -41,32 +41,32 @@ class SymptomTrendsViewModelTest {
     // ── buildSnapshots — date range ───────────────────────────────────
 
     @Test
-    fun `week range produces 8 snapshots (day 0 through day 7)`() {
+    fun `week range produces 7 snapshots (day 0 through day 6)`() {
         val start = LocalDate.of(2025, 6, 1)
         val snapshots = SymptomTrendsLogic.buildSnapshots(
             emptyList(), emptyList(), 0, start, 7, json
         )
-        assertEquals(8, snapshots.size)
+        assertEquals(7, snapshots.size)
         assertEquals(start, snapshots.first().date)
-        assertEquals(start.plusDays(7), snapshots.last().date)
+        assertEquals(start.plusDays(6), snapshots.last().date)
     }
 
     @Test
-    fun `month range produces 31 snapshots`() {
+    fun `month range produces 30 snapshots`() {
         val start = LocalDate.of(2025, 6, 1)
         val snapshots = SymptomTrendsLogic.buildSnapshots(
             emptyList(), emptyList(), 0, start, 30, json
         )
-        assertEquals(31, snapshots.size)
+        assertEquals(30, snapshots.size)
     }
 
     @Test
-    fun `quarter range produces 91 snapshots`() {
+    fun `quarter range produces 90 snapshots`() {
         val start = LocalDate.of(2025, 3, 1)
         val snapshots = SymptomTrendsLogic.buildSnapshots(
             emptyList(), emptyList(), 0, start, 90, json
         )
-        assertEquals(91, snapshots.size)
+        assertEquals(90, snapshots.size)
     }
 
     @Test
