@@ -17,6 +17,8 @@ import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.ProfileLocation
 import com.ryan.pollenwitan.domain.model.TrackedSymptom
 import com.ryan.pollenwitan.domain.model.UserProfile
+import com.ryan.pollenwitan.data.security.ExportCrypto
+import com.ryan.pollenwitan.data.security.ExportDecryptionException
 import com.ryan.pollenwitan.ui.screens.ProfileEditLogic
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
@@ -39,12 +41,16 @@ class AppDataImporter(private val context: Context) {
 
     /**
      * @return a summary string (e.g. "Imported 2 profiles, 3 medicines, 45 dose entries, 12 symptom entries")
-     * @throws IllegalArgumentException if the JSON is invalid or version is unsupported
+     * @throws IllegalArgumentException if the JSON is invalid, version is unsupported,
+     *         or an encrypted file is provided without a password
      * @throws ImportValidationException if the import data fails schema validation
+     * @throws ExportDecryptionException if the password is wrong or data is corrupted
      */
-    suspend fun import(inputStream: InputStream): String {
+    suspend fun import(inputStream: InputStream, password: String? = null): String {
         val text = inputStream.bufferedReader().use { it.readText() }
-        val data = json.decodeFromString<ExportData>(text)
+
+        // Detect encrypted vs plaintext backup
+        val data = tryDecrypt(text, password)
 
         require(data.version == 1) {
             "Unsupported export version: ${data.version}"
@@ -78,6 +84,35 @@ class AppDataImporter(private val context: Context) {
             append(", ${data.doseHistory.size} dose entries")
             append(", ${data.symptomEntries.size} symptom entries")
         }
+    }
+
+    private fun tryDecrypt(text: String, password: String?): ExportData {
+        // Try parsing as encrypted envelope
+        val envelope = try {
+            json.decodeFromString<EncryptedExportEnvelope>(text)
+        } catch (_: Exception) {
+            null
+        }
+
+        if (envelope != null && envelope.format == "pollenwitan-encrypted-backup") {
+            require(password != null) {
+                "This backup is encrypted. Please provide the password"
+            }
+            val cryptoEnvelope = com.ryan.pollenwitan.data.security.EncryptedExportEnvelope(
+                salt = envelope.salt,
+                iv = envelope.iv,
+                ciphertext = envelope.ciphertext
+            )
+            val plaintext = try {
+                ExportCrypto.decrypt(cryptoEnvelope, password)
+            } catch (e: ExportDecryptionException) {
+                throw ExportDecryptionException("Incorrect password or corrupted backup file", e)
+            }
+            return json.decodeFromString<ExportData>(plaintext)
+        }
+
+        // Legacy plaintext
+        return json.decodeFromString<ExportData>(text)
     }
 
     private suspend fun restoreData(data: ExportData) {
