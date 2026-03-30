@@ -13,8 +13,8 @@
         <pin-set expiration="2027-01-01">
             <!-- ISRG Root X1 (Let's Encrypt root) -->
             <pin digest="SHA-256">C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</pin>
-            <!-- DigiCert Global Root G2 (Cloudflare chain) -->
-            <pin digest="SHA-256">i7WTqTvh0OioIruIfFR4kMPnBqrS2rdiVPl/s2uC/CY=</pin>
+            <!-- Let's Encrypt R13 (intermediate) -->
+            <pin digest="SHA-256">AlSQhgtJirc8ahLyekmtX+Iw+v46yPYRLJt9Cq1GlB0=</pin>
         </pin-set>
         <trust-anchors>
             <certificates src="system" />
