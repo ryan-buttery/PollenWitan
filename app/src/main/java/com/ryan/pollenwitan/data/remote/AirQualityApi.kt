@@ -3,7 +3,7 @@ package com.ryan.pollenwitan.data.remote
 import com.ryan.pollenwitan.data.remote.dto.AirQualityResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
@@ -70,7 +70,7 @@ class AirQualityApi {
         private const val HOURLY_PARAMS = "birch_pollen,alder_pollen,grass_pollen,mugwort_pollen,ragweed_pollen,olive_pollen,pm2_5,pm10,european_aqi"
 
         private val httpClient by lazy {
-            HttpClient(CIO) {
+            HttpClient(OkHttp) {
                 install(ContentNegotiation) {
                     json(Json { ignoreUnknownKeys = true })
                 }
