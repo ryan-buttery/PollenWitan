@@ -88,9 +88,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun saveManualLocation(latitude: String, longitude: String, displayName: String) {
         val lat = latitude.toDoubleOrNull() ?: return
         val lon = longitude.toDoubleOrNull() ?: return
-        if (displayName.isBlank()) return
+        if (!ProfileEditLogic.isValidLatitude(lat) || !ProfileEditLogic.isValidLongitude(lon)) return
+        val name = displayName.take(ProfileEditLogic.MAX_LOCATION_DISPLAY_NAME_LENGTH).trim()
+        if (name.isBlank()) return
         viewModelScope.launch {
-            locationRepository.setManualLocation(lat, lon, displayName)
+            locationRepository.setManualLocation(lat, lon, name)
         }
     }
 
@@ -138,9 +140,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun addMedicine(name: String, type: MedicineType) {
+        val trimmed = name.take(ProfileEditLogic.MAX_MEDICINE_NAME_LENGTH).trim()
+        if (trimmed.isBlank()) return
         viewModelScope.launch {
             medicineRepository.addMedicine(
-                Medicine(id = UUID.randomUUID().toString(), name = name.trim(), type = type)
+                Medicine(id = UUID.randomUUID().toString(), name = trimmed, type = type)
             )
         }
     }
@@ -153,10 +157,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { medicineRepository.deleteMedicine(medicineId) }
     }
 
-    fun exportAllData(outputStream: OutputStream, onResult: (Result<Unit>) -> Unit) {
+    fun exportAllData(outputStream: OutputStream, password: String? = null, onResult: (Result<Unit>) -> Unit) {
         viewModelScope.launch {
             try {
-                exporter.export(outputStream)
+                exporter.export(outputStream, password)
                 onResult(Result.success(Unit))
             } catch (e: Exception) {
                 onResult(Result.failure(e))
@@ -164,10 +168,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun importAllData(inputStream: InputStream, onResult: (Result<String>) -> Unit) {
+    fun importAllData(inputStream: InputStream, password: String? = null, onResult: (Result<String>) -> Unit) {
         viewModelScope.launch {
             try {
-                val summary = importer.import(inputStream)
+                val summary = importer.import(inputStream, password)
                 onResult(Result.success(summary))
             } catch (e: Exception) {
                 onResult(Result.failure(e))

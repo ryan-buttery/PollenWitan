@@ -17,8 +17,12 @@ import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.ProfileLocation
 import com.ryan.pollenwitan.domain.model.TrackedSymptom
 import com.ryan.pollenwitan.domain.model.UserProfile
+import com.ryan.pollenwitan.data.security.ExportCrypto
+import com.ryan.pollenwitan.data.security.ExportDecryptionException
+import com.ryan.pollenwitan.ui.screens.ProfileEditLogic
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
+import java.io.File
 import java.io.InputStream
 
 /**
@@ -29,19 +33,89 @@ class AppDataImporter(private val context: Context) {
 
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
+    companion object {
+        private const val ROLLBACK_FILENAME = "import_rollback.json"
+    }
+
+    private val rollbackFile get() = File(context.filesDir, ROLLBACK_FILENAME)
+
     /**
      * @return a summary string (e.g. "Imported 2 profiles, 3 medicines, 45 dose entries, 12 symptom entries")
-     * @throws IllegalArgumentException if the JSON is invalid or version is unsupported
+     * @throws IllegalArgumentException if the JSON is invalid, version is unsupported,
+     *         or an encrypted file is provided without a password
+     * @throws ImportValidationException if the import data fails schema validation
+     * @throws ExportDecryptionException if the password is wrong or data is corrupted
      */
-    suspend fun import(inputStream: InputStream): String {
+    suspend fun import(inputStream: InputStream, password: String? = null): String {
         val text = inputStream.bufferedReader().use { it.readText() }
-        val data = json.decodeFromString<ExportData>(text)
+
+        // Detect encrypted vs plaintext backup
+        val data = tryDecrypt(text, password)
 
         require(data.version == 1) {
             "Unsupported export version: ${data.version}"
         }
 
-        // Clear existing data
+        validateImportData(data)
+
+        // Auto-backup current state before destructive import
+        AppDataExporter(context).export(rollbackFile.outputStream())
+
+        try {
+            restoreData(data)
+        } catch (e: Exception) {
+            // Rollback: restore previous state from backup
+            try {
+                val backupText = rollbackFile.readText()
+                val backupData = json.decodeFromString<ExportData>(backupText)
+                restoreData(backupData)
+            } catch (_: Exception) {
+                // Rollback itself failed — nothing more we can do
+            }
+            rollbackFile.delete()
+            throw e
+        }
+
+        rollbackFile.delete()
+
+        return buildString {
+            append("Imported ${data.profiles.size} profiles")
+            append(", ${data.medicines.size} medicines")
+            append(", ${data.doseHistory.size} dose entries")
+            append(", ${data.symptomEntries.size} symptom entries")
+        }
+    }
+
+    private fun tryDecrypt(text: String, password: String?): ExportData {
+        // Try parsing as encrypted envelope
+        val envelope = try {
+            json.decodeFromString<EncryptedExportEnvelope>(text)
+        } catch (_: Exception) {
+            null
+        }
+
+        if (envelope != null && envelope.format == "pollenwitan-encrypted-backup") {
+            require(password != null) {
+                "This backup is encrypted. Please provide the password"
+            }
+            val cryptoEnvelope = com.ryan.pollenwitan.data.security.EncryptedExportEnvelope(
+                salt = envelope.salt,
+                iv = envelope.iv,
+                ciphertext = envelope.ciphertext
+            )
+            val plaintext = try {
+                ExportCrypto.decrypt(cryptoEnvelope, password)
+            } catch (e: ExportDecryptionException) {
+                throw ExportDecryptionException("Incorrect password or corrupted backup file", e)
+            }
+            return json.decodeFromString<ExportData>(plaintext)
+        }
+
+        // Legacy plaintext
+        return json.decodeFromString<ExportData>(text)
+    }
+
+    private suspend fun restoreData(data: ExportData) {
         val profileRepo = ProfileRepository(context)
         val medicineRepo = MedicineRepository(context)
         val locationRepo = LocationRepository(context)
@@ -137,12 +211,93 @@ class AppDataImporter(private val context: Context) {
         notifRepo.setPreSeasonAlertsEnabled(np.preSeasonAlertsEnabled)
         notifRepo.setSymptomReminderEnabled(np.symptomReminderEnabled)
         notifRepo.setSymptomReminderHour(np.symptomReminderHour)
+    }
 
-        return buildString {
-            append("Imported ${data.profiles.size} profiles")
-            append(", ${data.medicines.size} medicines")
-            append(", ${data.doseHistory.size} dose entries")
-            append(", ${data.symptomEntries.size} symptom entries")
+    private fun validateImportData(data: ExportData) {
+        val errors = mutableListOf<String>()
+        val validPollenTypes = PollenType.entries.map { it.name }.toSet()
+        val validMedicineTypes = MedicineType.entries.map { it.name }.toSet()
+        val validLocationModes = LocationMode.entries.map { it.name }.toSet()
+        val thresholdRange = ProfileEditLogic.MIN_THRESHOLD..ProfileEditLogic.MAX_THRESHOLD
+
+        // Profile validation
+        for ((i, profile) in data.profiles.withIndex()) {
+            val prefix = "Profile[${i}] (${profile.id})"
+
+            if (profile.displayName.isBlank()) {
+                errors += "$prefix: displayName is blank"
+            } else if (profile.displayName.length > ProfileEditLogic.MAX_DISPLAY_NAME_LENGTH) {
+                errors += "$prefix: displayName exceeds ${ProfileEditLogic.MAX_DISPLAY_NAME_LENGTH} chars"
+            }
+
+            for ((key, threshold) in profile.trackedAllergens) {
+                if (key !in validPollenTypes) {
+                    errors += "$prefix: unknown allergen type '$key'"
+                }
+                val values = listOf(threshold.low, threshold.moderate, threshold.high, threshold.veryHigh)
+                if (values.any { it !in thresholdRange }) {
+                    errors += "$prefix: allergen '$key' has threshold outside ${ProfileEditLogic.MIN_THRESHOLD}–${ProfileEditLogic.MAX_THRESHOLD}"
+                }
+                if (threshold.low >= threshold.moderate || threshold.moderate >= threshold.high || threshold.high >= threshold.veryHigh) {
+                    errors += "$prefix: allergen '$key' thresholds must be in ascending order (low < moderate < high < veryHigh)"
+                }
+            }
+
+            profile.location?.let { loc ->
+                if (loc.latitude !in -90.0..90.0) {
+                    errors += "$prefix: latitude ${loc.latitude} out of range -90..90"
+                }
+                if (loc.longitude !in -180.0..180.0) {
+                    errors += "$prefix: longitude ${loc.longitude} out of range -180..180"
+                }
+                if (loc.displayName.isBlank()) {
+                    errors += "$prefix: location displayName is blank"
+                }
+            }
+
+            for ((j, assignment) in profile.medicineAssignments.withIndex()) {
+                val aPrefix = "$prefix medicineAssignment[$j]"
+                if (assignment.dose !in 1..ProfileEditLogic.MAX_DOSE) {
+                    errors += "$aPrefix: dose ${assignment.dose} out of range 1–${ProfileEditLogic.MAX_DOSE}"
+                }
+                if (assignment.timesPerDay !in 1..ProfileEditLogic.MAX_TIMES_PER_DAY) {
+                    errors += "$aPrefix: timesPerDay ${assignment.timesPerDay} out of range 1–${ProfileEditLogic.MAX_TIMES_PER_DAY}"
+                }
+                if (assignment.reminderHours.any { it !in 0..23 }) {
+                    errors += "$aPrefix: reminderHours contains value outside 0–23"
+                }
+            }
+        }
+
+        // Medicine validation
+        for ((i, med) in data.medicines.withIndex()) {
+            val prefix = "Medicine[$i] (${med.id})"
+
+            if (med.name.isBlank()) {
+                errors += "$prefix: name is blank"
+            } else if (med.name.length > ProfileEditLogic.MAX_MEDICINE_NAME_LENGTH) {
+                errors += "$prefix: name exceeds ${ProfileEditLogic.MAX_MEDICINE_NAME_LENGTH} chars"
+            }
+
+            if (med.type !in validMedicineTypes) {
+                errors += "$prefix: unknown type '${med.type}' (will fall back to Other)"
+            }
+        }
+
+        // Location settings validation
+        val loc = data.locationSettings
+        if (loc.mode !in validLocationModes) {
+            errors += "Location settings: unknown mode '${loc.mode}'"
+        }
+        if (loc.manualLatitude !in -90.0..90.0) {
+            errors += "Location settings: manualLatitude ${loc.manualLatitude} out of range -90..90"
+        }
+        if (loc.manualLongitude !in -180.0..180.0) {
+            errors += "Location settings: manualLongitude ${loc.manualLongitude} out of range -180..180"
+        }
+
+        if (errors.isNotEmpty()) {
+            throw ImportValidationException(errors)
         }
     }
 
@@ -180,3 +335,11 @@ class AppDataImporter(private val context: Context) {
         }
     )
 }
+
+/**
+ * Thrown when import data fails schema validation.
+ * Contains all validation errors found (not just the first).
+ */
+class ImportValidationException(
+    val errors: List<String>
+) : Exception("Import validation failed with ${errors.size} error(s):\n${errors.joinToString("\n") { "  • $it" }}")

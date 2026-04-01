@@ -114,3 +114,12 @@ data class ExportNotificationPrefs(
     val symptomReminderEnabled: Boolean,
     val symptomReminderHour: Int
 )
+
+@Serializable
+data class EncryptedExportEnvelope(
+    val format: String = "pollenwitan-encrypted-backup",
+    val version: Int = 1,
+    val salt: String,       // Base64-encoded 16-byte PBKDF2 salt
+    val iv: String,         // Base64-encoded 12-byte AES-GCM IV
+    val ciphertext: String  // Base64-encoded AES-256-GCM ciphertext (includes auth tag)
+)

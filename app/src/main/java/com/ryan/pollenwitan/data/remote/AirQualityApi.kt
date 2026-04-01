@@ -11,6 +11,15 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
+import java.io.IOException
+
+/**
+ * Exception thrown when the Open-Meteo API returns a non-success HTTP status.
+ */
+class ApiException(
+    val statusCode: Int,
+    override val message: String
+) : Exception("HTTP $statusCode: $message")
 
 class AirQualityApi {
 
@@ -21,15 +30,7 @@ class AirQualityApi {
         longitude: Double,
         forecastDays: Int = 1
     ): AirQualityResponse {
-        return retryWithBackoff {
-            client.get(BASE_URL) {
-                parameter("latitude", latitude)
-                parameter("longitude", longitude)
-                parameter("hourly", HOURLY_PARAMS)
-                parameter("timezone", "Europe/Warsaw")
-                parameter("forecast_days", forecastDays)
-            }
-        }.body()
+        return executeRequest(latitude, longitude, forecastDays).body()
     }
 
     suspend fun getAirQualityRaw(
@@ -37,6 +38,14 @@ class AirQualityApi {
         longitude: Double,
         forecastDays: Int = 1
     ): String {
+        return executeRequest(latitude, longitude, forecastDays).body()
+    }
+
+    private suspend fun executeRequest(
+        latitude: Double,
+        longitude: Double,
+        forecastDays: Int
+    ): HttpResponse {
         return retryWithBackoff {
             client.get(BASE_URL) {
                 parameter("latitude", latitude)
@@ -45,7 +54,7 @@ class AirQualityApi {
                 parameter("timezone", "Europe/Warsaw")
                 parameter("forecast_days", forecastDays)
             }
-        }.body()
+        }
     }
 
     private suspend fun retryWithBackoff(
@@ -54,25 +63,68 @@ class AirQualityApi {
         block: suspend () -> HttpResponse
     ): HttpResponse {
         var currentDelay = initialDelayMs
+        var lastException: Exception? = null
+
         repeat(maxRetries) { attempt ->
-            val response = block()
-            if (response.status.value != 429) return response
+            try {
+                val response = block()
+                val status = response.status.value
+
+                when {
+                    status in 200..299 -> return response
+                    status == 429 || status in 500..599 -> {
+                        // Transient failures: rate-limit or server error — retry
+                        lastException = ApiException(status, "Transient error (attempt ${attempt + 1}/$maxRetries)")
+                    }
+                    else -> {
+                        // Client errors (4xx except 429) are not retryable
+                        val body = runCatching { response.body<String>() }.getOrDefault("")
+                        throw ApiException(status, body)
+                    }
+                }
+            } catch (e: IOException) {
+                // Network failures (timeout, DNS, connection reset) — retry
+                lastException = e
+            }
+
             if (attempt < maxRetries - 1) {
                 delay(currentDelay)
                 currentDelay *= 2
             }
         }
-        return block()
+
+        // Final attempt — let exceptions propagate
+        return try {
+            val response = block()
+            val status = response.status.value
+            if (status in 200..299) {
+                response
+            } else {
+                val body = runCatching { response.body<String>() }.getOrDefault("")
+                throw ApiException(status, body)
+            }
+        } catch (e: IOException) {
+            throw lastException ?: e
+        }
     }
 
     companion object {
         private const val BASE_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
         private const val HOURLY_PARAMS = "birch_pollen,alder_pollen,grass_pollen,mugwort_pollen,ragweed_pollen,olive_pollen,pm2_5,pm10,european_aqi"
 
+        private const val CONNECT_TIMEOUT_MS = 15_000L
+        private const val REQUEST_TIMEOUT_MS = 30_000L
+        private const val SOCKET_TIMEOUT_MS = 15_000L
+
         private val httpClient by lazy {
             HttpClient(OkHttp) {
                 install(ContentNegotiation) {
                     json(Json { ignoreUnknownKeys = true })
+                }
+                install(HttpTimeout) {
+                    connectTimeoutMillis = CONNECT_TIMEOUT_MS
+                    requestTimeoutMillis = REQUEST_TIMEOUT_MS
+                    socketTimeoutMillis = SOCKET_TIMEOUT_MS
                 }
             }
         }
