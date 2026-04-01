@@ -2,7 +2,7 @@
 -keep class io.ktor.** { *; }
 -dontwarn io.ktor.**
 
-# SLF4J (referenced by Ktor CIO, not bundled)
+# SLF4J (referenced by Ktor, not bundled)
 -dontwarn org.slf4j.**
 
 # kotlinx-serialization

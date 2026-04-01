@@ -15,7 +15,7 @@ Comprehensive guide for AI assistants working in this repository.
 - **Package**: `com.ryan.pollenwitan`
 - **Build system**: Gradle with Kotlin DSL (`.gradle.kts` files throughout)
 - **DI**: None -- ViewModels extend `AndroidViewModel` and instantiate repositories directly
-- **Networking**: Ktor Client (CIO engine) + kotlinx.serialization
+- **Networking**: Ktor Client (OkHttp engine) + kotlinx.serialization
 - **Local storage**: DataStore (preferences/profiles/theme), Room (cached forecast data)
 - **Background work**: WorkManager (periodic fetch), AlarmManager (time-critical alerts)
 
@@ -215,7 +215,7 @@ Side drawer (`ModalNavigationDrawer`) with four top-level destinations: Dashboar
 | DataStore | `datastore-preferences` | 1.1.1 |
 | Glance | `glance-appwidget` / `glance-material3` | 1.1.1 |
 | WorkManager | `work-runtime-ktx` | 2.9.1 |
-| Ktor | `ktor-client-core` / `ktor-client-cio` / `ktor-client-content-negotiation` / `ktor-serialization-kotlinx-json` | 2.3.12 |
+| Ktor | `ktor-client-core` / `ktor-client-okhttp` / `ktor-client-content-negotiation` / `ktor-serialization-kotlinx-json` | 2.3.12 |
 | Serialization | `kotlinx-serialization-json` | 1.7.3 |
 
 ### Build Variants
