@@ -47,12 +47,20 @@ object DatabaseEncryption {
                 val passphrase = getOrCreatePassphrase(prefs)
                 val dbIsEncrypted = ensureEncrypted(appContext, passphrase, prefs)
 
-                factory = if (dbIsEncrypted) {
+                if (dbIsEncrypted) {
+                    // Verify we can actually open the DB with this passphrase
+                    val dbFile = appContext.getDatabasePath(DB_NAME)
+                    if (dbFile.exists() && !verifyEncryptedDb(dbFile, passphrase)) {
+                        Log.w(TAG, "Cannot open encrypted DB with current passphrase — deleting for fresh start")
+                        dbFile.delete()
+                        File(dbFile.parent, "$DB_NAME-wal").delete()
+                        File(dbFile.parent, "$DB_NAME-shm").delete()
+                    }
+                    factory = SupportOpenHelperFactory(passphrase)
                     Log.i(TAG, "Database encryption active")
-                    SupportOpenHelperFactory(passphrase)
                 } else {
                     Log.w(TAG, "Database remains unencrypted — migration failed or pending")
-                    null
+                    factory = null
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Encryption init failed — falling back to unencrypted DB", e)
@@ -127,6 +135,11 @@ object DatabaseEncryption {
 
     /**
      * Migrates an existing unencrypted DB to encrypted using sqlcipher_export.
+     *
+     * Creates the encrypted DB first with [openDatabase(path, byte[])] so the passphrase
+     * goes through the same native [sqlite3_key] codepath that [SupportOpenHelperFactory]
+     * uses later. The old plaintext DB is attached with an empty key and exported in.
+     *
      * Returns true on success, false on failure (DB remains unencrypted).
      */
     private fun migrateToEncrypted(
@@ -138,23 +151,25 @@ object DatabaseEncryption {
 
         val tempFile = File(dbFile.parent, "pollenwitan_encrypted.db")
         return try {
-            // Open unencrypted DB with empty passphrase via SQLCipher
-            val unencrypted = net.zetetic.database.sqlcipher.SQLiteDatabase.openDatabase(
-                dbFile.absolutePath, "",
-                null, net.zetetic.database.sqlcipher.SQLiteDatabase.OPEN_READWRITE,
+            // Create a new encrypted DB using byte[] passphrase — same native sqlite3_key
+            // codepath that SupportOpenHelperFactory uses, avoiding encoding mismatches.
+            val encryptedDb = net.zetetic.database.sqlcipher.SQLiteDatabase.openDatabase(
+                tempFile.absolutePath, passphrase,
+                null,
+                net.zetetic.database.sqlcipher.SQLiteDatabase.OPEN_READWRITE or
+                    net.zetetic.database.sqlcipher.SQLiteDatabase.CREATE_IF_NECESSARY,
                 null, null
             )
 
-            // Attach a new encrypted DB and export data into it
-            val passphraseStr = String(passphrase, Charsets.ISO_8859_1)
-            unencrypted.execSQL(
-                "ATTACH DATABASE '${tempFile.absolutePath}' AS encrypted KEY '${
-                    passphraseStr.replace("'", "''")
-                }'"
+            // Attach the old unencrypted DB with empty key (plaintext mode)
+            encryptedDb.execSQL(
+                "ATTACH DATABASE '${dbFile.absolutePath}' AS plaintext KEY ''"
             )
-            unencrypted.execSQL("SELECT sqlcipher_export('encrypted')")
-            unencrypted.execSQL("DETACH DATABASE encrypted")
-            unencrypted.close()
+
+            // Export data from the plaintext attachment into the encrypted main DB
+            encryptedDb.execSQL("SELECT sqlcipher_export('main', 'plaintext')")
+            encryptedDb.execSQL("DETACH DATABASE plaintext")
+            encryptedDb.close()
 
             // Swap files
             val backupFile = File(dbFile.parent, "pollenwitan_unencrypted.bak")
@@ -172,6 +187,25 @@ object DatabaseEncryption {
         } catch (e: Exception) {
             Log.e(TAG, "Migration failed — DB remains unencrypted", e)
             tempFile.delete()
+            false
+        }
+    }
+
+    /**
+     * Verify that the encrypted DB can actually be opened with the given passphrase.
+     * Catches mismatches caused by passphrase loss (EncryptedSharedPreferences corruption)
+     * or encoding bugs in prior migration code.
+     */
+    private fun verifyEncryptedDb(dbFile: File, passphrase: ByteArray): Boolean {
+        return try {
+            val db = net.zetetic.database.sqlcipher.SQLiteDatabase.openDatabase(
+                dbFile.absolutePath, passphrase,
+                null, net.zetetic.database.sqlcipher.SQLiteDatabase.OPEN_READONLY,
+                null, null
+            )
+            db.close()
+            true
+        } catch (_: Exception) {
             false
         }
     }
