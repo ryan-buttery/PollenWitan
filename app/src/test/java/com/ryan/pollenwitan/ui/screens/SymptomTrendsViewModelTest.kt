@@ -41,32 +41,32 @@ class SymptomTrendsViewModelTest {
     // ── buildSnapshots — date range ───────────────────────────────────
 
     @Test
-    fun `week range produces 8 snapshots (day 0 through day 7)`() {
+    fun `week range produces 7 snapshots (day 0 through day 6)`() {
         val start = LocalDate.of(2025, 6, 1)
         val snapshots = SymptomTrendsLogic.buildSnapshots(
             emptyList(), emptyList(), 0, start, 7, json
         )
-        assertEquals(8, snapshots.size)
+        assertEquals(7, snapshots.size)
         assertEquals(start, snapshots.first().date)
-        assertEquals(start.plusDays(7), snapshots.last().date)
+        assertEquals(start.plusDays(6), snapshots.last().date)
     }
 
     @Test
-    fun `month range produces 31 snapshots`() {
+    fun `month range produces 30 snapshots`() {
         val start = LocalDate.of(2025, 6, 1)
         val snapshots = SymptomTrendsLogic.buildSnapshots(
             emptyList(), emptyList(), 0, start, 30, json
         )
-        assertEquals(31, snapshots.size)
+        assertEquals(30, snapshots.size)
     }
 
     @Test
-    fun `quarter range produces 91 snapshots`() {
+    fun `quarter range produces 90 snapshots`() {
         val start = LocalDate.of(2025, 3, 1)
         val snapshots = SymptomTrendsLogic.buildSnapshots(
             emptyList(), emptyList(), 0, start, 90, json
         )
-        assertEquals(91, snapshots.size)
+        assertEquals(90, snapshots.size)
     }
 
     @Test
@@ -86,7 +86,7 @@ class SymptomTrendsViewModelTest {
     fun `day with no data has zero defaults`() {
         val start = LocalDate.of(2025, 6, 1)
         val snapshots = SymptomTrendsLogic.buildSnapshots(
-            emptyList(), emptyList(), 2, start, 0, json
+            emptyList(), emptyList(), 2, start, 1, json
         )
         val snap = snapshots[0]
         assertTrue(snap.symptomRatings.isEmpty())
@@ -119,7 +119,7 @@ class SymptomTrendsViewModelTest {
         )
 
         val snapshots = SymptomTrendsLogic.buildSnapshots(
-            listOf(entry), emptyList(), 0, start, 0, json
+            listOf(entry), emptyList(), 0, start, 1, json
         )
 
         val snap = snapshots[0]
@@ -146,7 +146,7 @@ class SymptomTrendsViewModelTest {
         )
 
         val snapshots = SymptomTrendsLogic.buildSnapshots(
-            listOf(entry), emptyList(), 0, date, 0, json
+            listOf(entry), emptyList(), 0, date, 1, json
         )
 
         assertEquals(45.2, snapshots[0].pollenLevels["Birch"]!!, 0.001)
@@ -168,7 +168,7 @@ class SymptomTrendsViewModelTest {
         )
 
         val snapshots = SymptomTrendsLogic.buildSnapshots(
-            listOf(entry), emptyList(), 0, date, 0, json
+            listOf(entry), emptyList(), 0, date, 1, json
         )
 
         assertTrue(snapshots[0].pollenLevels.isEmpty())
@@ -186,7 +186,7 @@ class SymptomTrendsViewModelTest {
         )
 
         val snapshots = SymptomTrendsLogic.buildSnapshots(
-            emptyList(), doses, 3, date, 0, json
+            emptyList(), doses, 3, date, 1, json
         )
 
         assertEquals(3, snapshots[0].dosesConfirmed)
@@ -203,7 +203,7 @@ class SymptomTrendsViewModelTest {
         )
 
         val snapshots = SymptomTrendsLogic.buildSnapshots(
-            emptyList(), day1Doses + day2Doses, 2, start, 1, json
+            emptyList(), day1Doses + day2Doses, 2, start, 2, json
         )
 
         assertEquals(1, snapshots[0].dosesConfirmed)
@@ -216,7 +216,7 @@ class SymptomTrendsViewModelTest {
         val doses = listOf(makeDoseHistory("med1", 0, start.plusDays(1).toString()))
 
         val snapshots = SymptomTrendsLogic.buildSnapshots(
-            emptyList(), doses, 2, start, 1, json
+            emptyList(), doses, 2, start, 2, json
         )
 
         assertEquals(0, snapshots[0].dosesConfirmed)
@@ -241,7 +241,7 @@ class SymptomTrendsViewModelTest {
         val doses = listOf(makeDoseHistory("med1", 0, date.toString()))
 
         val snapshots = SymptomTrendsLogic.buildSnapshots(
-            listOf(entry), doses, 2, date, 0, json
+            listOf(entry), doses, 2, date, 1, json
         )
 
         val snap = snapshots[0]
@@ -267,7 +267,7 @@ class SymptomTrendsViewModelTest {
         )
 
         val snapshots = SymptomTrendsLogic.buildSnapshots(
-            listOf(outsideEntry), emptyList(), 0, start, 0, json
+            listOf(outsideEntry), emptyList(), 0, start, 1, json
         )
 
         assertTrue(snapshots[0].symptomRatings.isEmpty())

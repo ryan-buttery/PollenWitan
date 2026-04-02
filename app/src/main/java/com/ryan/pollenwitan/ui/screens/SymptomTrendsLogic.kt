@@ -22,7 +22,7 @@ internal object SymptomTrendsLogic {
         val entryByDate = entries.associateBy { it.date }
         val dosesByDate = doseHistory.groupBy { it.date }
 
-        return (0..rangeDays).map { offset ->
+        return (0 until rangeDays).map { offset ->
             val date = startDate.plusDays(offset)
             val entry = entryByDate[date]
             val doses = dosesByDate[date.toString()] ?: emptyList()

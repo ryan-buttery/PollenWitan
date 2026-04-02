@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import com.ryan.pollenwitan.ui.theme.localizedName
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
@@ -65,6 +66,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
     var showImportConfirm by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
     var showCsvProfilePicker by remember { mutableStateOf(false) }
+    var showExportPasswordDialog by remember { mutableStateOf(false) }
+    var pendingExportUri by remember { mutableStateOf<Uri?>(null) }
+    var showImportPasswordDialog by remember { mutableStateOf(false) }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -88,15 +92,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
         ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
         uri?.let {
-            context.contentResolver.openOutputStream(it)?.let { stream ->
-                viewModel.exportAllData(stream) { result ->
-                    result.onSuccess {
-                        statusMessage = context.getString(R.string.settings_export_success)
-                    }.onFailure { e ->
-                        statusMessage = context.getString(R.string.settings_export_error, e.message ?: "Unknown")
-                    }
-                }
-            }
+            pendingExportUri = it
+            showExportPasswordDialog = true
         }
     }
 
@@ -127,6 +124,24 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
         }
     }
 
+    // Helper to perform import with optional password
+    fun performImport(uri: Uri, password: String? = null) {
+        context.contentResolver.openInputStream(uri)?.let { stream ->
+            viewModel.importAllData(stream, password) { result ->
+                result.onSuccess { summary ->
+                    statusMessage = context.getString(R.string.settings_import_success, summary)
+                }.onFailure { e ->
+                    if (password == null && e.message?.contains("encrypted") == true) {
+                        // File is encrypted — prompt for password
+                        showImportPasswordDialog = true
+                    } else {
+                        statusMessage = context.getString(R.string.settings_import_error, e.message ?: "Unknown")
+                    }
+                }
+            }
+        }
+    }
+
     // Import confirmation dialog
     if (showImportConfirm) {
         AlertDialog(
@@ -139,18 +154,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             confirmButton = {
                 TextButton(onClick = {
                     showImportConfirm = false
-                    pendingImportUri?.let { uri ->
-                        context.contentResolver.openInputStream(uri)?.let { stream ->
-                            viewModel.importAllData(stream) { result ->
-                                result.onSuccess { summary ->
-                                    statusMessage = context.getString(R.string.settings_import_success, summary)
-                                }.onFailure { e ->
-                                    statusMessage = context.getString(R.string.settings_import_error, e.message ?: "Unknown")
-                                }
-                            }
-                        }
-                    }
-                    pendingImportUri = null
+                    pendingImportUri?.let { uri -> performImport(uri) }
                 }) {
                     Text(stringResource(R.string.settings_import_confirm))
                 }
@@ -158,6 +162,171 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             dismissButton = {
                 TextButton(onClick = {
                     showImportConfirm = false
+                    pendingImportUri = null
+                }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
+
+    // Export password dialog
+    if (showExportPasswordDialog) {
+        var password by remember { mutableStateOf("") }
+        var confirmPassword by remember { mutableStateOf("") }
+        val passwordsMatch = password.isNotEmpty() && password == confirmPassword
+
+        AlertDialog(
+            onDismissRequest = {
+                showExportPasswordDialog = false
+                pendingExportUri = null
+            },
+            title = { Text(stringResource(R.string.settings_export_password_title)) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text(stringResource(R.string.settings_export_password_hint)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        label = { Text(stringResource(R.string.settings_export_confirm_password_hint)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (confirmPassword.isNotEmpty() && password != confirmPassword) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.settings_export_passwords_mismatch),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.settings_export_plaintext_warning),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showExportPasswordDialog = false
+                        pendingExportUri?.let { uri ->
+                            context.contentResolver.openOutputStream(uri)?.let { stream ->
+                                viewModel.exportAllData(stream, password) { result ->
+                                    result.onSuccess {
+                                        statusMessage = context.getString(R.string.settings_export_success)
+                                    }.onFailure { e ->
+                                        statusMessage = context.getString(R.string.settings_export_error, e.message ?: "Unknown")
+                                    }
+                                }
+                            }
+                        }
+                        pendingExportUri = null
+                    },
+                    enabled = passwordsMatch
+                ) {
+                    Text(stringResource(R.string.settings_export_encrypt))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showExportPasswordDialog = false
+                    pendingExportUri?.let { uri ->
+                        context.contentResolver.openOutputStream(uri)?.let { stream ->
+                            viewModel.exportAllData(stream) { result ->
+                                result.onSuccess {
+                                    statusMessage = context.getString(R.string.settings_export_success)
+                                }.onFailure { e ->
+                                    statusMessage = context.getString(R.string.settings_export_error, e.message ?: "Unknown")
+                                }
+                            }
+                        }
+                    }
+                    pendingExportUri = null
+                }) {
+                    Text(stringResource(R.string.settings_export_skip))
+                }
+            }
+        )
+    }
+
+    // Import password dialog (shown when encrypted file detected)
+    if (showImportPasswordDialog) {
+        var importPassword by remember { mutableStateOf("") }
+        var importPasswordError by remember { mutableStateOf<String?>(null) }
+
+        AlertDialog(
+            onDismissRequest = {
+                showImportPasswordDialog = false
+                pendingImportUri = null
+            },
+            title = { Text(stringResource(R.string.settings_import_password_title)) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = importPassword,
+                        onValueChange = {
+                            importPassword = it
+                            importPasswordError = null
+                        },
+                        label = { Text(stringResource(R.string.settings_import_password_hint)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = importPasswordError != null
+                    )
+                    importPasswordError?.let {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingImportUri?.let { uri ->
+                            context.contentResolver.openInputStream(uri)?.let { stream ->
+                                viewModel.importAllData(stream, importPassword) { result ->
+                                    result.onSuccess { summary ->
+                                        showImportPasswordDialog = false
+                                        pendingImportUri = null
+                                        statusMessage = context.getString(R.string.settings_import_success, summary)
+                                    }.onFailure { e ->
+                                        if (e.message?.contains("password") == true || e.message?.contains("corrupted") == true) {
+                                            importPasswordError = context.getString(R.string.settings_import_wrong_password)
+                                        } else {
+                                            showImportPasswordDialog = false
+                                            pendingImportUri = null
+                                            statusMessage = context.getString(R.string.settings_import_error, e.message ?: "Unknown")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    enabled = importPassword.isNotEmpty()
+                ) {
+                    Text(stringResource(R.string.settings_import_decrypt))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showImportPasswordDialog = false
                     pendingImportUri = null
                 }) {
                     Text(stringResource(R.string.common_cancel))

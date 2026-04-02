@@ -23,8 +23,8 @@ android {
         applicationId = "com.ryan.pollenwitan"
         minSdk = 26
         targetSdk = 35
-        versionCode = 9
-        versionName = "1.0.0"
+        versionCode = 11
+        versionName = "1.0.1"
     }
 
     signingConfigs {
@@ -113,7 +113,7 @@ dependencies {
     // Ktor
     val ktorVersion = "2.3.12"
     implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 

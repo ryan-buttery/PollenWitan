@@ -108,7 +108,10 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun setDisplayName(name: String) {
-        _uiState.value = _uiState.value.copy(displayName = name, validationError = null)
+        _uiState.value = _uiState.value.copy(
+            displayName = name.take(ProfileEditLogic.MAX_DISPLAY_NAME_LENGTH),
+            validationError = null
+        )
     }
 
     fun setHasAsthma(value: Boolean) {
@@ -195,7 +198,9 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun setLocationDisplayName(value: String) {
-        _uiState.value = _uiState.value.copy(locationDisplayName = value)
+        _uiState.value = _uiState.value.copy(
+            locationDisplayName = value.take(ProfileEditLogic.MAX_LOCATION_DISPLAY_NAME_LENGTH)
+        )
     }
 
     fun addMedicineAssignment(medicineId: String) {
@@ -260,7 +265,7 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun addCustomSymptom(name: String) {
-        val trimmed = name.trim()
+        val trimmed = name.take(ProfileEditLogic.MAX_CUSTOM_SYMPTOM_NAME_LENGTH).trim()
         if (trimmed.isBlank()) return
         val current = _uiState.value
         val symptom = TrackedSymptom(id = UUID.randomUUID().toString(), displayName = trimmed, isDefault = false)
@@ -303,8 +308,18 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
             val errorMsg = when (validation.reason) {
                 ProfileEditLogic.ValidationReason.NameEmpty ->
                     app.getString(R.string.validation_name_empty)
+                ProfileEditLogic.ValidationReason.NameTooLong ->
+                    app.getString(R.string.validation_name_too_long, ProfileEditLogic.MAX_DISPLAY_NAME_LENGTH)
                 ProfileEditLogic.ValidationReason.NoAllergenOrDiscovery ->
                     app.getString(R.string.validation_select_allergen)
+                ProfileEditLogic.ValidationReason.InvalidLatitude ->
+                    app.getString(R.string.validation_invalid_latitude)
+                ProfileEditLogic.ValidationReason.InvalidLongitude ->
+                    app.getString(R.string.validation_invalid_longitude)
+                ProfileEditLogic.ValidationReason.InvalidThreshold ->
+                    app.getString(R.string.validation_invalid_threshold)
+                ProfileEditLogic.ValidationReason.InvalidDose ->
+                    app.getString(R.string.validation_invalid_dose)
             }
             _uiState.value = state.copy(validationError = errorMsg)
             return
