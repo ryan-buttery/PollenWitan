@@ -28,6 +28,22 @@
         </activity>
 
         <receiver
+            android:name=".worker.MedicationActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ryan.pollenwitan.ACTION_MARK_DOSE_TAKEN" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".worker.MissedDoseAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ryan.pollenwitan.ACTION_MISSED_DOSE_CHECK" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
             android:name=".widget.PollenWidgetReceiver"
             android:exported="true">
             <intent-filter>

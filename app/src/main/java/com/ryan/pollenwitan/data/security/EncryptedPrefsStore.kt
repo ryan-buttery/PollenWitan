@@ -2,6 +2,7 @@ package com.ryan.pollenwitan.data.security
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,10 @@ import kotlinx.coroutines.flow.map
  * Provides reactive data access (like DataStore) backed by EncryptedSharedPreferences
  * (AES256-GCM encryption via Android Keystore). Use [data] to observe changes and
  * [edit] to modify values atomically.
+ *
+ * If the Android Keystore key has been invalidated (e.g. device lock screen changed),
+ * the corrupted prefs file is deleted and recreated. This loses existing data but
+ * prevents a hard crash loop.
  */
 class EncryptedPrefsStore(context: Context, name: String) {
 
@@ -21,13 +26,28 @@ class EncryptedPrefsStore(context: Context, name: String) {
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
 
-    val prefs: SharedPreferences = EncryptedSharedPreferences.create(
-        context.applicationContext,
-        name,
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    val prefs: SharedPreferences = try {
+        createEncryptedPrefs(context.applicationContext, name, masterKey)
+    } catch (e: java.security.GeneralSecurityException) {
+        Log.e("EncryptedPrefsStore", "Keystore key invalidated for '$name' — clearing and recreating", e)
+        deletePrefsFiles(context.applicationContext, name)
+        createEncryptedPrefs(context.applicationContext, name, masterKey)
+    }
+
+    companion object {
+        private fun createEncryptedPrefs(
+            context: Context, name: String, masterKey: MasterKey
+        ): SharedPreferences = EncryptedSharedPreferences.create(
+            context, name, masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+
+        private fun deletePrefsFiles(context: Context, name: String) {
+            val prefsDir = java.io.File(context.filesDir.parent, "shared_prefs")
+            java.io.File(prefsDir, "$name.xml").delete()
+        }
+    }
 
     private val version = MutableStateFlow(0)
 

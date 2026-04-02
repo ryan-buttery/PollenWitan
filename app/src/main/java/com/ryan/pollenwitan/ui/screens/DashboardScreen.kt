@@ -23,6 +23,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.runtime.Composable
@@ -31,6 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import android.content.Context
+import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -293,12 +298,18 @@ private fun DashboardContent(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // European AQI
+                val reduceMotion = LocalContext.current.isReduceMotionEnabled()
+                val aqiColor by animateColorAsState(
+                    targetValue = conditions.aqiSeverity.toColor(),
+                    animationSpec = if (reduceMotion) snap() else tween(400),
+                    label = "aqiColor"
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
                             .size(12.dp)
                             .clip(CircleShape)
-                            .background(conditions.aqiSeverity.toColor())
+                            .background(aqiColor)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -310,13 +321,13 @@ private fun DashboardContent(
                         text = "${conditions.europeanAqi}",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = conditions.aqiSeverity.toColor()
+                        color = aqiColor
                     )
                 }
                 Text(
                     text = conditions.aqiSeverity.toLabel(),
                     style = MaterialTheme.typography.bodySmall,
-                    color = conditions.aqiSeverity.toColor(),
+                    color = aqiColor,
                     modifier = Modifier.align(Alignment.End)
                 )
 
@@ -492,6 +503,12 @@ private fun DashboardContent(
 @Composable
 private fun PollenRow(reading: PollenReading, dimmed: Boolean = false) {
     val alpha = if (dimmed) 0.5f else 1f
+    val reduceMotion = LocalContext.current.isReduceMotionEnabled()
+    val severityColor by animateColorAsState(
+        targetValue = reading.severity.toColor().copy(alpha = alpha),
+        animationSpec = if (reduceMotion) snap() else tween(400),
+        label = "severityColor"
+    )
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -500,7 +517,7 @@ private fun PollenRow(reading: PollenReading, dimmed: Boolean = false) {
             modifier = Modifier
                 .size(12.dp)
                 .clip(CircleShape)
-                .background(reading.severity.toColor().copy(alpha = alpha))
+                .background(severityColor)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
@@ -519,7 +536,12 @@ private fun PollenRow(reading: PollenReading, dimmed: Boolean = false) {
         Text(
             text = reading.severity.toLabel(),
             style = MaterialTheme.typography.bodySmall,
-            color = reading.severity.toColor().copy(alpha = alpha)
+            color = severityColor
         )
     }
+}
+
+@Composable
+private fun Context.isReduceMotionEnabled(): Boolean = remember {
+    Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
 }

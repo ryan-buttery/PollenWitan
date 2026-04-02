@@ -502,7 +502,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                     onCompoundRiskToggle = viewModel::setCompoundRiskAlertsEnabled,
                     onPreSeasonToggle = viewModel::setPreSeasonAlertsEnabled,
                     onSymptomReminderToggle = viewModel::setSymptomReminderEnabled,
-                    onSymptomReminderHourChange = viewModel::setSymptomReminderHour
+                    onSymptomReminderHourChange = viewModel::setSymptomReminderHour,
+                    onMissedDoseEscalationToggle = viewModel::setMissedDoseEscalationEnabled
                 )
             }
         }
@@ -638,6 +639,23 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.about_licence),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.about_source_code),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
             }
         }
     }
@@ -652,7 +670,8 @@ private fun NotificationSettings(
     onCompoundRiskToggle: (Boolean) -> Unit,
     onPreSeasonToggle: (Boolean) -> Unit,
     onSymptomReminderToggle: (Boolean) -> Unit,
-    onSymptomReminderHourChange: (Int) -> Unit
+    onSymptomReminderHourChange: (Int) -> Unit,
+    onMissedDoseEscalationToggle: (Boolean) -> Unit
 ) {
     // Morning briefing
     Row(
@@ -824,6 +843,28 @@ private fun NotificationSettings(
                 }
             }
         }
+    }
+
+    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+    // Missed dose escalation
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.settings_missed_dose_escalation), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                stringResource(R.string.settings_missed_dose_escalation_desc, prefs.missedDoseWindowMinutes / 60),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(
+            checked = prefs.missedDoseEscalationEnabled,
+            onCheckedChange = onMissedDoseEscalationToggle
+        )
     }
 }
 

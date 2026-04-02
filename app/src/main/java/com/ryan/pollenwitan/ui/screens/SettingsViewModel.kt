@@ -139,6 +139,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { notificationPrefsRepository.setSymptomReminderHour(hour) }
     }
 
+    fun setMissedDoseEscalationEnabled(enabled: Boolean) {
+        viewModelScope.launch { notificationPrefsRepository.setMissedDoseEscalationEnabled(enabled) }
+    }
+
     fun addMedicine(name: String, type: MedicineType) {
         val trimmed = name.take(ProfileEditLogic.MAX_MEDICINE_NAME_LENGTH).trim()
         if (trimmed.isBlank()) return

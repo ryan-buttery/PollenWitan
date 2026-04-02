@@ -201,15 +201,38 @@ class PollenCheckWorker(
             for ((assignmentIndex, slotIndex, medicineId) in pending) {
                 val assignment = profile.medicineAssignments[assignmentIndex]
                 val medicine = medicines.find { it.id == medicineId } ?: continue
-                NotificationHelper.sendNotification(
+                val notifId = MEDICATION_REMINDER_BASE_ID + index * 100 + assignmentIndex * 10 + slotIndex
+                NotificationHelper.sendMedicationReminder(
                     context = ctx,
-                    channelId = NotificationHelper.CHANNEL_MEDICATION_REMINDER,
-                    notificationId = MEDICATION_REMINDER_BASE_ID + index * 100 + assignmentIndex * 10 + slotIndex,
+                    notificationId = notifId,
                     title = ctx.getString(R.string.notif_medication_reminder, profile.displayName),
                     text = ctx.getString(R.string.notif_time_to_take, medicine.name, assignment.dose, medicine.type.localizedUnitLabel(ctx)),
+                    profileId = profile.id,
+                    medicineId = medicineId,
+                    slotIndex = slotIndex,
+                    medicineName = medicine.name,
+                    dose = assignment.dose,
+                    medicineType = medicine.type.name,
+                    reminderHour = assignment.reminderHours[slotIndex],
+                    profileIndex = index,
+                    assignmentIndex = assignmentIndex,
                     targetRoute = Screen.Dashboard.route,
                     groupKey = if (multiProfile) NotificationHelper.GROUP_MEDICATION_REMINDER else null
                 )
+                // Schedule missed-dose escalation alarm
+                if (prefs.missedDoseEscalationEnabled) {
+                    MissedDoseAlarmReceiver.schedule(
+                        context = ctx,
+                        profileIndex = index,
+                        profileId = profile.id,
+                        profileName = profile.displayName,
+                        medicineId = medicineId,
+                        medicineName = medicine.name,
+                        assignmentIndex = assignmentIndex,
+                        slotIndex = slotIndex,
+                        windowMinutes = prefs.missedDoseWindowMinutes
+                    )
+                }
                 medicationCount++
             }
         }
