@@ -87,7 +87,7 @@ class SymptomTrendsViewModel(application: Application) : AndroidViewModel(applic
             )
         } else {
             val endDate = LocalDate.now()
-            val startDate = endDate.minusDays(params.range.days)
+            val startDate = endDate.minusDays(params.range.days - 1)
             val expectedDosesPerDay = SymptomTrendsLogic.expectedDosesPerDay(
                 profile.medicineAssignments
             )

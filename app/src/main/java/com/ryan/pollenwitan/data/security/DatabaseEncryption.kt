@@ -51,10 +51,11 @@ object DatabaseEncryption {
                     // Verify we can actually open the DB with this passphrase
                     val dbFile = appContext.getDatabasePath(DB_NAME)
                     if (dbFile.exists() && !verifyEncryptedDb(dbFile, passphrase)) {
-                        Log.w(TAG, "Cannot open encrypted DB with current passphrase — deleting for fresh start")
-                        dbFile.delete()
-                        File(dbFile.parent, "$DB_NAME-wal").delete()
-                        File(dbFile.parent, "$DB_NAME-shm").delete()
+                        Log.e(TAG, "Cannot open encrypted DB with current passphrase — falling back to unencrypted")
+                        prefs.edit().putBoolean(KEY_ENCRYPTED, false).apply()
+                        factory = null
+                        initialized = true
+                        return
                     }
                     factory = SupportOpenHelperFactory(passphrase)
                     Log.i(TAG, "Database encryption active")
