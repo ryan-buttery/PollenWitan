@@ -10,6 +10,7 @@
     <string name="common_refresh">Odśwież</string>
     <string name="common_loading">Ładowanie…</string>
     <string name="common_error_title">Coś poszło nie tak</string>
+    <string name="common_ok">OK</string>
     <string name="common_name">Imię</string>
     <string name="common_other">Inne</string>
 
@@ -472,4 +473,8 @@
     <string name="about_title">PollenWitan</string>
     <string name="about_description">Prognoza pyłków i jakości powietrza z poszanowaniem prywatności, dostosowana do konkretnych alergenów każdego domownika. Śledź sześć typów pyłków indywidualnie, zapisuj codzienne objawy, monitoruj przyjmowanie leków i sprawdzaj, które pyłki wpływają na Ciebie najbardziej dzięki analizie długoterminowych trendów. Bez reklam, bez śledzenia, bez kont.</string>
     <string name="about_data_source">Dane o pyłkach i jakości powietrza z Open-Meteo (model europejski CAMS).</string>
+
+    <!-- Database reset warning -->
+    <string name="db_reset_title">Dane w pamięci podręcznej zostały usunięte</string>
+    <string name="db_reset_message">Lokalna pamięć podręczna prognozy nie mogła zostać odszyfrowana i musiała zostać wyczyszczona. Twoje profile i ustawienia nie zostały zmienione. Nowe dane prognozy zostaną pobrane automatycznie.</string>
 </resources>

@@ -9,14 +9,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
 import com.ryan.pollenwitan.data.repository.ThemePrefsRepository
+import com.ryan.pollenwitan.data.security.DatabaseEncryption
 import com.ryan.pollenwitan.ui.navigation.AppNavGraph
 import com.ryan.pollenwitan.ui.theme.ForestTheme
 import com.ryan.pollenwitan.ui.theme.PollenWitanTheme
@@ -55,6 +61,23 @@ class MainActivity : AppCompatActivity() {
                         },
                         initialRoute = navigateTo
                     )
+
+                    // One-shot warning when the encrypted DB had to be deleted
+                    var showDbResetWarning by remember {
+                        mutableStateOf(DatabaseEncryption.dbWasReset)
+                    }
+                    if (showDbResetWarning) {
+                        AlertDialog(
+                            onDismissRequest = { showDbResetWarning = false },
+                            title = { Text(stringResource(R.string.db_reset_title)) },
+                            text = { Text(stringResource(R.string.db_reset_message)) },
+                            confirmButton = {
+                                TextButton(onClick = { showDbResetWarning = false }) {
+                                    Text(stringResource(R.string.common_ok))
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }

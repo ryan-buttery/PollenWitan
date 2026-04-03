@@ -32,6 +32,20 @@ object DatabaseEncryption {
     private var initialized = false
 
     /**
+     * True if the encrypted database had to be deleted because the passphrase was
+     * unrecoverable or the file was corrupted beyond repair.  UI should read this
+     * once and show a one-time warning to the user.
+     */
+    @Volatile
+    var dbWasReset = false
+        private set
+
+    /** Called by [AppDatabase] recovery logic when the DB had to be deleted. */
+    fun markDbReset() {
+        dbWasReset = true
+    }
+
+    /**
      * Initialise encryption. Call once from Application.onCreate.
      * After this call, [getSupportFactory] returns the factory (or null on failure).
      */
@@ -44,6 +58,12 @@ object DatabaseEncryption {
 
                 val appContext = context.applicationContext
                 val prefs = getEncryptedPrefs(appContext)
+                if (prefs == null) {
+                    Log.e(TAG, "EncryptedSharedPreferences unavailable — falling back to unencrypted DB")
+                    factory = null
+                    initialized = true
+                    return
+                }
                 val passphrase = getOrCreatePassphrase(prefs)
                 val dbIsEncrypted = ensureEncrypted(appContext, passphrase, prefs)
 
@@ -51,11 +71,21 @@ object DatabaseEncryption {
                     // Verify we can actually open the DB with this passphrase
                     val dbFile = appContext.getDatabasePath(DB_NAME)
                     if (dbFile.exists() && !verifyEncryptedDb(dbFile, passphrase)) {
-                        Log.e(TAG, "Cannot open encrypted DB with current passphrase — falling back to unencrypted")
-                        prefs.edit().putBoolean(KEY_ENCRYPTED, false).apply()
-                        factory = null
-                        initialized = true
-                        return
+                        // WAL/SHM corruption can cause verify to fail even with the
+                        // correct passphrase — delete them and retry before giving up.
+                        Log.w(TAG, "Verify failed — clearing WAL/SHM and retrying")
+                        File(dbFile.parent, "$DB_NAME-wal").delete()
+                        File(dbFile.parent, "$DB_NAME-shm").delete()
+
+                        if (!verifyEncryptedDb(dbFile, passphrase)) {
+                            // Passphrase genuinely doesn't match — data is unrecoverable.
+                            // Delete the DB so Room can create a fresh encrypted one.
+                            Log.e(TAG, "Cannot open encrypted DB with current passphrase — deleting for fresh start")
+                            dbFile.delete()
+                            File(dbFile.parent, "$DB_NAME-wal").delete()
+                            File(dbFile.parent, "$DB_NAME-shm").delete()
+                            dbWasReset = true
+                        }
                     }
                     factory = SupportOpenHelperFactory(passphrase)
                     Log.i(TAG, "Database encryption active")
@@ -76,16 +106,21 @@ object DatabaseEncryption {
      */
     fun getSupportFactory(): SupportOpenHelperFactory? = factory
 
-    private fun getEncryptedPrefs(context: Context) =
-        EncryptedSharedPreferences.create(
-            context,
-            PREFS_FILE,
-            MasterKey.Builder(context)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build(),
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
+    private fun getEncryptedPrefs(context: Context): android.content.SharedPreferences? =
+        try {
+            EncryptedSharedPreferences.create(
+                context,
+                PREFS_FILE,
+                MasterKey.Builder(context)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build(),
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to open EncryptedSharedPreferences — Keystore may be corrupted", e)
+            null
+        }
 
     private fun getOrCreatePassphrase(
         prefs: android.content.SharedPreferences
@@ -199,9 +234,11 @@ object DatabaseEncryption {
      */
     private fun verifyEncryptedDb(dbFile: File, passphrase: ByteArray): Boolean {
         return try {
+            // Use OPEN_READWRITE to match Room's open behaviour — WAL recovery
+            // only runs in read-write mode, so OPEN_READONLY can falsely pass.
             val db = net.zetetic.database.sqlcipher.SQLiteDatabase.openDatabase(
                 dbFile.absolutePath, passphrase,
-                null, net.zetetic.database.sqlcipher.SQLiteDatabase.OPEN_READONLY,
+                null, net.zetetic.database.sqlcipher.SQLiteDatabase.OPEN_READWRITE,
                 null, null
             )
             db.close()

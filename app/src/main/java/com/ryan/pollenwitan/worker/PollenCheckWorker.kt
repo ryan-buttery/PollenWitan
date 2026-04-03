@@ -3,6 +3,7 @@ package com.ryan.pollenwitan.worker
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -44,6 +45,15 @@ class PollenCheckWorker(
     private val gpsLocationProvider = GpsLocationProvider(applicationContext)
 
     override suspend fun doWork(): Result {
+        return try {
+            doWorkInternal()
+        } catch (e: Exception) {
+            Log.e(TAG, "PollenCheckWorker failed — will retry", e)
+            Result.retry()
+        }
+    }
+
+    private suspend fun doWorkInternal(): Result {
         val ctx = applicationContext
 
         // Refresh GPS location if in GPS mode and enough time has elapsed
@@ -332,6 +342,7 @@ class PollenCheckWorker(
     }
 
     companion object {
+        private const val TAG = "PollenCheckWorker"
         const val WORK_NAME = "pollen_check"
         private const val GPS_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000L // 6 hours
         private const val MORNING_BRIEFING_BASE_ID = 1000
