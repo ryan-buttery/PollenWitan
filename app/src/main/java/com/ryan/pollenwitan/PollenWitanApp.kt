@@ -15,7 +15,7 @@ class PollenWitanApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        DatabaseEncryption.init(this)
+        DatabaseEncryption.migrateAwayFromEncryption(this)
         runBlocking { DataStoreMigration.migrateIfNeeded(this@PollenWitanApp) }
         NotificationHelper.createChannels(this)
         schedulePollenCheck()

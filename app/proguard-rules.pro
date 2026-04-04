@@ -24,9 +24,6 @@
 -keep class * extends androidx.room.RoomDatabase
 -keep @androidx.room.Entity class *
 
-# SQLCipher
--keep class net.zetetic.database.sqlcipher.** { *; }
--dontwarn net.zetetic.database.sqlcipher.**
 
 # Google Tink (transitive via security-crypto) — compile-time annotations not bundled
 -dontwarn com.google.errorprone.annotations.**

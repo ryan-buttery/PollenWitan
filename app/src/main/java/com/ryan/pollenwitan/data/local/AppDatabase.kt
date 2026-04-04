@@ -94,12 +94,12 @@ abstract class AppDatabase : RoomDatabase() {
             }
 
         /**
-         * Builds and force-opens the database, recovering from WAL corruption
-         * or unreadable encrypted files if necessary.
+         * Builds and force-opens the database, recovering from corruption
+         * if necessary.
          *
          * Recovery order:
          * 1. Normal open
-         * 2. Delete WAL/SHM, retry (fixes partial-write WAL corruption)
+         * 2. Delete journal files, retry
          * 3. Delete entire DB, recreate (last resort — data lost, user warned)
          */
         private fun openWithRecovery(context: Context): AppDatabase {
@@ -119,14 +119,15 @@ abstract class AppDatabase : RoomDatabase() {
                 db.close()
             }
 
-            // Attempt 2: delete WAL/SHM files and retry
+            // Attempt 2: delete journal files and retry
             File(dbFile.parent, "$DB_NAME-wal").delete()
             File(dbFile.parent, "$DB_NAME-shm").delete()
+            File(dbFile.parent, "$DB_NAME-journal").delete()
 
             val db2 = buildDb(appContext)
             try {
                 db2.openHelper.writableDatabase
-                Log.i(TAG, "Attempt 2 succeeded — after WAL cleanup")
+                Log.i(TAG, "Attempt 2 succeeded — after journal cleanup")
                 return db2
             } catch (e: Exception) {
                 Log.e(TAG, "Attempt 2 failed — ${e.javaClass.simpleName}: ${e.message}")
@@ -138,6 +139,7 @@ abstract class AppDatabase : RoomDatabase() {
             dbFile.delete()
             File(dbFile.parent, "$DB_NAME-wal").delete()
             File(dbFile.parent, "$DB_NAME-shm").delete()
+            File(dbFile.parent, "$DB_NAME-journal").delete()
             DatabaseEncryption.markDbReset()
 
             return buildDb(appContext)
@@ -151,11 +153,6 @@ abstract class AppDatabase : RoomDatabase() {
             )
                 .setJournalMode(JournalMode.TRUNCATE)
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
-                .apply {
-                    DatabaseEncryption.getSupportFactory()?.let {
-                        openHelperFactory(it)
-                    }
-                }
                 .build()
     }
 }

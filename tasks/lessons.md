@@ -69,10 +69,8 @@ After deploying the WAL corruption fix (TRUNCATE mode, OPEN_READWRITE verify, 3-
 - `JournalMode.TRUNCATE` was active, ruling out WAL corruption as the cause
 - The device is Android 16 (developer preview), secondary user profile (`full.secondary`)
 
-### Root Cause (Confirmed by Elimination)
-WAL corruption was ruled out by the TRUNCATE mode switch. The remaining explanation: **EncryptedSharedPreferences is losing the passphrase** between process restarts. On Android 16 secondary user profiles, the Android Keystore key backing the MasterKey may be invalidated when the system kills and restarts the app process, causing ESP to silently generate a new encryption key. The stored passphrase becomes unreadable, `getOrCreatePassphrase()` generates a new one, and the DB encrypted with the old passphrase becomes unrecoverable.
-
-Contributing factor: passphrase was written with `.apply()` (async), creating a race window where process death could lose a newly generated passphrase before it hits disk.
+### Root Cause (Initially Hypothesised — Later Disproven)
+Initial hypothesis was EncryptedSharedPreferences losing the passphrase due to Keystore re-keying. A passphrase backup mechanism was added to test this. **This hypothesis was WRONG** — see the 2026-04-04 follow-up below.
 
 ### Fix Applied
 **Passphrase backup mechanism** — store the passphrase in both EncryptedSharedPreferences AND plain SharedPreferences:
@@ -95,9 +93,83 @@ Storing the passphrase in plain SharedPreferences reduces the encryption benefit
 - `app/src/main/java/com/ryan/pollenwitan/data/security/DatabaseEncryption.kt` — major rewrite of passphrase management
 - `app/src/main/java/com/ryan/pollenwitan/data/local/AppDatabase.kt` — enhanced recovery logging
 
-### If the Issue Persists
-The diagnostic logging should now reveal exactly what's happening. Check for:
-- `ESP passphrase fingerprint mismatch` — confirms Keystore re-keying
-- `Recovered passphrase from backup` — confirms backup mechanism is working
-- `Attempt N failed/succeeded` in AppDatabase — shows which recovery tier fires
-- If backup passphrase is also being lost, investigate whether Android 16 secondary user data isolation is wiping plain SharedPreferences too (would indicate a platform bug)
+### Outcome
+The passphrase backup was NOT needed — diagnostic logging in the next run proved the passphrase was stable. See below.
+
+---
+
+## 2026-04-04 (follow-up) — On-Disk File Corruption, Not Key Loss
+
+### The Problem
+Despite all encryption-layer hardening (TRUNCATE mode, READWRITE verify, passphrase backup), the DB was still lost within ~1 hour of a fresh install + JSON import.
+
+### Diagnostic Evidence (from the new logging)
+```
+DatabaseEncryption: Passphrase loaded from ESP [fp=17abf6d1]
+DatabaseEncryption: DB verify: file=45056b, wal=none, shm=none, fp=17abf6d1
+SQLiteConnection: Database keying operation returned:0
+sqlcipher: ERROR CORE sqlcipher_page_cipher: hmac check failed for pgno=1
+sqlcipher: ERROR CORE sqlite3Codec: error decrypting page 1 data: 1
+```
+
+And 20 minutes earlier, the system itself flagged it:
+```
+sqlite_db_corrupt: Database file corrupt=/data/user/12/com.ryan.pollenwitan/databases/pollenwitan.db
+```
+
+### Root Cause (Confirmed)
+**Physical on-disk corruption of the database file.** The passphrase is correct and stable (`fp=17abf6d1` throughout, loaded from ESP, `keying operation returned:0`). But the actual bytes on page 1 of the DB file no longer match their HMAC. The file itself has been corrupted at the storage layer.
+
+Key evidence chain:
+1. Passphrase fingerprint is consistent across runs — **not** a key loss issue
+2. No WAL or SHM files present — **not** a WAL corruption issue
+3. `keying operation returned:0` — passphrase was accepted by SQLCipher (key setup succeeded)
+4. `hmac check failed for pgno=1` — page 1 data on disk doesn't match its HMAC
+5. `sqlite_db_corrupt` event from the system 20 minutes before our code even ran
+6. File is only 45056 bytes (~11 pages at 4096 page size) — even page 1 is corrupt
+
+### Why SQLCipher Amplifies the Damage
+With SQLCipher encryption, every page has an HMAC. A single flipped bit on ANY page causes the HMAC check to fail, making the entire page unreadable. Since page 1 contains the SQLite header and schema, corruption there makes the entire DB unreadable.
+
+Without encryption, the same bit-flip would:
+- Corrupt at most one row or index entry
+- Leave the rest of the DB readable
+- Be recoverable with `PRAGMA integrity_check` + manual repair
+
+### Environment Details
+- Device: Pixel 9 (`tegu`), Android 16 developer preview (`BP4A.260205.001`)
+- User type: `full.secondary` (user ID 12, path `/data/user/12/`)
+- Storage corruption happening consistently (every session, within 1-2 hours)
+- Multiple process restarts overnight from WorkManager/battery optimization
+- The `auditd` SELinux denials (`denied { read }` for various system properties) suggest the secondary user profile has restricted access to certain system properties, but this shouldn't affect file I/O
+
+### Resolution
+**Remove SQLCipher encryption from the Room database entirely.** The DB is already protected by:
+- Android's per-user file-based encryption (FBE) at the storage layer
+- The app's private data directory (inaccessible to other apps without root)
+- `android:allowBackup="false"` (can't be extracted via ADB backup)
+
+Sensitive data (profiles, medicine assignments, location settings) remains in EncryptedSharedPreferences. The Room DB contains cached forecasts (replaceable), dose history, and symptom diary entries — health-adjacent data that is adequately protected by Android's native FBE.
+
+### What to Clean Up
+- Remove `DatabaseEncryption` class entirely (or reduce to a no-op)
+- Remove `net.zetetic:sqlcipher-android` dependency from `build.gradle.kts`
+- Remove `openHelperFactory()` from Room builder
+- Handle migration from encrypted DB → unencrypted (existing users)
+- Remove passphrase backup SharedPreferences (`pollenwitan_db_key_backup`)
+- Remove ESP prefs file (`pollenwitan_db_key`)
+- Keep the 3-tier recovery in `AppDatabase` as it's still useful for general corruption
+- Keep the `dbWasReset` flag and user notification
+
+### Key Lesson
+**Don't add encryption layers on top of already-encrypted storage unless there's a specific threat model that requires it.** Android's file-based encryption already protects app data at rest. Adding SQLCipher on top created a fragile system where minor storage-level corruption (which FBE can tolerate) became total data loss (because SQLCipher's HMAC verification is all-or-nothing per page). The additional encryption provided negligible security benefit over FBE while massively increasing fragility.
+
+### Hypotheses Explored and Ruled Out (Summary)
+| Hypothesis | Evidence | Verdict |
+|---|---|---|
+| WAL corruption from process kill | Switched to TRUNCATE mode, no WAL files present | Ruled out |
+| OPEN_READONLY vs OPEN_READWRITE verify mismatch | Fixed, but issue persisted | Ruled out as root cause |
+| EncryptedSharedPreferences losing passphrase | Fingerprint stable (`17abf6d1`), ESP returned correct key | Ruled out |
+| Passphrase not written to disk (.apply() race) | Switched to .commit(), passphrase stable | Ruled out |
+| Android Keystore re-keying on secondary user | Backup mechanism not triggered | Ruled out |
+| On-disk file corruption | `hmac check failed for pgno=1`, `sqlite_db_corrupt` system event | **Confirmed** |

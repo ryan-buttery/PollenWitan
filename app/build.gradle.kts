@@ -98,10 +98,8 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
 
-    // Room encryption (SQLCipher)
+    // EncryptedSharedPreferences (profiles, settings)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
-    implementation("net.zetetic:sqlcipher-android:4.14.0")
-    implementation("androidx.sqlite:sqlite-ktx:2.4.0")
 
     // Glance (home screen widget)
     implementation("androidx.glance:glance-appwidget:1.1.1")
