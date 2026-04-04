@@ -1,11 +1,13 @@
 package com.ryan.pollenwitan.data.security
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import java.io.File
+import java.security.MessageDigest
 import java.security.SecureRandom
 
 /**
@@ -13,6 +15,8 @@ import java.security.SecureRandom
  *
  * - Generates a random 32-byte passphrase, stored in EncryptedSharedPreferences
  *   (backed by Android Keystore AES256_GCM master key).
+ * - Keeps a plaintext backup of the passphrase in regular SharedPreferences
+ *   so that Android Keystore invalidation doesn't cause data loss.
  * - Provides a [SupportOpenHelperFactory] for Room's `openHelperFactory()`.
  * - Handles one-time migration of an existing unencrypted DB to encrypted.
  * - Falls back to null (unencrypted Room) if encryption init fails.
@@ -21,7 +25,9 @@ object DatabaseEncryption {
 
     private const val TAG = "DatabaseEncryption"
     private const val PREFS_FILE = "pollenwitan_db_key"
+    private const val BACKUP_PREFS_FILE = "pollenwitan_db_key_backup"
     private const val KEY_PASSPHRASE = "db_passphrase"
+    private const val KEY_PASSPHRASE_FINGERPRINT = "db_passphrase_fp"
     private const val KEY_ENCRYPTED = "db_encrypted"
     private const val DB_NAME = "pollenwitan.db"
 
@@ -57,34 +63,63 @@ object DatabaseEncryption {
                 System.loadLibrary("sqlcipher")
 
                 val appContext = context.applicationContext
-                val prefs = getEncryptedPrefs(appContext)
-                if (prefs == null) {
-                    Log.e(TAG, "EncryptedSharedPreferences unavailable — falling back to unencrypted DB")
-                    factory = null
+                val backupPrefs = appContext.getSharedPreferences(BACKUP_PREFS_FILE, Context.MODE_PRIVATE)
+                val espPrefs = getEncryptedPrefs(appContext)
+                if (espPrefs == null) {
+                    Log.e(TAG, "EncryptedSharedPreferences unavailable — trying backup passphrase")
+                    // ESP is broken, but we might still have the backup
+                    val passphrase = getPassphraseFromBackup(backupPrefs)
+                    if (passphrase != null) {
+                        Log.i(TAG, "Recovered passphrase from backup [fp=${fingerprint(passphrase)}]")
+                        factory = SupportOpenHelperFactory(passphrase)
+                    } else {
+                        Log.e(TAG, "No backup passphrase available — falling back to unencrypted DB")
+                        factory = null
+                    }
                     initialized = true
                     return
                 }
-                val passphrase = getOrCreatePassphrase(prefs)
-                val dbIsEncrypted = ensureEncrypted(appContext, passphrase, prefs)
+
+                val passphrase = getOrCreatePassphrase(espPrefs, backupPrefs)
+                val dbIsEncrypted = ensureEncrypted(appContext, passphrase, espPrefs)
 
                 if (dbIsEncrypted) {
-                    // Verify we can actually open the DB with this passphrase
                     val dbFile = appContext.getDatabasePath(DB_NAME)
-                    if (dbFile.exists() && !verifyEncryptedDb(dbFile, passphrase)) {
-                        // WAL/SHM corruption can cause verify to fail even with the
-                        // correct passphrase — delete them and retry before giving up.
-                        Log.w(TAG, "Verify failed — clearing WAL/SHM and retrying")
-                        File(dbFile.parent, "$DB_NAME-wal").delete()
-                        File(dbFile.parent, "$DB_NAME-shm").delete()
+                    if (dbFile.exists()) {
+                        val walFile = File(dbFile.parent, "$DB_NAME-wal")
+                        val shmFile = File(dbFile.parent, "$DB_NAME-shm")
+                        Log.i(TAG, "DB verify: file=${dbFile.length()}b" +
+                                ", wal=${if (walFile.exists()) "${walFile.length()}b" else "none"}" +
+                                ", shm=${if (shmFile.exists()) "${shmFile.length()}b" else "none"}" +
+                                ", fp=${fingerprint(passphrase)}")
 
                         if (!verifyEncryptedDb(dbFile, passphrase)) {
-                            // Passphrase genuinely doesn't match — data is unrecoverable.
-                            // Delete the DB so Room can create a fresh encrypted one.
-                            Log.e(TAG, "Cannot open encrypted DB with current passphrase — deleting for fresh start")
-                            dbFile.delete()
-                            File(dbFile.parent, "$DB_NAME-wal").delete()
-                            File(dbFile.parent, "$DB_NAME-shm").delete()
-                            dbWasReset = true
+                            Log.w(TAG, "Verify failed with ESP passphrase — clearing WAL/SHM and retrying")
+                            walFile.delete()
+                            shmFile.delete()
+
+                            if (!verifyEncryptedDb(dbFile, passphrase)) {
+                                // ESP passphrase doesn't work — try backup passphrase
+                                val backupPassphrase = getPassphraseFromBackup(backupPrefs)
+                                if (backupPassphrase != null && !backupPassphrase.contentEquals(passphrase)) {
+                                    Log.w(TAG, "ESP passphrase [fp=${fingerprint(passphrase)}] differs from backup [fp=${fingerprint(backupPassphrase)}] — trying backup")
+                                    if (verifyEncryptedDb(dbFile, backupPassphrase)) {
+                                        Log.i(TAG, "Backup passphrase works — re-syncing to ESP")
+                                        resyncPassphrase(backupPassphrase, espPrefs, backupPrefs)
+                                        factory = SupportOpenHelperFactory(backupPassphrase)
+                                        Log.i(TAG, "Database encryption active (recovered from backup)")
+                                        initialized = true
+                                        return
+                                    }
+                                    Log.e(TAG, "Backup passphrase also failed")
+                                }
+                                // Both passphrases failed — data is unrecoverable
+                                Log.e(TAG, "Cannot open encrypted DB — deleting for fresh start")
+                                dbFile.delete()
+                                File(dbFile.parent, "$DB_NAME-wal").delete()
+                                File(dbFile.parent, "$DB_NAME-shm").delete()
+                                dbWasReset = true
+                            }
                         }
                     }
                     factory = SupportOpenHelperFactory(passphrase)
@@ -106,7 +141,88 @@ object DatabaseEncryption {
      */
     fun getSupportFactory(): SupportOpenHelperFactory? = factory
 
-    private fun getEncryptedPrefs(context: Context): android.content.SharedPreferences? =
+    // ---- Passphrase management ----
+
+    private fun getOrCreatePassphrase(
+        espPrefs: SharedPreferences,
+        backupPrefs: SharedPreferences
+    ): ByteArray {
+        val stored = espPrefs.getString(KEY_PASSPHRASE, null)
+        if (stored != null) {
+            val passphrase = android.util.Base64.decode(stored, android.util.Base64.NO_WRAP)
+            val fp = fingerprint(passphrase)
+            val backupFp = backupPrefs.getString(KEY_PASSPHRASE_FINGERPRINT, null)
+
+            if (backupFp != null && backupFp != fp) {
+                // ESP returned a different passphrase than what we stored before.
+                // The Keystore may have been re-keyed. Try the backup.
+                Log.w(TAG, "ESP passphrase fingerprint mismatch: esp=$fp, backup=$backupFp")
+                val backupPassphrase = getPassphraseFromBackup(backupPrefs)
+                if (backupPassphrase != null && fingerprint(backupPassphrase) == backupFp) {
+                    Log.i(TAG, "Using backup passphrase [fp=$backupFp] — ESP was re-keyed")
+                    return backupPassphrase
+                }
+            }
+
+            // Ensure backup is in sync
+            savePassphraseBackup(passphrase, backupPrefs)
+            Log.d(TAG, "Passphrase loaded from ESP [fp=$fp]")
+            return passphrase
+        }
+
+        // No passphrase in ESP — check backup before generating new
+        val backupPassphrase = getPassphraseFromBackup(backupPrefs)
+        if (backupPassphrase != null) {
+            Log.i(TAG, "ESP empty but backup exists [fp=${fingerprint(backupPassphrase)}] — restoring to ESP")
+            resyncPassphrase(backupPassphrase, espPrefs, backupPrefs)
+            return backupPassphrase
+        }
+
+        // Truly fresh — generate new passphrase
+        val passphrase = ByteArray(32).also { SecureRandom().nextBytes(it) }
+        val encoded = android.util.Base64.encodeToString(passphrase, android.util.Base64.NO_WRAP)
+        espPrefs.edit().putString(KEY_PASSPHRASE, encoded).commit()
+        savePassphraseBackup(passphrase, backupPrefs)
+        Log.i(TAG, "Generated new passphrase [fp=${fingerprint(passphrase)}]")
+        return passphrase
+    }
+
+    private fun savePassphraseBackup(passphrase: ByteArray, backupPrefs: SharedPreferences) {
+        val encoded = android.util.Base64.encodeToString(passphrase, android.util.Base64.NO_WRAP)
+        backupPrefs.edit()
+            .putString(KEY_PASSPHRASE, encoded)
+            .putString(KEY_PASSPHRASE_FINGERPRINT, fingerprint(passphrase))
+            .commit()
+    }
+
+    private fun getPassphraseFromBackup(backupPrefs: SharedPreferences): ByteArray? {
+        val stored = backupPrefs.getString(KEY_PASSPHRASE, null) ?: return null
+        return try {
+            android.util.Base64.decode(stored, android.util.Base64.NO_WRAP)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun resyncPassphrase(
+        passphrase: ByteArray,
+        espPrefs: SharedPreferences,
+        backupPrefs: SharedPreferences
+    ) {
+        val encoded = android.util.Base64.encodeToString(passphrase, android.util.Base64.NO_WRAP)
+        espPrefs.edit().putString(KEY_PASSPHRASE, encoded).commit()
+        savePassphraseBackup(passphrase, backupPrefs)
+    }
+
+    /** First 8 hex chars of SHA-256 — enough to detect changes, safe to log. */
+    private fun fingerprint(passphrase: ByteArray): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(passphrase)
+        return digest.take(4).joinToString("") { "%02x".format(it) }
+    }
+
+    // ---- Encrypted SharedPreferences ----
+
+    private fun getEncryptedPrefs(context: Context): SharedPreferences? =
         try {
             EncryptedSharedPreferences.create(
                 context,
@@ -122,23 +238,7 @@ object DatabaseEncryption {
             null
         }
 
-    private fun getOrCreatePassphrase(
-        prefs: android.content.SharedPreferences
-    ): ByteArray {
-        val stored = prefs.getString(KEY_PASSPHRASE, null)
-        if (stored != null) {
-            return android.util.Base64.decode(stored, android.util.Base64.NO_WRAP)
-        }
-
-        val passphrase = ByteArray(32).also { SecureRandom().nextBytes(it) }
-        prefs.edit()
-            .putString(
-                KEY_PASSPHRASE,
-                android.util.Base64.encodeToString(passphrase, android.util.Base64.NO_WRAP)
-            )
-            .apply()
-        return passphrase
-    }
+    // ---- DB state management ----
 
     /**
      * Ensures the database is encrypted. Returns true if the DB is (or is now) encrypted,
@@ -147,7 +247,7 @@ object DatabaseEncryption {
     private fun ensureEncrypted(
         context: Context,
         passphrase: ByteArray,
-        prefs: android.content.SharedPreferences
+        prefs: SharedPreferences
     ): Boolean {
         // Already confirmed encrypted on a previous launch
         if (prefs.getBoolean(KEY_ENCRYPTED, false)) return true
@@ -155,13 +255,13 @@ object DatabaseEncryption {
         val dbFile = context.getDatabasePath(DB_NAME)
         if (!dbFile.exists()) {
             // Fresh install — Room will create an encrypted DB via SupportOpenHelperFactory
-            prefs.edit().putBoolean(KEY_ENCRYPTED, true).apply()
+            prefs.edit().putBoolean(KEY_ENCRYPTED, true).commit()
             return true
         }
 
         // DB exists — check if it's already encrypted
         if (isAlreadyEncrypted(dbFile)) {
-            prefs.edit().putBoolean(KEY_ENCRYPTED, true).apply()
+            prefs.edit().putBoolean(KEY_ENCRYPTED, true).commit()
             return true
         }
 
@@ -171,24 +271,16 @@ object DatabaseEncryption {
 
     /**
      * Migrates an existing unencrypted DB to encrypted using sqlcipher_export.
-     *
-     * Creates the encrypted DB first with [openDatabase(path, byte[])] so the passphrase
-     * goes through the same native [sqlite3_key] codepath that [SupportOpenHelperFactory]
-     * uses later. The old plaintext DB is attached with an empty key and exported in.
-     *
-     * Returns true on success, false on failure (DB remains unencrypted).
      */
     private fun migrateToEncrypted(
         dbFile: File,
         passphrase: ByteArray,
-        prefs: android.content.SharedPreferences
+        prefs: SharedPreferences
     ): Boolean {
         Log.i(TAG, "Migrating unencrypted database to encrypted...")
 
         val tempFile = File(dbFile.parent, "pollenwitan_encrypted.db")
         return try {
-            // Create a new encrypted DB using byte[] passphrase — same native sqlite3_key
-            // codepath that SupportOpenHelperFactory uses, avoiding encoding mismatches.
             val encryptedDb = net.zetetic.database.sqlcipher.SQLiteDatabase.openDatabase(
                 tempFile.absolutePath, passphrase,
                 null,
@@ -197,27 +289,22 @@ object DatabaseEncryption {
                 null, null
             )
 
-            // Attach the old unencrypted DB with empty key (plaintext mode)
             encryptedDb.execSQL(
                 "ATTACH DATABASE '${dbFile.absolutePath}' AS plaintext KEY ''"
             )
-
-            // Export data from the plaintext attachment into the encrypted main DB
             encryptedDb.execSQL("SELECT sqlcipher_export('main', 'plaintext')")
             encryptedDb.execSQL("DETACH DATABASE plaintext")
             encryptedDb.close()
 
-            // Swap files
             val backupFile = File(dbFile.parent, "pollenwitan_unencrypted.bak")
             dbFile.renameTo(backupFile)
             tempFile.renameTo(dbFile)
             backupFile.delete()
 
-            // Clean up WAL/SHM files from the old unencrypted DB
             File(dbFile.parent, "$DB_NAME-wal").delete()
             File(dbFile.parent, "$DB_NAME-shm").delete()
 
-            prefs.edit().putBoolean(KEY_ENCRYPTED, true).apply()
+            prefs.edit().putBoolean(KEY_ENCRYPTED, true).commit()
             Log.i(TAG, "Database migration to encrypted completed successfully")
             true
         } catch (e: Exception) {
@@ -229,8 +316,6 @@ object DatabaseEncryption {
 
     /**
      * Verify that the encrypted DB can actually be opened with the given passphrase.
-     * Catches mismatches caused by passphrase loss (EncryptedSharedPreferences corruption)
-     * or encoding bugs in prior migration code.
      */
     private fun verifyEncryptedDb(dbFile: File, passphrase: ByteArray): Boolean {
         return try {
@@ -243,7 +328,8 @@ object DatabaseEncryption {
             )
             db.close()
             true
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.w(TAG, "verifyEncryptedDb failed: ${e.javaClass.simpleName}: ${e.message}")
             false
         }
     }
@@ -259,9 +345,9 @@ object DatabaseEncryption {
                 android.database.sqlite.SQLiteDatabase.OPEN_READONLY
             )
             db.close()
-            false // Opened fine with no passphrase → unencrypted
+            false
         } catch (_: Exception) {
-            true // Can't open without passphrase → encrypted (or corrupt)
+            true
         }
     }
 }

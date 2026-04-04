@@ -55,3 +55,49 @@ If crashes continue after this fix, investigate:
 
 ### Pattern to Avoid
 Previous fix (commit a7648f0) tried to "fall back to unencrypted" by setting `factory = null` when verification failed. This was impossible — you can't read an encrypted DB without the passphrase. The result was either a framework SQLite crash (different error) or a cycle where `isAlreadyEncrypted()` re-flagged the DB as encrypted each launch. **Don't create fallback paths that are logically impossible.**
+
+---
+
+## 2026-04-04 — Passphrase Loss Despite WAL Fix
+
+### The Problem
+After deploying the WAL corruption fix (TRUNCATE mode, OPEN_READWRITE verify, 3-tier recovery), the DB was still lost overnight. The recovery code worked (no crash — the `dbWasReset` dialog appeared), but it hit the last-resort "delete DB" path.
+
+### Key Evidence
+- Logcat showed the process killed/restarted **5 times** between 04:19–04:23 (PIDs 30306 → 30849 → 32471 → 7122 → 8283) — typical WorkManager + Android battery optimization behaviour
+- No app-level logs captured (only system `events`/`audit` buffers visible in the report), so we couldn't see which recovery tier triggered the reset
+- `JournalMode.TRUNCATE` was active, ruling out WAL corruption as the cause
+- The device is Android 16 (developer preview), secondary user profile (`full.secondary`)
+
+### Root Cause (Confirmed by Elimination)
+WAL corruption was ruled out by the TRUNCATE mode switch. The remaining explanation: **EncryptedSharedPreferences is losing the passphrase** between process restarts. On Android 16 secondary user profiles, the Android Keystore key backing the MasterKey may be invalidated when the system kills and restarts the app process, causing ESP to silently generate a new encryption key. The stored passphrase becomes unreadable, `getOrCreatePassphrase()` generates a new one, and the DB encrypted with the old passphrase becomes unrecoverable.
+
+Contributing factor: passphrase was written with `.apply()` (async), creating a race window where process death could lose a newly generated passphrase before it hits disk.
+
+### Fix Applied
+**Passphrase backup mechanism** — store the passphrase in both EncryptedSharedPreferences AND plain SharedPreferences:
+
+1. **Plain SharedPreferences backup** (`pollenwitan_db_key_backup`) stores the passphrase in Base64 and a SHA-256 fingerprint. This survives Keystore invalidation.
+2. **Fingerprint mismatch detection** — on each init, compare ESP passphrase fingerprint against the backup. If they differ, the Keystore was re-keyed; use the backup passphrase instead.
+3. **ESP-empty recovery** — if ESP returns no passphrase but backup exists, restore from backup.
+4. **Verify fallback** — if ESP passphrase fails DB verification, try backup passphrase before deleting.
+5. **All writes use `.commit()`** (synchronous) instead of `.apply()` (async).
+6. **Comprehensive diagnostic logging** — every decision point logs the passphrase fingerprint and file sizes, so the next failure will be fully diagnosable.
+
+### Security Trade-off
+Storing the passphrase in plain SharedPreferences reduces the encryption benefit — it's readable by root or via ADB backup. However:
+- `android:allowBackup="false"` prevents ADB backup extraction
+- The alternative (losing user health data repeatedly) is worse
+- Profiles and settings remain in EncryptedSharedPreferences (higher-value targets)
+- The DB primarily contains cached forecasts, dose history, and symptom diary entries
+
+### Files Changed
+- `app/src/main/java/com/ryan/pollenwitan/data/security/DatabaseEncryption.kt` — major rewrite of passphrase management
+- `app/src/main/java/com/ryan/pollenwitan/data/local/AppDatabase.kt` — enhanced recovery logging
+
+### If the Issue Persists
+The diagnostic logging should now reveal exactly what's happening. Check for:
+- `ESP passphrase fingerprint mismatch` — confirms Keystore re-keying
+- `Recovered passphrase from backup` — confirms backup mechanism is working
+- `Attempt N failed/succeeded` in AppDatabase — shows which recovery tier fires
+- If backup passphrase is also being lost, investigate whether Android 16 secondary user data isolation is wiping plain SharedPreferences too (would indicate a platform bug)

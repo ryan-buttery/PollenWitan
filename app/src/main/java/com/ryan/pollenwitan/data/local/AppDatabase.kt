@@ -104,33 +104,37 @@ abstract class AppDatabase : RoomDatabase() {
          */
         private fun openWithRecovery(context: Context): AppDatabase {
             val appContext = context.applicationContext
+            val dbFile = appContext.getDatabasePath(DB_NAME)
+
+            Log.i(TAG, "openWithRecovery: db exists=${dbFile.exists()}, size=${dbFile.length()}")
 
             // Attempt 1: normal open
             val db = buildDb(appContext)
             try {
                 db.openHelper.writableDatabase
+                Log.i(TAG, "Attempt 1 succeeded — normal open")
                 return db
             } catch (e: Exception) {
-                Log.e(TAG, "Database open failed — attempting WAL cleanup", e)
+                Log.e(TAG, "Attempt 1 failed — ${e.javaClass.simpleName}: ${e.message}")
                 db.close()
             }
 
             // Attempt 2: delete WAL/SHM files and retry
-            val dbFile = appContext.getDatabasePath(DB_NAME)
             File(dbFile.parent, "$DB_NAME-wal").delete()
             File(dbFile.parent, "$DB_NAME-shm").delete()
 
             val db2 = buildDb(appContext)
             try {
                 db2.openHelper.writableDatabase
-                Log.i(TAG, "Recovery successful after WAL cleanup")
+                Log.i(TAG, "Attempt 2 succeeded — after WAL cleanup")
                 return db2
             } catch (e: Exception) {
-                Log.e(TAG, "WAL cleanup insufficient — deleting database for fresh start", e)
+                Log.e(TAG, "Attempt 2 failed — ${e.javaClass.simpleName}: ${e.message}")
                 db2.close()
             }
 
             // Attempt 3: delete everything and let Room create fresh
+            Log.e(TAG, "Attempt 3 — deleting database for fresh start")
             dbFile.delete()
             File(dbFile.parent, "$DB_NAME-wal").delete()
             File(dbFile.parent, "$DB_NAME-shm").delete()
