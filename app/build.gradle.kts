@@ -43,6 +43,19 @@ android {
             resValue("string", "app_name", "PollenWitan (Debug)")
             signingConfig = signingConfigs.getByName("release")
         }
+        create("benchmark") {
+            initWith(getByName("debug"))
+            isMinifyEnabled = true
+            isShrinkResources = true
+            applicationIdSuffix = ".benchmark"
+            resValue("string", "app_name", "PollenWitan (Bench)")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("release")
+            isDebuggable = true
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
