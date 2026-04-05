@@ -3,6 +3,7 @@ package com.ryan.pollenwitan.worker
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.ryan.pollenwitan.data.repository.DoseTrackingRepository
 import kotlinx.coroutines.CoroutineScope
@@ -50,8 +51,10 @@ class MedicationActionReceiver : BroadcastReceiver() {
                     medicineType = medicineType,
                     reminderHour = reminderHour
                 )
-                NotificationManagerCompat.from(context).cancel(notificationId)
+            } catch (e: Exception) {
+                Log.e("MedicationAction", "Failed to confirm dose", e)
             } finally {
+                NotificationManagerCompat.from(context).cancel(notificationId)
                 pendingResult.finish()
             }
         }

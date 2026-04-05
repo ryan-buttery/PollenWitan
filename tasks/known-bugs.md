@@ -69,3 +69,35 @@ Affects: morning briefings, threshold alerts, compound risk alerts, medication r
 Only affects manual coordinate entry (GPS fix auto-fills the name).
 
 **Fix:** Add a `LocationNameBlank` validation reason, or have `resolveLocation` fall back to coordinates as the display name.
+
+## 9. `requestCode()` collision with >= 10 slots
+
+**File:** `worker/MissedDoseAlarmReceiver.kt:86-87`
+
+`MISSED_DOSE_NOTIF_BASE_ID + profileIndex * 100 + assignmentIndex * 10 + slotIndex` overflows when `slotIndex >= 10` — e.g. `(0, 1, 0) = 7010` and `(0, 0, 10) = 7010`. Unlikely today (realistically <= 3 slots) but a latent collision.
+
+**Fix:** Use a hash-based approach: `Objects.hash(profileIndex, assignmentIndex, slotIndex).and(0xFFFF) + MISSED_DOSE_NOTIF_BASE_ID`.
+
+## 10. `isReduceMotionEnabled()` is not reactive
+
+**File:** `ui/screens/DashboardScreen.kt:572-574`
+
+The value is cached once in `remember {}` and never re-read. If the user toggles "remove animations" from the accessibility quick tile while the app is foregrounded, animations won't respond until the composable leaves and re-enters composition.
+
+**Fix:** Observe `ANIMATOR_DURATION_SCALE` reactively via a `ContentObserver` inside a `DisposableEffect`.
+
+## 11. `StaleDataBanner` missing accessibility role
+
+**File:** `ui/components/StaleDataBanner.kt`
+
+The banner is clickable but has no `semantics { role = Role.Button }`. Screen-reader users won't know it's tappable.
+
+**Fix:** Add `Modifier.semantics { role = Role.Button }` to the `Surface`.
+
+## 12. Import error detection via fragile string matching
+
+**File:** `ui/screens/SettingsScreen.kt:134`
+
+`e.message?.contains("encrypted") == true` detects encrypted imports by matching the exception message string. A locale-specific or library-version message change would silently break the "prompt for password" flow.
+
+**Fix:** Throw a custom `EncryptedImportException` from the importer and catch it specifically.
