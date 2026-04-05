@@ -34,6 +34,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.sp
 import android.content.Context
 import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
@@ -51,6 +55,7 @@ import com.ryan.pollenwitan.ui.components.ProfileSwitcher
 import com.ryan.pollenwitan.ui.components.StaleDataBanner
 import com.ryan.pollenwitan.ui.theme.localizedName
 import com.ryan.pollenwitan.ui.theme.localizedUnitLabel
+import com.ryan.pollenwitan.ui.theme.toAbbreviation
 import com.ryan.pollenwitan.ui.theme.toColor
 import com.ryan.pollenwitan.ui.theme.toLabel
 import java.time.LocalTime
@@ -309,12 +314,14 @@ private fun DashboardContent(
                     animationSpec = if (reduceMotion) snap() else tween(400),
                     label = "aqiColor"
                 )
+                val aqiSeverityLabel = conditions.aqiSeverity.toLabel()
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
                             .size(12.dp)
                             .clip(CircleShape)
                             .background(aqiColor)
+                            .semantics { contentDescription = "${conditions.europeanAqi}: $aqiSeverityLabel" }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -518,12 +525,27 @@ private fun PollenRow(reading: PollenReading, dimmed: Boolean = false) {
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val severityLabel = reading.severity.toLabel()
+        val abbreviation = reading.severity.toAbbreviation()
+        val allergenName = reading.type.localizedName()
         Box(
             modifier = Modifier
                 .size(12.dp)
                 .clip(CircleShape)
                 .background(severityColor)
-        )
+                .semantics { this.contentDescription = "$allergenName: $severityLabel" },
+            contentAlignment = Alignment.Center
+        ) {
+            if (abbreviation.isNotEmpty()) {
+                Text(
+                    text = abbreviation,
+                    fontSize = 7.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    lineHeight = 7.sp
+                )
+            }
+        }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = reading.type.localizedName(),
@@ -539,7 +561,7 @@ private fun PollenRow(reading: PollenReading, dimmed: Boolean = false) {
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = reading.severity.toLabel(),
+            text = severityLabel,
             style = MaterialTheme.typography.bodySmall,
             color = severityColor
         )

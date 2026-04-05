@@ -510,6 +510,65 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Widget section
+        if (uiState.profiles.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_widget_section),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.settings_widget_profile),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Default option
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = uiState.widgetProfileId.isEmpty(),
+                            onClick = { viewModel.setWidgetProfile("") }
+                        )
+                        Text(
+                            text = stringResource(R.string.settings_widget_profile_default),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+
+                    // Per-profile options
+                    uiState.profiles.forEach { profile ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = uiState.widgetProfileId == profile.id,
+                                onClick = { viewModel.setWidgetProfile(profile.id) }
+                            )
+                            Text(
+                                text = profile.displayName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         // Data Management section
         Card(
             modifier = Modifier.fillMaxWidth(),

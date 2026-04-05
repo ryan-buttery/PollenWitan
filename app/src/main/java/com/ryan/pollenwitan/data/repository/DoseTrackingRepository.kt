@@ -105,6 +105,62 @@ class DoseTrackingRepository(
         )
     }
 
+    suspend fun confirmDoseForDate(
+        profileId: String,
+        medicineId: String,
+        slotIndex: Int,
+        date: LocalDate,
+        medicineName: String,
+        dose: Int,
+        medicineType: String,
+        reminderHour: Int
+    ) {
+        doseHistoryDao.upsert(
+            DoseHistoryEntity(
+                profileId = profileId,
+                medicineId = medicineId,
+                slotIndex = slotIndex,
+                date = date.toString(),
+                confirmedAtMillis = System.currentTimeMillis(),
+                confirmed = true,
+                medicineName = medicineName,
+                dose = dose,
+                medicineType = medicineType,
+                reminderHour = reminderHour
+            )
+        )
+    }
+
+    suspend fun unconfirmDoseForDate(
+        profileId: String,
+        medicineId: String,
+        slotIndex: Int,
+        date: LocalDate,
+        medicineName: String,
+        dose: Int,
+        medicineType: String,
+        reminderHour: Int
+    ) {
+        doseHistoryDao.upsert(
+            DoseHistoryEntity(
+                profileId = profileId,
+                medicineId = medicineId,
+                slotIndex = slotIndex,
+                date = date.toString(),
+                confirmedAtMillis = System.currentTimeMillis(),
+                confirmed = false,
+                medicineName = medicineName,
+                dose = dose,
+                medicineType = medicineType,
+                reminderHour = reminderHour
+            )
+        )
+    }
+
+    suspend fun getAllHistoryForDate(profileId: String, date: LocalDate): List<DoseHistoryEntity> {
+        return doseHistoryDao.getAllForDate(profileId, date.toString())
+    }
+
     suspend fun getHistoryForDate(profileId: String, date: LocalDate): List<DoseHistoryEntity> {
         return doseHistoryDao.getConfirmedForDate(profileId, date.toString())
     }

@@ -14,6 +14,14 @@
     <string name="common_error_title">Something went wrong</string>
     <string name="common_ok">OK</string>
     <string name="stale_data_banner">Last updated %1$s ago \u2014 tap to refresh</string>
+    <string name="common_close">Close</string>
+    <string name="accessibility_delete_entry">Delete entry</string>
+    <string name="accessibility_previous_range">Previous date range</string>
+    <string name="accessibility_next_range">Next date range</string>
+    <string name="accessibility_expand">Expand</string>
+    <string name="accessibility_collapse">Collapse</string>
+    <string name="accessibility_chart_line">%1$s chart, %2$d days</string>
+    <string name="accessibility_chart_bar">Symptom severity chart, %1$d days</string>
     <string name="common_name">Name</string>
     <string name="common_other">Other</string>
 
@@ -320,6 +328,9 @@
     <string name="symptom_no_entries">No entries yet</string>
     <string name="symptom_diary_add_entry">Add Entry</string>
     <string name="symptom_diary_select_date">Select date</string>
+    <string name="symptom_diary_delete_title">Delete Entry</string>
+    <string name="symptom_diary_delete_message">Delete the symptom entry for %1$s?</string>
+    <string name="symptom_diary_delete">Delete</string>
     <string name="symptom_diary_backfill_title">Log Past Entry</string>
     <string name="symptom_peak_pollen">Peak pollen</string>
     <string name="settings_symptom_reminder">Symptom check-in reminder</string>
@@ -341,6 +352,20 @@
     <string name="notif_missed_dose_text">Reminder: %1$s\u2019s %2$s hasn\u2019t been logged yet</string>
     <string name="settings_missed_dose_escalation">Missed dose follow-up</string>
     <string name="settings_missed_dose_escalation_desc">Send a reminder if a dose isn\u2019t confirmed within %1$d hours</string>
+
+    <!-- Medication History -->
+    <string name="nav_medication_history">Medication History</string>
+    <string name="med_history_title">Medication History</string>
+    <string name="med_history_backfill_hint">Editing dose records for a past date</string>
+    <string name="med_history_no_medicines">No medicines assigned to this profile</string>
+    <string name="med_history_no_data">No medication records for this date</string>
+    <string name="accessibility_previous_day">Previous day</string>
+    <string name="accessibility_next_day">Next day</string>
+
+    <!-- Widget Settings -->
+    <string name="settings_widget_section">Widget</string>
+    <string name="settings_widget_profile">Widget profile</string>
+    <string name="settings_widget_profile_default">Default (follows dashboard)</string>
 
     <!-- Symptom Trends -->
     <string name="nav_symptom_trends">Symptom Trends</string>

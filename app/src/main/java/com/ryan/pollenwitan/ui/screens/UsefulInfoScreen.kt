@@ -114,7 +114,7 @@ private fun InfoSection(
                 )
                 Icon(
                     imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = null,
+                    contentDescription = stringResource(if (expanded) R.string.accessibility_collapse else R.string.accessibility_expand),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

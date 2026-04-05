@@ -25,6 +25,14 @@ object AqiColors {
     val VeryPoor = Color(0xFF7B1FA2)
 }
 
+fun SeverityLevel.toAbbreviation(): String = when (this) {
+    SeverityLevel.None -> ""
+    SeverityLevel.Low -> "L"
+    SeverityLevel.Moderate -> "M"
+    SeverityLevel.High -> "H"
+    SeverityLevel.VeryHigh -> "V"
+}
+
 fun SeverityLevel.toColor(): Color = when (this) {
     SeverityLevel.None -> SeverityColors.None
     SeverityLevel.Low -> SeverityColors.Low

@@ -30,6 +30,10 @@
 - [x] **Notification Enhancements** — Combine daily notifications for all profiles into a single grouped notification instead of one per profile. Add PendingIntents so tapping a notification navigates to the relevant screen (e.g., morning briefing → dashboard, medication reminder → dashboard, symptom reminder → check-in screen)
 - [x] **Symptom Diary Back-Fill** — Allow users to log symptom entries for past dates from the diary browser screen, not just the current day. Date picker to select the target date, pre-fill if an entry already exists for that date
 - [x] **Evening Check-In UX** — Make it clearer on the dashboard card that the daily symptom check-in is intended for the evening (e.g., subtitle text, time-aware messaging like "Log your evening check-in" vs "Check back this evening")
+- [x] **Symptom Diary Full CRUD** — Historical pollen data via Open-Meteo `past_days` (up to 16 days), delete entries with confirmation dialog, edit via existing tap-to-check-in flow
+- [x] **Medication History Back-Fill** — New screen to confirm/unconfirm medication doses for past dates (up to 90 days). Navigation drawer item, date navigation, checkbox per dose slot
+- [x] **Widget Profile Selection** — Settings UI to pin a specific profile to the widget instead of following the dashboard selection. Default fallback to dashboard profile
+- [x] **Accessibility Pass** — Content descriptions for interactive icons, severity dot semantics (TalkBack reads allergen + severity), chart semantics, colourblind abbreviation letters in Dashboard severity dots
 
 ## Unit Test Coverage (Issue #10)
 

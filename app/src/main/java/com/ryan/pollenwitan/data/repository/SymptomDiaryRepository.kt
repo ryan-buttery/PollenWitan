@@ -46,6 +46,10 @@ class SymptomDiaryRepository(private val context: Context) {
             .map { entities -> entities.map(::fromEntity) }
     }
 
+    suspend fun deleteEntry(profileId: String, date: LocalDate) {
+        dao.deleteForDate(profileId, date.toString())
+    }
+
     private fun toEntity(entry: SymptomDiaryEntry): SymptomEntryEntity {
         val ratingsJsonStr = json.encodeToString(
             entry.ratings.map { RatingJson(it.symptomId, it.symptomName, it.severity) }

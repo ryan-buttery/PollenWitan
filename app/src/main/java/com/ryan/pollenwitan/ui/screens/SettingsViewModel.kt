@@ -34,7 +34,8 @@ data class SettingsUiState(
     val gpsStatus: GpsStatus = GpsStatus.Idle,
     val notificationPrefs: NotificationPrefs = NotificationPrefs(),
     val medicines: List<Medicine> = emptyList(),
-    val profiles: List<UserProfile> = emptyList()
+    val profiles: List<UserProfile> = emptyList(),
+    val widgetProfileId: String = ""
 )
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
@@ -57,7 +58,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         _gpsStatus,
         notificationPrefsRepository.getPrefs(),
         medicineRepository.getMedicines(),
-        profileRepository.getProfiles()
+        combine(profileRepository.getProfiles(), profileRepository.getWidgetProfileId()) { p, w -> p to w }
     ) { values ->
         val mode = values[0] as LocationMode
         val location = values[1] as com.ryan.pollenwitan.domain.model.AppLocation
@@ -66,7 +67,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         @Suppress("UNCHECKED_CAST")
         val medicines = values[4] as List<Medicine>
         @Suppress("UNCHECKED_CAST")
-        val profiles = values[5] as List<UserProfile>
+        val profilesAndWidget = values[5] as Pair<List<UserProfile>, String>
+        val profiles = profilesAndWidget.first
+        val widgetProfileId = profilesAndWidget.second
         SettingsUiState(
             locationMode = mode,
             manualLatitude = if (mode == LocationMode.Manual) location.latitude.toString() else "",
@@ -75,7 +78,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             gpsStatus = gpsStatus,
             notificationPrefs = notifPrefs,
             medicines = medicines,
-            profiles = profiles
+            profiles = profiles,
+            widgetProfileId = widgetProfileId
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -141,6 +145,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setMissedDoseEscalationEnabled(enabled: Boolean) {
         viewModelScope.launch { notificationPrefsRepository.setMissedDoseEscalationEnabled(enabled) }
+    }
+
+    fun setWidgetProfile(profileId: String) {
+        viewModelScope.launch { profileRepository.setWidgetProfileId(profileId) }
     }
 
     fun addMedicine(name: String, type: MedicineType) {

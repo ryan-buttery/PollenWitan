@@ -102,7 +102,8 @@ class MainActivity : AppCompatActivity() {
             Screen.ProfileList.route,
             Screen.SymptomCheckIn.createRoute(),
             Screen.SymptomDiary.route,
-            Screen.SymptomTrends.route
+            Screen.SymptomTrends.route,
+            Screen.MedicationHistory.route
         )
     }
 

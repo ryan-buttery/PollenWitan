@@ -28,7 +28,9 @@ object WidgetDataProvider {
             return emptyData(context.getString(R.string.widget_no_profiles))
         }
 
-        val selectedId = profileRepository.getSelectedProfileId().first()
+        val widgetProfileId = profileRepository.getWidgetProfileId().first()
+        val selectedId = if (widgetProfileId.isNotEmpty()) widgetProfileId
+            else profileRepository.getSelectedProfileId().first()
         val profile = profiles.find { it.id == selectedId } ?: profiles.first()
 
         val location = profile.location?.let {

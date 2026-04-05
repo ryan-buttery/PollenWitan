@@ -12,6 +12,14 @@
     <string name="common_error_title">Coś poszło nie tak</string>
     <string name="common_ok">OK</string>
     <string name="stale_data_banner">Ostatnia aktualizacja %1$s temu \u2014 dotknij, by odświeżyć</string>
+    <string name="common_close">Zamknij</string>
+    <string name="accessibility_delete_entry">Usuń wpis</string>
+    <string name="accessibility_previous_range">Poprzedni zakres dat</string>
+    <string name="accessibility_next_range">Następny zakres dat</string>
+    <string name="accessibility_expand">Rozwiń</string>
+    <string name="accessibility_collapse">Zwiń</string>
+    <string name="accessibility_chart_line">Wykres %1$s, %2$d dni</string>
+    <string name="accessibility_chart_bar">Wykres nasilenia objawów, %1$d dni</string>
     <string name="common_name">Imię</string>
     <string name="common_other">Inne</string>
 
@@ -318,6 +326,9 @@
     <string name="symptom_no_entries">Brak wpisów</string>
     <string name="symptom_diary_add_entry">Dodaj wpis</string>
     <string name="symptom_diary_select_date">Wybierz datę</string>
+    <string name="symptom_diary_delete_title">Usuń wpis</string>
+    <string name="symptom_diary_delete_message">Usunąć wpis objawów z dnia %1$s?</string>
+    <string name="symptom_diary_delete">Usuń</string>
     <string name="symptom_diary_backfill_title">Uzupełnij wpis</string>
     <string name="symptom_peak_pollen">Szczyt pyłków</string>
     <string name="settings_symptom_reminder">Przypomnienie o objawach</string>
@@ -339,6 +350,20 @@
     <string name="notif_missed_dose_text">Przypomnienie: dawka %2$s dla %1$s nie została jeszcze potwierdzona</string>
     <string name="settings_missed_dose_escalation">Przypomnienie o pominiętej dawce</string>
     <string name="settings_missed_dose_escalation_desc">Wyślij przypomnienie, jeśli dawka nie zostanie potwierdzona w ciągu %1$d godzin</string>
+
+    <!-- Medication History -->
+    <string name="nav_medication_history">Historia leków</string>
+    <string name="med_history_title">Historia leków</string>
+    <string name="med_history_backfill_hint">Edytujesz wpisy dawek dla przeszłej daty</string>
+    <string name="med_history_no_medicines">Brak leków przypisanych do tego profilu</string>
+    <string name="med_history_no_data">Brak zapisów leków dla tej daty</string>
+    <string name="accessibility_previous_day">Poprzedni dzień</string>
+    <string name="accessibility_next_day">Następny dzień</string>
+
+    <!-- Widget Settings -->
+    <string name="settings_widget_section">Widget</string>
+    <string name="settings_widget_profile">Profil widgetu</string>
+    <string name="settings_widget_profile_default">Domyślny (śledzi pulpit)</string>
 
     <!-- Symptom Trends -->
     <string name="nav_symptom_trends">Trendy objawów</string>

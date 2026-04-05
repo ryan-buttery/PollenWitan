@@ -37,15 +37,17 @@ class AirQualityApi {
     suspend fun getAirQualityRaw(
         latitude: Double,
         longitude: Double,
-        forecastDays: Int = 1
+        forecastDays: Int = 1,
+        pastDays: Int = 0
     ): String {
-        return executeRequest(latitude, longitude, forecastDays).body()
+        return executeRequest(latitude, longitude, forecastDays, pastDays).body()
     }
 
     private suspend fun executeRequest(
         latitude: Double,
         longitude: Double,
-        forecastDays: Int
+        forecastDays: Int,
+        pastDays: Int = 0
     ): HttpResponse {
         return retryWithBackoff {
             client.get(BASE_URL) {
@@ -54,6 +56,7 @@ class AirQualityApi {
                 parameter("hourly", HOURLY_PARAMS)
                 parameter("timezone", "Europe/Warsaw")
                 parameter("forecast_days", forecastDays)
+                if (pastDays > 0) parameter("past_days", pastDays)
             }
         }
     }

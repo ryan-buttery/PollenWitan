@@ -34,6 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -305,11 +307,14 @@ private fun PeakSeverityDots(
                     .height(10.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
+                val severityLabel = severity.toLabel()
+                val allergenName = reading.type.localizedName()
                 Box(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
                         .background(severity.toColor().copy(alpha = alpha))
+                        .semantics { contentDescription = "$allergenName: $severityLabel" }
                 )
             }
         }
@@ -431,12 +436,15 @@ private fun HourlyRow(
                 pollen.severity
             }
             val alpha = if (isTracked) 1f else 0.4f
+            val pollenSeverityLabel = severity.toLabel()
+            val pollenName = pollen.type.localizedName()
 
             Box(
                 modifier = Modifier
                     .size(8.dp)
                     .clip(CircleShape)
                     .background(severity.toColor().copy(alpha = alpha))
+                    .semantics { contentDescription = "$pollenName: $pollenSeverityLabel" }
             )
             Text(
                 text = String.format("%.0f", pollen.value),

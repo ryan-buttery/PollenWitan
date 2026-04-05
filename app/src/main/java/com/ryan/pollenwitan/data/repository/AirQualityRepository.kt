@@ -16,6 +16,7 @@ import com.ryan.pollenwitan.domain.model.PollenReading
 import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import kotlinx.serialization.json.Json
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -76,6 +77,21 @@ class AirQualityRepository(context: Context) {
             days = buildForecastDays(response.hourly),
             fetchedAtMillis = fetchedAt
         )
+    }
+
+    suspend fun getHistoricalDayPeaks(
+        latitude: Double,
+        longitude: Double,
+        targetDate: LocalDate
+    ): Result<ForecastDay> = runCatching {
+        val pastDays = ChronoUnit.DAYS.between(targetDate, LocalDate.now()).toInt()
+        require(pastDays in 1..16) { "Historical data only available for 1-16 days ago" }
+
+        val rawJson = api.getAirQualityRaw(latitude, longitude, forecastDays = 1, pastDays = pastDays)
+        val response = json.decodeFromString<AirQualityResponse>(rawJson)
+        val days = buildForecastDays(response.hourly)
+        days.find { it.date == targetDate }
+            ?: error("Target date $targetDate not found in API response")
     }
 
     private suspend fun fetchOrCache(

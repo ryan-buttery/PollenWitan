@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
@@ -74,6 +75,7 @@ import com.ryan.pollenwitan.ui.screens.ProfileListScreen
 import com.ryan.pollenwitan.ui.screens.SettingsScreen
 import com.ryan.pollenwitan.ui.screens.AllergenDiscoveryScreen
 import com.ryan.pollenwitan.ui.screens.LegalDisclaimerScreen
+import com.ryan.pollenwitan.ui.screens.MedicationHistoryScreen
 import com.ryan.pollenwitan.ui.screens.ThresholdCalibrationScreen
 import com.ryan.pollenwitan.ui.screens.UsefulInfoScreen
 import com.ryan.pollenwitan.R
@@ -97,6 +99,7 @@ private val navItems = listOf(
     NavItem(Screen.UsefulInfo, R.string.nav_useful_info, Icons.Filled.Info),
     NavItem(Screen.SymptomDiary, R.string.nav_symptom_diary, Icons.Filled.EditNote),
     NavItem(Screen.SymptomTrends, R.string.nav_symptom_trends, Icons.Filled.Timeline),
+    NavItem(Screen.MedicationHistory, R.string.nav_medication_history, Icons.Filled.Medication),
     NavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings)
 )
 
@@ -383,6 +386,7 @@ fun AppNavGraph(
                     )
                 }
                 composable(Screen.SymptomTrends.route) { SymptomTrendsScreen() }
+                composable(Screen.MedicationHistory.route) { MedicationHistoryScreen() }
                 composable(Screen.Settings.route) { SettingsScreen() }
                 composable(Screen.ProfileList.route) {
                     ProfileListScreen(navController = navController)

@@ -47,6 +47,15 @@ interface DoseHistoryDao {
         endDate: String
     ): Flow<List<DoseHistoryEntity>>
 
+    @Query(
+        """
+        SELECT * FROM dose_history
+        WHERE profileId = :profileId AND date = :date
+        ORDER BY reminderHour ASC, slotIndex ASC
+        """
+    )
+    suspend fun getAllForDate(profileId: String, date: String): List<DoseHistoryEntity>
+
     @Query("DELETE FROM dose_history WHERE date < :beforeDate")
     suspend fun deleteOlderThan(beforeDate: String)
 
