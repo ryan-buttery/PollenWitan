@@ -35,6 +35,9 @@
     <string name="nav_edit_profile">Edit Profile</string>
     <string name="nav_app_name">PollenWitan</string>
     <string name="nav_app_subtitle">Pollen &amp; Air Quality Forecast</string>
+    <string name="nav_section_health">Health Tracking</string>
+    <string name="nav_section_manage">Profiles &amp; Settings</string>
+    <string name="nav_section_reference">Reference</string>
 
     <!-- Theme -->
     <string name="theme_light">Light Theme</string>

@@ -90,18 +90,45 @@ private data class NavItem(
     val icon: ImageVector
 )
 
-private val navItems = listOf(
-    NavItem(Screen.Dashboard, R.string.nav_dashboard, Icons.Filled.Dashboard),
-    NavItem(Screen.Forecast, R.string.nav_forecast, Icons.Filled.CalendarMonth),
-    NavItem(Screen.ProfileList, R.string.nav_profiles, Icons.Filled.Person),
-    NavItem(Screen.CrossReactivity, R.string.nav_cross_reactivity, Icons.Filled.Link),
-    NavItem(Screen.PollenCalendar, R.string.nav_pollen_calendar, Icons.Filled.EventNote),
-    NavItem(Screen.UsefulInfo, R.string.nav_useful_info, Icons.Filled.Info),
-    NavItem(Screen.SymptomDiary, R.string.nav_symptom_diary, Icons.Filled.EditNote),
-    NavItem(Screen.SymptomTrends, R.string.nav_symptom_trends, Icons.Filled.Timeline),
-    NavItem(Screen.MedicationHistory, R.string.nav_medication_history, Icons.Filled.Medication),
-    NavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings)
+private data class NavSection(
+    @StringRes val labelRes: Int? = null,
+    val items: List<NavItem>
 )
+
+private val navSections = listOf(
+    NavSection(
+        labelRes = null,
+        items = listOf(
+            NavItem(Screen.Dashboard, R.string.nav_dashboard, Icons.Filled.Dashboard),
+            NavItem(Screen.Forecast, R.string.nav_forecast, Icons.Filled.CalendarMonth),
+        )
+    ),
+    NavSection(
+        labelRes = R.string.nav_section_health,
+        items = listOf(
+            NavItem(Screen.SymptomTrends, R.string.nav_symptom_trends, Icons.Filled.Timeline),
+            NavItem(Screen.SymptomDiary, R.string.nav_symptom_diary, Icons.Filled.EditNote),
+            NavItem(Screen.MedicationHistory, R.string.nav_medication_history, Icons.Filled.Medication),
+        )
+    ),
+    NavSection(
+        labelRes = R.string.nav_section_manage,
+        items = listOf(
+            NavItem(Screen.ProfileList, R.string.nav_profiles, Icons.Filled.Person),
+            NavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings),
+        )
+    ),
+    NavSection(
+        labelRes = R.string.nav_section_reference,
+        items = listOf(
+            NavItem(Screen.PollenCalendar, R.string.nav_pollen_calendar, Icons.Filled.EventNote),
+            NavItem(Screen.CrossReactivity, R.string.nav_cross_reactivity, Icons.Filled.Link),
+            NavItem(Screen.UsefulInfo, R.string.nav_useful_info, Icons.Filled.Info),
+        )
+    )
+)
+
+private val navItems = navSections.flatMap { it.items }
 
 @Composable
 fun AppNavGraph(
@@ -204,7 +231,73 @@ fun AppNavGraph(
                     )
                 }
 
-                // Divider
+                // Navigation sections
+                navSections.forEach { section ->
+                    // Section divider
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .height(1.dp)
+                            .background(colors.TextDim.copy(alpha = 0.2f)),
+                    )
+
+                    // Section label
+                    if (section.labelRes != null) {
+                        Text(
+                            text = stringResource(section.labelRes),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = colors.TextDim,
+                            modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 4.dp),
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
+                    // Section items
+                    section.items.forEach { item ->
+                        val isSelected = currentDestination?.hierarchy?.any {
+                            it.route == item.screen.route
+                        } == true
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) colors.Selected else colors.Mid)
+                                .clickable {
+                                    scope.launch { drawerState.close() }
+                                    navController.navigate(item.screen.route) {
+                                        popUpTo(Screen.Dashboard.route) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                                .padding(horizontal = 12.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = item.icon,
+                                contentDescription = stringResource(item.labelRes),
+                                tint = if (isSelected) colors.TextOnSelected else colors.TextDim,
+                                modifier = Modifier.size(22.dp),
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text(
+                                text = stringResource(item.labelRes),
+                                fontSize = 16.sp,
+                                color = if (isSelected) colors.TextOnSelected else colors.Text,
+                            )
+                        }
+                    }
+                }
+
+                // Divider before theme toggle
+                Spacer(modifier = Modifier.height(8.dp))
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -212,7 +305,6 @@ fun AppNavGraph(
                         .height(1.dp)
                         .background(colors.TextDim.copy(alpha = 0.2f)),
                 )
-                Spacer(modifier = Modifier.height(8.dp))
 
                 // Theme toggle
                 Row(
@@ -240,56 +332,6 @@ fun AppNavGraph(
                         fontSize = 16.sp,
                         color = colors.Text,
                     )
-                }
-
-                // Divider
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .height(1.dp)
-                        .background(colors.TextDim.copy(alpha = 0.2f)),
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Navigation items
-                navItems.forEach { item ->
-                    val isSelected = currentDestination?.hierarchy?.any {
-                        it.route == item.screen.route
-                    } == true
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) colors.Selected else colors.Mid)
-                            .clickable {
-                                scope.launch { drawerState.close() }
-                                navController.navigate(item.screen.route) {
-                                    popUpTo(Screen.Dashboard.route) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            }
-                            .padding(horizontal = 12.dp, vertical = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = item.icon,
-                            contentDescription = stringResource(item.labelRes),
-                            tint = if (isSelected) colors.TextOnSelected else colors.TextDim,
-                            modifier = Modifier.size(22.dp),
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(
-                            text = stringResource(item.labelRes),
-                            fontSize = 16.sp,
-                            color = if (isSelected) colors.TextOnSelected else colors.Text,
-                        )
-                    }
                 }
                 }
             }
