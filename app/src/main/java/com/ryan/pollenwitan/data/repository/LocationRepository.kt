@@ -60,6 +60,19 @@ class LocationRepository(
         LocationMode.valueOf(prefs.getString(Keys.MODE, null) ?: LocationMode.Manual.name)
     }
 
+    /** Returns raw stored manual and GPS values separately, for export. */
+    fun getRawLocationData(): Flow<RawLocationData> = store.data.map { prefs ->
+        RawLocationData(
+            mode = LocationMode.valueOf(prefs.getString(Keys.MODE, null) ?: LocationMode.Manual.name),
+            manualLatitude = prefs.getDouble(Keys.MANUAL_LAT, DefaultLocation.LATITUDE),
+            manualLongitude = prefs.getDouble(Keys.MANUAL_LON, DefaultLocation.LONGITUDE),
+            manualDisplayName = prefs.getString(Keys.MANUAL_NAME, null) ?: DefaultLocation.DISPLAY_NAME,
+            gpsLatitude = prefs.getDoubleOrNull(Keys.GPS_LAT),
+            gpsLongitude = prefs.getDoubleOrNull(Keys.GPS_LON),
+            gpsDisplayName = prefs.getString(Keys.GPS_NAME, null)
+        )
+    }
+
     suspend fun setManualLocation(latitude: Double, longitude: Double, displayName: String) {
         store.edit {
             putDouble(Keys.MANUAL_LAT, latitude)
@@ -88,3 +101,13 @@ class LocationRepository(
         return System.currentTimeMillis() - lastUpdated >= intervalMillis
     }
 }
+
+data class RawLocationData(
+    val mode: LocationMode,
+    val manualLatitude: Double,
+    val manualLongitude: Double,
+    val manualDisplayName: String,
+    val gpsLatitude: Double?,
+    val gpsLongitude: Double?,
+    val gpsDisplayName: String?
+)

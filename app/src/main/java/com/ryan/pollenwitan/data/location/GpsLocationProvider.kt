@@ -1,12 +1,15 @@
 package com.ryan.pollenwitan.data.location
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
+import androidx.core.content.ContextCompat
 import com.ryan.pollenwitan.domain.model.AppLocation
 import java.util.Locale
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -18,8 +21,13 @@ class GpsLocationProvider(private val context: Context) {
     private val locationManager: LocationManager
         get() = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
+    private fun hasLocationPermission(): Boolean =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
     @SuppressLint("MissingPermission")
     fun getLastKnownLocation(): AppLocation? {
+        if (!hasLocationPermission()) return null
         val lm = locationManager
         val location = lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
             ?: lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
@@ -28,6 +36,7 @@ class GpsLocationProvider(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     suspend fun requestSingleUpdate(): AppLocation? {
+        if (!hasLocationPermission()) return null
         val lm = locationManager
 
         // Try network provider first (faster), fall back to GPS

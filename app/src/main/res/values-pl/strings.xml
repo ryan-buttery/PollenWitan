@@ -10,6 +10,16 @@
     <string name="common_refresh">Odśwież</string>
     <string name="common_loading">Ładowanie…</string>
     <string name="common_error_title">Coś poszło nie tak</string>
+    <string name="common_ok">OK</string>
+    <string name="stale_data_banner">Ostatnia aktualizacja %1$s temu \u2014 dotknij, by odświeżyć</string>
+    <string name="common_close">Zamknij</string>
+    <string name="accessibility_delete_entry">Usuń wpis</string>
+    <string name="accessibility_previous_range">Poprzedni zakres dat</string>
+    <string name="accessibility_next_range">Następny zakres dat</string>
+    <string name="accessibility_expand">Rozwiń</string>
+    <string name="accessibility_collapse">Zwiń</string>
+    <string name="accessibility_chart_line">Wykres %1$s, %2$d dni</string>
+    <string name="accessibility_chart_bar">Wykres nasilenia objawów, %1$d dni</string>
     <string name="common_name">Imię</string>
     <string name="common_other">Inne</string>
 
@@ -23,6 +33,9 @@
     <string name="nav_edit_profile">Edytuj profil</string>
     <string name="nav_app_name">PollenWitan</string>
     <string name="nav_app_subtitle">Prognoza pyłków i jakości powietrza</string>
+    <string name="nav_section_health">Śledzenie zdrowia</string>
+    <string name="nav_section_manage">Profile i ustawienia</string>
+    <string name="nav_section_reference">Informacje</string>
 
     <!-- Theme -->
     <string name="theme_light">Jasny motyw</string>
@@ -215,12 +228,14 @@
     <string name="notif_no_tracked_allergens">Brak śledzonych alergenów dzisiaj</string>
     <string name="notif_aqi_summary">AQI: %1$d (%2$s)</string>
     <string name="notif_elevated_particulates">Podwyższone pyły \u2014 zachowaj ostrożność</string>
+    <string name="notif_peak_today">Szczyt dzisiaj: %1$s</string>
     <string name="notif_high_pollen_alert">%1$s: Alert wysokich pyłków</string>
     <string name="notif_threshold_breach">%1$s: %2$s (%3$s ziaren/m³)</string>
     <string name="notif_respiratory_risk">%1$s: Ryzyko oddechowe</string>
     <string name="notif_compound_risk_text">Podwyższone pyłki (%1$s) w połączeniu ze złą jakością powietrza (PM2.5: %2$s, PM10: %3$s). Zachowaj szczególną ostrożność.</string>
     <string name="notif_medication_reminder">%1$s: Przypomnienie o leku</string>
     <string name="notif_time_to_take">Czas na %1$s (%2$d %3$s)</string>
+    <string name="notif_action_mark_taken">Oznacz jako przyjęte</string>
     <string name="notif_pre_season_title">%1$s: Czas rozpocząć leczenie</string>
     <string name="notif_pre_season_text">Sezon %1$s zazwyczaj zaczyna się około %2$s. Rozważ rozpoczęcie przyjmowania leków.</string>
 
@@ -314,6 +329,9 @@
     <string name="symptom_no_entries">Brak wpisów</string>
     <string name="symptom_diary_add_entry">Dodaj wpis</string>
     <string name="symptom_diary_select_date">Wybierz datę</string>
+    <string name="symptom_diary_delete_title">Usuń wpis</string>
+    <string name="symptom_diary_delete_message">Usunąć wpis objawów z dnia %1$s?</string>
+    <string name="symptom_diary_delete">Usuń</string>
     <string name="symptom_diary_backfill_title">Uzupełnij wpis</string>
     <string name="symptom_peak_pollen">Szczyt pyłków</string>
     <string name="settings_symptom_reminder">Przypomnienie o objawach</string>
@@ -327,6 +345,28 @@
     <string name="notif_group_compound_risk">Ryzyko oddechowe — %1$d profili</string>
     <string name="notif_group_medication">Przypomnienia o lekach — %1$d przypomnień</string>
     <string name="notif_group_symptom_reminder">Przegląd objawów — %1$d profili</string>
+
+    <!-- Missed dose escalation -->
+    <string name="notif_channel_missed_dose">Przypomnienia o pominiętych dawkach</string>
+    <string name="notif_channel_missed_dose_desc">Przypomnienia, gdy dawka leku nie została potwierdzona</string>
+    <string name="notif_missed_dose_title">%1$s: Dawka niezalogowana</string>
+    <string name="notif_missed_dose_text">Przypomnienie: dawka %2$s dla %1$s nie została jeszcze potwierdzona</string>
+    <string name="settings_missed_dose_escalation">Przypomnienie o pominiętej dawce</string>
+    <string name="settings_missed_dose_escalation_desc">Wyślij przypomnienie, jeśli dawka nie zostanie potwierdzona w ciągu %1$d godzin</string>
+
+    <!-- Medication History -->
+    <string name="nav_medication_history">Historia leków</string>
+    <string name="med_history_title">Historia leków</string>
+    <string name="med_history_backfill_hint">Edytujesz wpisy dawek dla przeszłej daty</string>
+    <string name="med_history_no_medicines">Brak leków przypisanych do tego profilu</string>
+    <string name="med_history_no_data">Brak zapisów leków dla tej daty</string>
+    <string name="accessibility_previous_day">Poprzedni dzień</string>
+    <string name="accessibility_next_day">Następny dzień</string>
+
+    <!-- Widget Settings -->
+    <string name="settings_widget_section">Widget</string>
+    <string name="settings_widget_profile">Profil widgetu</string>
+    <string name="settings_widget_profile_default">Domyślny (śledzi pulpit)</string>
 
     <!-- Symptom Trends -->
     <string name="nav_symptom_trends">Trendy objawów</string>
@@ -472,4 +512,12 @@
     <string name="about_title">PollenWitan</string>
     <string name="about_description">Prognoza pyłków i jakości powietrza z poszanowaniem prywatności, dostosowana do konkretnych alergenów każdego domownika. Śledź sześć typów pyłków indywidualnie, zapisuj codzienne objawy, monitoruj przyjmowanie leków i sprawdzaj, które pyłki wpływają na Ciebie najbardziej dzięki analizie długoterminowych trendów. Bez reklam, bez śledzenia, bez kont.</string>
     <string name="about_data_source">Dane o pyłkach i jakości powietrza z Open-Meteo (model europejski CAMS).</string>
+    <string name="about_licence">Licencjonowane na warunkach Apache License, Version 2.0. Kopię licencji można uzyskać pod adresem apache.org/licenses/LICENSE-2.0.</string>
+    <string name="about_source_code">Kod źródłowy dostępny na GitHubie.</string>
+
+    <!-- Database reset warning -->
+    <string name="db_reset_title">Dane w pamięci podręcznej zostały usunięte</string>
+    <string name="db_reset_message">Lokalna pamięć podręczna prognozy nie mogła zostać odszyfrowana i musiała zostać wyczyszczona. Twoje profile i ustawienia nie zostały zmienione. Nowe dane prognozy zostaną pobrane automatycznie.</string>
+    <string name="keystore_reset_title">Ustawienia zresetowane</string>
+    <string name="keystore_reset_message">Ustawienia zabezpieczeń urządzenia zostały zmienione i zaszyfrowane dane aplikacji nie mogły zostać odzyskane. Profile, leki i preferencje zostały zresetowane. Prosimy o ponowną konfigurację ustawień.</string>
 </resources>

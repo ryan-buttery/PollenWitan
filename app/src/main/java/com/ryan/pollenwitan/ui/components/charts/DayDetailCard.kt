@@ -72,7 +72,7 @@ fun DayDetailCard(
                     fontWeight = FontWeight.SemiBold
                 )
                 IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                    Icon(Icons.Filled.Close, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.common_close), modifier = Modifier.size(18.dp))
                 }
             }
 

@@ -23,6 +23,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.runtime.Composable
@@ -31,6 +34,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.sp
+import android.content.Context
+import android.provider.Settings
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -43,8 +52,10 @@ import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SymptomDiaryEntry
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.components.ProfileSwitcher
+import com.ryan.pollenwitan.ui.components.StaleDataBanner
 import com.ryan.pollenwitan.ui.theme.localizedName
 import com.ryan.pollenwitan.ui.theme.localizedUnitLabel
+import com.ryan.pollenwitan.ui.theme.toAbbreviation
 import com.ryan.pollenwitan.ui.theme.toColor
 import com.ryan.pollenwitan.ui.theme.toLabel
 import java.time.LocalTime
@@ -63,6 +74,7 @@ fun DashboardScreen(
         is WeatherState.Loading -> LoadingContent()
         is WeatherState.Success -> DashboardContent(
             conditions = weather.conditions,
+            fetchedAtMillis = weather.fetchedAtMillis,
             profiles = uiState.profiles,
             selectedProfile = uiState.selectedProfile,
             locationDisplayName = uiState.locationDisplayName,
@@ -120,6 +132,7 @@ private fun ErrorContent(message: String, onRetry: () -> Unit) {
 @Composable
 private fun DashboardContent(
     conditions: CurrentConditions,
+    fetchedAtMillis: Long,
     profiles: List<UserProfile>,
     selectedProfile: UserProfile?,
     locationDisplayName: String,
@@ -156,6 +169,8 @@ private fun DashboardContent(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        StaleDataBanner(fetchedAtMillis = fetchedAtMillis, onRefresh = onRefresh)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -293,12 +308,20 @@ private fun DashboardContent(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // European AQI
+                val reduceMotion = LocalContext.current.isReduceMotionEnabled()
+                val aqiColor by animateColorAsState(
+                    targetValue = conditions.aqiSeverity.toColor(),
+                    animationSpec = if (reduceMotion) snap() else tween(400),
+                    label = "aqiColor"
+                )
+                val aqiSeverityLabel = conditions.aqiSeverity.toLabel()
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
                             .size(12.dp)
                             .clip(CircleShape)
-                            .background(conditions.aqiSeverity.toColor())
+                            .background(aqiColor)
+                            .semantics { contentDescription = "${conditions.europeanAqi}: $aqiSeverityLabel" }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -310,13 +333,13 @@ private fun DashboardContent(
                         text = "${conditions.europeanAqi}",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = conditions.aqiSeverity.toColor()
+                        color = aqiColor
                     )
                 }
                 Text(
                     text = conditions.aqiSeverity.toLabel(),
                     style = MaterialTheme.typography.bodySmall,
-                    color = conditions.aqiSeverity.toColor(),
+                    color = aqiColor,
                     modifier = Modifier.align(Alignment.End)
                 )
 
@@ -492,16 +515,37 @@ private fun DashboardContent(
 @Composable
 private fun PollenRow(reading: PollenReading, dimmed: Boolean = false) {
     val alpha = if (dimmed) 0.5f else 1f
+    val reduceMotion = LocalContext.current.isReduceMotionEnabled()
+    val severityColor by animateColorAsState(
+        targetValue = reading.severity.toColor().copy(alpha = alpha),
+        animationSpec = if (reduceMotion) snap() else tween(400),
+        label = "severityColor"
+    )
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val severityLabel = reading.severity.toLabel()
+        val abbreviation = reading.severity.toAbbreviation()
+        val allergenName = reading.type.localizedName()
         Box(
             modifier = Modifier
                 .size(12.dp)
                 .clip(CircleShape)
-                .background(reading.severity.toColor().copy(alpha = alpha))
-        )
+                .background(severityColor)
+                .semantics { this.contentDescription = "$allergenName: $severityLabel" },
+            contentAlignment = Alignment.Center
+        ) {
+            if (abbreviation.isNotEmpty()) {
+                Text(
+                    text = abbreviation,
+                    fontSize = 7.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    lineHeight = 7.sp
+                )
+            }
+        }
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = reading.type.localizedName(),
@@ -517,9 +561,14 @@ private fun PollenRow(reading: PollenReading, dimmed: Boolean = false) {
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
-            text = reading.severity.toLabel(),
+            text = severityLabel,
             style = MaterialTheme.typography.bodySmall,
-            color = reading.severity.toColor().copy(alpha = alpha)
+            color = severityColor
         )
     }
+}
+
+@Composable
+private fun Context.isReduceMotionEnabled(): Boolean = remember {
+    Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
 }

@@ -16,15 +16,15 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.ryan.pollenwitan"
+namespace = "com.ryan.pollenwitan"
     compileSdk = 35
 
     defaultConfig {
         applicationId = "com.ryan.pollenwitan"
         minSdk = 26
         targetSdk = 35
-        versionCode = 11
-        versionName = "1.0.1"
+        versionCode = 12
+        versionName = "1.1.0"
     }
 
     signingConfigs {
@@ -42,6 +42,19 @@ android {
             applicationIdSuffix = ".debug"
             resValue("string", "app_name", "PollenWitan (Debug)")
             signingConfig = signingConfigs.getByName("release")
+        }
+        create("benchmark") {
+            initWith(getByName("debug"))
+            isMinifyEnabled = true
+            isShrinkResources = true
+            applicationIdSuffix = ".benchmark"
+            resValue("string", "app_name", "PollenWitan (Bench)")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("release")
+            isDebuggable = true // Intentional: required for profiling with Android Studio
         }
         release {
             isMinifyEnabled = true
@@ -98,10 +111,8 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
 
-    // Room encryption (SQLCipher)
+    // EncryptedSharedPreferences (profiles, settings)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
-    implementation("net.zetetic:sqlcipher-android:4.14.0")
-    implementation("androidx.sqlite:sqlite-ktx:2.4.0")
 
     // Glance (home screen widget)
     implementation("androidx.glance:glance-appwidget:1.1.1")

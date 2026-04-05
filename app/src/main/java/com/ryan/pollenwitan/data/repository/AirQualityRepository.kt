@@ -9,12 +9,14 @@ import com.ryan.pollenwitan.data.remote.dto.HourlyData
 import com.ryan.pollenwitan.domain.model.CurrentConditions
 import com.ryan.pollenwitan.domain.model.DayPeriod
 import com.ryan.pollenwitan.domain.model.ForecastDay
+import com.ryan.pollenwitan.domain.model.ForecastResult
 import com.ryan.pollenwitan.domain.model.HourlyReading
 import com.ryan.pollenwitan.domain.model.PeriodSummary
 import com.ryan.pollenwitan.domain.model.PollenReading
 import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import kotlinx.serialization.json.Json
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -30,7 +32,7 @@ class AirQualityRepository(context: Context) {
         latitude: Double,
         longitude: Double
     ): Result<CurrentConditions> = runCatching {
-        val response = fetchOrCache(latitude, longitude, forecastDays = 1)
+        val (response, fetchedAt) = fetchOrCache(latitude, longitude, forecastDays = 1)
         val hourly = response.hourly
 
         val now = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
@@ -51,7 +53,8 @@ class AirQualityRepository(context: Context) {
             pm25 = hourly.pm25?.getOrNull(index) ?: 0.0,
             pm10 = hourly.pm10?.getOrNull(index) ?: 0.0,
             aqiSeverity = SeverityClassifier.aqiSeverity(aqiValue),
-            timestamp = now
+            timestamp = now,
+            fetchedAtMillis = fetchedAt
         )
     }
 
@@ -60,22 +63,49 @@ class AirQualityRepository(context: Context) {
         longitude: Double,
         days: Int = 4
     ): Result<List<ForecastDay>> = runCatching {
-        val response = fetchOrCache(latitude, longitude, forecastDays = days)
+        val (response, _) = fetchOrCache(latitude, longitude, forecastDays = days)
         buildForecastDays(response.hourly)
+    }
+
+    suspend fun getForecastWithTimestamp(
+        latitude: Double,
+        longitude: Double,
+        days: Int = 4
+    ): Result<ForecastResult> = runCatching {
+        val (response, fetchedAt) = fetchOrCache(latitude, longitude, forecastDays = days)
+        ForecastResult(
+            days = buildForecastDays(response.hourly),
+            fetchedAtMillis = fetchedAt
+        )
+    }
+
+    suspend fun getHistoricalDayPeaks(
+        latitude: Double,
+        longitude: Double,
+        targetDate: LocalDate
+    ): Result<ForecastDay> = runCatching {
+        val pastDays = ChronoUnit.DAYS.between(targetDate, LocalDate.now()).toInt()
+        require(pastDays in 1..16) { "Historical data only available for 1-16 days ago" }
+
+        val rawJson = api.getAirQualityRaw(latitude, longitude, forecastDays = 1, pastDays = pastDays)
+        val response = json.decodeFromString<AirQualityResponse>(rawJson)
+        val days = buildForecastDays(response.hourly)
+        days.find { it.date == targetDate }
+            ?: error("Target date $targetDate not found in API response")
     }
 
     private suspend fun fetchOrCache(
         latitude: Double,
         longitude: Double,
         forecastDays: Int
-    ): AirQualityResponse {
+    ): Pair<AirQualityResponse, Long> {
         val roundedLat = roundCoord(latitude)
         val roundedLon = roundCoord(longitude)
         val now = System.currentTimeMillis()
 
         val cached = dao.getLatest(roundedLat, roundedLon, forecastDays)
         if (cached != null && (now - cached.fetchedAtMillis) < CACHE_MAX_AGE_MS) {
-            return json.decodeFromString<AirQualityResponse>(cached.responseJson)
+            return json.decodeFromString<AirQualityResponse>(cached.responseJson) to cached.fetchedAtMillis
         }
 
         val rawJson = api.getAirQualityRaw(latitude, longitude, forecastDays)
@@ -93,7 +123,7 @@ class AirQualityRepository(context: Context) {
 
         dao.deleteOlderThan(now - CACHE_CLEANUP_AGE_MS)
 
-        return response
+        return response to now
     }
 
     companion object {

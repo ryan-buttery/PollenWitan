@@ -211,6 +211,8 @@ class AppDataImporter(private val context: Context) {
         notifRepo.setPreSeasonAlertsEnabled(np.preSeasonAlertsEnabled)
         notifRepo.setSymptomReminderEnabled(np.symptomReminderEnabled)
         notifRepo.setSymptomReminderHour(np.symptomReminderHour)
+        notifRepo.setMissedDoseEscalationEnabled(np.missedDoseEscalationEnabled)
+        notifRepo.setMissedDoseWindowMinutes(np.missedDoseWindowMinutes)
     }
 
     private fun validateImportData(data: ExportData) {
@@ -332,7 +334,8 @@ class AppDataImporter(private val context: Context) {
                 displayName = symptom.displayName,
                 isDefault = symptom.isDefault
             )
-        }
+        },
+        discoveryMode = discoveryMode
     )
 }
 

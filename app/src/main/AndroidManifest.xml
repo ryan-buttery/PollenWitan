@@ -9,6 +9,7 @@
     <application
         android:name=".PollenWitanApp"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
@@ -26,6 +27,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".worker.MedicationActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ryan.pollenwitan.ACTION_MARK_DOSE_TAKEN" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".worker.MissedDoseAlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.ryan.pollenwitan.ACTION_MISSED_DOSE_CHECK" />
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name=".widget.PollenWidgetReceiver"

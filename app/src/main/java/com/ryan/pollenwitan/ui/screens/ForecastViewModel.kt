@@ -7,6 +7,7 @@ import com.ryan.pollenwitan.data.repository.AirQualityRepository
 import com.ryan.pollenwitan.data.repository.LocationRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.domain.model.ForecastDay
+import com.ryan.pollenwitan.domain.model.ForecastResult
 import com.ryan.pollenwitan.domain.model.UserProfile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,7 +19,7 @@ import kotlinx.coroutines.launch
 
 sealed interface ForecastState {
     data object Loading : ForecastState
-    data class Success(val days: List<ForecastDay>) : ForecastState
+    data class Success(val days: List<ForecastDay>, val fetchedAtMillis: Long) : ForecastState
     data class Error(val message: String) : ForecastState
 }
 
@@ -92,11 +93,11 @@ class ForecastViewModel(application: Application) : AndroidViewModel(application
             val selectedId = profileRepository.getSelectedProfileId().first()
             val selectedProfile = profiles.find { it.id == selectedId }
             val location = ProfileRepository.resolveLocation(selectedProfile, globalLocation)
-            airQualityRepository.getForecast(
+            airQualityRepository.getForecastWithTimestamp(
                 location.latitude,
                 location.longitude
             ).fold(
-                onSuccess = { _forecastState.value = ForecastState.Success(it) },
+                onSuccess = { _forecastState.value = ForecastState.Success(it.days, it.fetchedAtMillis) },
                 onFailure = { _forecastState.value = ForecastState.Error(it.message ?: "Unknown error") }
             )
         }

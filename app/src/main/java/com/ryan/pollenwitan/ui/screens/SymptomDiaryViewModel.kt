@@ -70,6 +70,14 @@ class SymptomDiaryViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
+    fun deleteEntry(date: LocalDate) {
+        val profileId = uiState.value.selectedProfileId
+        if (profileId.isBlank()) return
+        viewModelScope.launch {
+            symptomDiaryRepository.deleteEntry(profileId, date)
+        }
+    }
+
     fun navigateRange(forward: Boolean) {
         val days = 30L
         if (forward) {

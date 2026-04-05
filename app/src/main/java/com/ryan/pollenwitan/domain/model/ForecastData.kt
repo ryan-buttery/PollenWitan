@@ -33,3 +33,8 @@ data class ForecastDay(
     val peakAqiSeverity: SeverityLevel,
     val hourlyReadings: List<HourlyReading>
 )
+
+data class ForecastResult(
+    val days: List<ForecastDay>,
+    val fetchedAtMillis: Long
+)

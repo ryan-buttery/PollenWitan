@@ -34,6 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,6 +48,7 @@ import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.components.ProfileSwitcher
+import com.ryan.pollenwitan.ui.components.StaleDataBanner
 import com.ryan.pollenwitan.ui.theme.localizedAbbreviation
 import com.ryan.pollenwitan.ui.theme.localizedName
 import com.ryan.pollenwitan.ui.theme.toColor
@@ -83,6 +86,7 @@ fun ForecastScreen(viewModel: ForecastViewModel = viewModel()) {
         }
         is ForecastState.Success -> ForecastContent(
             days = forecast.days,
+            fetchedAtMillis = forecast.fetchedAtMillis,
             profiles = uiState.profiles,
             selectedProfile = uiState.selectedProfile,
             locationDisplayName = uiState.locationDisplayName,
@@ -97,6 +101,7 @@ fun ForecastScreen(viewModel: ForecastViewModel = viewModel()) {
 @Composable
 private fun ForecastContent(
     days: List<ForecastDay>,
+    fetchedAtMillis: Long,
     profiles: List<UserProfile>,
     selectedProfile: UserProfile?,
     locationDisplayName: String,
@@ -121,6 +126,8 @@ private fun ForecastContent(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        StaleDataBanner(fetchedAtMillis = fetchedAtMillis, onRefresh = onRefresh)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -300,11 +307,14 @@ private fun PeakSeverityDots(
                     .height(10.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
+                val severityLabel = severity.toLabel()
+                val allergenName = reading.type.localizedName()
                 Box(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
                         .background(severity.toColor().copy(alpha = alpha))
+                        .semantics { contentDescription = "$allergenName: $severityLabel" }
                 )
             }
         }
@@ -426,12 +436,15 @@ private fun HourlyRow(
                 pollen.severity
             }
             val alpha = if (isTracked) 1f else 0.4f
+            val pollenSeverityLabel = severity.toLabel()
+            val pollenName = pollen.type.localizedName()
 
             Box(
                 modifier = Modifier
                     .size(8.dp)
                     .clip(CircleShape)
                     .background(severity.toColor().copy(alpha = alpha))
+                    .semantics { contentDescription = "$pollenName: $pollenSeverityLabel" }
             )
             Text(
                 text = String.format("%.0f", pollen.value),

@@ -31,6 +31,9 @@ interface SymptomEntryDao {
         endDate: String
     ): Flow<List<SymptomEntryEntity>>
 
+    @Query("DELETE FROM symptom_entries WHERE profileId = :profileId AND date = :date")
+    suspend fun deleteForDate(profileId: String, date: String)
+
     @Query("DELETE FROM symptom_entries WHERE date < :beforeDate")
     suspend fun deleteOlderThan(beforeDate: String)
 

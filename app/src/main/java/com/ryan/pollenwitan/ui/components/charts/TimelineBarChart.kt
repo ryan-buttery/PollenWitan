@@ -13,6 +13,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.ryan.pollenwitan.R
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -46,11 +50,13 @@ fun TimelineBarChart(
     val sortedData = data.sortedBy { it.date }
     val dates = sortedData.map { it.date }
 
+    val chartDescription = stringResource(R.string.accessibility_chart_bar, data.size)
     Column(modifier = modifier) {
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
+                .semantics { contentDescription = chartDescription }
                 .pointerInput(dates) {
                     detectTapGestures { offset ->
                         val leftMargin = 44.dp.toPx()

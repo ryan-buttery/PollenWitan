@@ -46,14 +46,15 @@ object DataStoreMigration {
         oldStore: DataStore<Preferences>,
         encryptedName: String
     ) {
-        val oldFile = File(context.filesDir, "datastore/${oldFileName}.preferences_pb")
+        val dataStoreDir = File(context.filesDir, "datastore")
+        val oldFile = File(dataStoreDir, "${oldFileName}.preferences_pb")
         if (!oldFile.exists()) return
 
         val target = EncryptedPrefsStore(context, encryptedName)
         if (target.prefs.all.isNotEmpty()) {
-            // Already migrated — just clean up the old file
-            oldFile.delete()
-            Log.d(TAG, "Cleaned up old DataStore file: $oldFileName")
+            // Already migrated — clean up old DataStore files
+            deleteDataStoreFiles(dataStoreDir, oldFileName)
+            Log.d(TAG, "Cleaned up old DataStore files: $oldFileName")
             return
         }
 
@@ -75,10 +76,17 @@ object DataStoreMigration {
                     }
                 }
             }
-            oldFile.delete()
+            deleteDataStoreFiles(dataStoreDir, oldFileName)
             Log.i(TAG, "Migrated $oldFileName → $encryptedName (${oldData.asMap().size} keys)")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to migrate $oldFileName — data preserved in old format", e)
         }
+    }
+
+    /** Delete the DataStore .preferences_pb file and any .tmp/.bak files it may have created. */
+    private fun deleteDataStoreFiles(dataStoreDir: File, fileName: String) {
+        File(dataStoreDir, "${fileName}.preferences_pb").delete()
+        File(dataStoreDir, "${fileName}.preferences_pb.tmp").delete()
+        File(dataStoreDir, "${fileName}.preferences_pb.bak").delete()
     }
 }

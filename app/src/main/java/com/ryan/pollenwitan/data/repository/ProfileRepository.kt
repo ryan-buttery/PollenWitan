@@ -22,6 +22,7 @@ class ProfileRepository(
     private object Keys {
         const val PROFILE_IDS = "profile_ids"
         const val SELECTED_PROFILE = "selected_profile"
+        const val WIDGET_PROFILE = "widget_profile"
 
         fun displayName(id: String) = "profile_${id}_name"
         fun hasAsthma(id: String) = "profile_${id}_asthma"
@@ -49,6 +50,16 @@ class ProfileRepository(
 
     fun getSelectedProfileId(): Flow<String> = store.data.map { prefs ->
         prefs.getString(Keys.SELECTED_PROFILE, null) ?: ""
+    }
+
+    fun getWidgetProfileId(): Flow<String> = store.data.map { prefs ->
+        prefs.getString(Keys.WIDGET_PROFILE, null) ?: ""
+    }
+
+    suspend fun setWidgetProfileId(profileId: String) {
+        store.edit {
+            putString(Keys.WIDGET_PROFILE, profileId)
+        }
     }
 
     suspend fun selectProfile(profileId: String) {
@@ -84,6 +95,9 @@ class ProfileRepository(
             clearProfileKeys(this, store.prefs, profileId)
             if (store.prefs.getString(Keys.SELECTED_PROFILE, null) == profileId) {
                 putString(Keys.SELECTED_PROFILE, ids.firstOrNull() ?: "")
+            }
+            if (store.prefs.getString(Keys.WIDGET_PROFILE, null) == profileId) {
+                putString(Keys.WIDGET_PROFILE, "")
             }
         }
     }
