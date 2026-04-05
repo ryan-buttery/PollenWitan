@@ -46,6 +46,7 @@ import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.components.ProfileSwitcher
+import com.ryan.pollenwitan.ui.components.StaleDataBanner
 import com.ryan.pollenwitan.ui.theme.localizedAbbreviation
 import com.ryan.pollenwitan.ui.theme.localizedName
 import com.ryan.pollenwitan.ui.theme.toColor
@@ -83,6 +84,7 @@ fun ForecastScreen(viewModel: ForecastViewModel = viewModel()) {
         }
         is ForecastState.Success -> ForecastContent(
             days = forecast.days,
+            fetchedAtMillis = forecast.fetchedAtMillis,
             profiles = uiState.profiles,
             selectedProfile = uiState.selectedProfile,
             locationDisplayName = uiState.locationDisplayName,
@@ -97,6 +99,7 @@ fun ForecastScreen(viewModel: ForecastViewModel = viewModel()) {
 @Composable
 private fun ForecastContent(
     days: List<ForecastDay>,
+    fetchedAtMillis: Long,
     profiles: List<UserProfile>,
     selectedProfile: UserProfile?,
     locationDisplayName: String,
@@ -121,6 +124,8 @@ private fun ForecastContent(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        StaleDataBanner(fetchedAtMillis = fetchedAtMillis, onRefresh = onRefresh)
 
         Spacer(modifier = Modifier.height(16.dp))
 

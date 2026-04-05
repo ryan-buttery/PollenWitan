@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 
 sealed interface WeatherState {
     data object Loading : WeatherState
-    data class Success(val conditions: CurrentConditions) : WeatherState
+    data class Success(val conditions: CurrentConditions, val fetchedAtMillis: Long) : WeatherState
     data class Error(val message: String) : WeatherState
 }
 
@@ -147,7 +147,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 location.latitude,
                 location.longitude
             ).fold(
-                onSuccess = { _weatherState.value = WeatherState.Success(it) },
+                onSuccess = { _weatherState.value = WeatherState.Success(it, it.fetchedAtMillis) },
                 onFailure = { _weatherState.value = WeatherState.Error(it.message ?: "Unknown error") }
             )
         }

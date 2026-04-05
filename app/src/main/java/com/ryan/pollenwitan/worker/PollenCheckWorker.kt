@@ -17,6 +17,7 @@ import com.ryan.pollenwitan.data.repository.NotificationPrefsRepository
 import com.ryan.pollenwitan.data.repository.ProfileRepository
 import com.ryan.pollenwitan.data.repository.SymptomDiaryRepository
 import com.ryan.pollenwitan.domain.model.CurrentConditions
+import com.ryan.pollenwitan.domain.model.ForecastDay
 import com.ryan.pollenwitan.domain.model.LocationMode
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.UserProfile
@@ -66,14 +67,6 @@ class PollenCheckWorker(
         // Group profiles by effective location to avoid redundant API calls
         val profilesByLocation = PollenCheckLogic.groupProfilesByLocation(profiles, globalLocation)
 
-        // Fetch conditions once per unique location
-        val conditionsByLocation = mutableMapOf<Pair<Double, Double>, CurrentConditions>()
-        for ((coords, _) in profilesByLocation) {
-            val result = airQualityRepository.getCurrentConditions(coords.first, coords.second)
-            val conditions = result.getOrNull() ?: return Result.retry()
-            conditionsByLocation[coords] = conditions
-        }
-
         val now = LocalDateTime.now()
         val multiProfile = profiles.size > 1
 
@@ -92,6 +85,21 @@ class PollenCheckWorker(
             notificationPrefsRepository.setLastBriefingDate(today)
         }
 
+        // Fetch conditions once per unique location
+        val conditionsByLocation = mutableMapOf<Pair<Double, Double>, CurrentConditions>()
+        val forecastByLocation = mutableMapOf<Pair<Double, Double>, ForecastDay?>()
+        for ((coords, _) in profilesByLocation) {
+            val result = airQualityRepository.getCurrentConditions(coords.first, coords.second)
+            val conditions = result.getOrNull() ?: return Result.retry()
+            conditionsByLocation[coords] = conditions
+
+            if (shouldSendBriefing) {
+                val forecastResult = airQualityRepository.getForecast(coords.first, coords.second, days = 1)
+                forecastByLocation[coords] = forecastResult.getOrNull()
+                    ?.find { it.date == today }
+            }
+        }
+
         var briefingCount = 0
         var thresholdCount = 0
         var compoundCount = 0
@@ -102,7 +110,8 @@ class PollenCheckWorker(
 
             // Morning briefing
             if (shouldSendBriefing) {
-                val summary = buildMorningSummary(ctx, profile, conditions)
+                val todayForecast = forecastByLocation[loc.latitude to loc.longitude]
+                val summary = buildMorningSummary(ctx, profile, conditions, todayForecast)
                 NotificationHelper.sendNotification(
                     context = ctx,
                     channelId = NotificationHelper.CHANNEL_MORNING_BRIEFING,
@@ -309,7 +318,12 @@ class PollenCheckWorker(
         return Result.success()
     }
 
-    private fun buildMorningSummary(ctx: Context, profile: UserProfile, conditions: CurrentConditions): String {
+    private fun buildMorningSummary(
+        ctx: Context,
+        profile: UserProfile,
+        conditions: CurrentConditions,
+        todayForecast: ForecastDay?
+    ): String {
         val parts = mutableListOf<String>()
 
         val trackedReadings = conditions.pollenReadings.filter { it.type in profile.trackedAllergens }
@@ -322,6 +336,16 @@ class PollenCheckWorker(
             parts.add(ctx.getString(R.string.notif_pollen_summary, pollenParts.joinToString(", ")))
         } else {
             parts.add(ctx.getString(R.string.notif_no_tracked_allergens))
+        }
+
+        // Peak daily values for tracked allergens
+        if (todayForecast != null) {
+            val peakParts = todayForecast.peakPollenReadings
+                .filter { it.type in profile.trackedAllergens && it.value > 0 }
+                .map { "${it.type.localizedName(ctx)} ${String.format("%.0f", it.value)}" }
+            if (peakParts.isNotEmpty()) {
+                parts.add(ctx.getString(R.string.notif_peak_today, peakParts.joinToString(", ")))
+            }
         }
 
         parts.add(ctx.getString(R.string.notif_aqi_summary, conditions.europeanAqi, conditions.aqiSeverity.toLabel(ctx)))

@@ -54,7 +54,7 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
-            isDebuggable = true
+            isDebuggable = true // Intentional: required for profiling with Android Studio
         }
         release {
             isMinifyEnabled = true

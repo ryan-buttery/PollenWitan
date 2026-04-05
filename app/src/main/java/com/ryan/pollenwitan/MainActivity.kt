@@ -24,6 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import com.ryan.pollenwitan.data.repository.ThemePrefsRepository
 import com.ryan.pollenwitan.data.security.DatabaseEncryption
 import com.ryan.pollenwitan.ui.navigation.AppNavGraph
+import com.ryan.pollenwitan.ui.navigation.Screen
 import com.ryan.pollenwitan.ui.theme.ForestTheme
 import com.ryan.pollenwitan.ui.theme.PollenWitanTheme
 import com.ryan.pollenwitan.worker.NotificationHelper
@@ -33,11 +34,16 @@ class MainActivity : AppCompatActivity() {
 
     private var navigateTo by mutableStateOf<String?>(null)
 
+    private fun validatedRoute(intent: Intent?): String? {
+        val route = intent?.getStringExtra(NotificationHelper.EXTRA_NAVIGATE_TO) ?: return null
+        return route.takeIf { it in VALID_NOTIFICATION_ROUTES }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applySystemBars(dark = true)
 
-        navigateTo = intent.getStringExtra(NotificationHelper.EXTRA_NAVIGATE_TO)
+        navigateTo = validatedRoute(intent)
 
         val themePrefsRepository = ThemePrefsRepository(this)
 
@@ -85,7 +91,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        navigateTo = intent.getStringExtra(NotificationHelper.EXTRA_NAVIGATE_TO)
+        navigateTo = validatedRoute(intent)
+    }
+
+    companion object {
+        private val VALID_NOTIFICATION_ROUTES = setOf(
+            Screen.Dashboard.route,
+            Screen.Forecast.route,
+            Screen.Settings.route,
+            Screen.ProfileList.route,
+            Screen.SymptomCheckIn.createRoute(),
+            Screen.SymptomDiary.route,
+            Screen.SymptomTrends.route
+        )
     }
 
     private fun applySystemBars(dark: Boolean) {

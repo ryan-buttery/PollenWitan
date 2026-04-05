@@ -11,6 +11,7 @@
     <string name="common_loading">Ładowanie…</string>
     <string name="common_error_title">Coś poszło nie tak</string>
     <string name="common_ok">OK</string>
+    <string name="stale_data_banner">Ostatnia aktualizacja %1$s temu \u2014 dotknij, by odświeżyć</string>
     <string name="common_name">Imię</string>
     <string name="common_other">Inne</string>
 
@@ -216,6 +217,7 @@
     <string name="notif_no_tracked_allergens">Brak śledzonych alergenów dzisiaj</string>
     <string name="notif_aqi_summary">AQI: %1$d (%2$s)</string>
     <string name="notif_elevated_particulates">Podwyższone pyły \u2014 zachowaj ostrożność</string>
+    <string name="notif_peak_today">Szczyt dzisiaj: %1$s</string>
     <string name="notif_high_pollen_alert">%1$s: Alert wysokich pyłków</string>
     <string name="notif_threshold_breach">%1$s: %2$s (%3$s ziaren/m³)</string>
     <string name="notif_respiratory_risk">%1$s: Ryzyko oddechowe</string>

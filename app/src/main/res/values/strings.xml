@@ -13,6 +13,7 @@
     <string name="common_loading">Loading…</string>
     <string name="common_error_title">Something went wrong</string>
     <string name="common_ok">OK</string>
+    <string name="stale_data_banner">Last updated %1$s ago \u2014 tap to refresh</string>
     <string name="common_name">Name</string>
     <string name="common_other">Other</string>
 
@@ -218,6 +219,7 @@
     <string name="notif_no_tracked_allergens">No tracked allergens today</string>
     <string name="notif_aqi_summary">AQI: %1$d (%2$s)</string>
     <string name="notif_elevated_particulates">Elevated particulates \u2014 consider precautions</string>
+    <string name="notif_peak_today">Peak today: %1$s</string>
     <string name="notif_high_pollen_alert">%1$s: High pollen alert</string>
     <string name="notif_threshold_breach">%1$s: %2$s (%3$s grains/m³)</string>
     <string name="notif_respiratory_risk">%1$s: Respiratory risk</string>

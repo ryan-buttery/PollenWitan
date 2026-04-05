@@ -14,5 +14,6 @@ data class CurrentConditions(
     val pm25: Double,
     val pm10: Double,
     val aqiSeverity: SeverityLevel,
-    val timestamp: LocalDateTime
+    val timestamp: LocalDateTime,
+    val fetchedAtMillis: Long = System.currentTimeMillis()
 )

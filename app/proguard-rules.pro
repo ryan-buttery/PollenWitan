@@ -1,5 +1,7 @@
-# Ktor
--keep class io.ktor.** { *; }
+# Ktor — keep only reflection-required classes (engine + plugin registration)
+-keep class io.ktor.serialization.** { *; }
+-keep class io.ktor.client.engine.okhttp.** { *; }
+-keep class io.ktor.client.plugins.contentnegotiation.** { *; }
 -dontwarn io.ktor.**
 
 # SLF4J (referenced by Ktor, not bundled)

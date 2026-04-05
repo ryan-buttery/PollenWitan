@@ -17,6 +17,10 @@
 
 ## Planned
 
+- [x] **Security Phase 4: Permissions & Component Security** — Explicit permission checks in GpsLocationProvider, intent route validation in MainActivity, dataExtractionRules for Android 12+
+- [x] **Security Phase 7: Build Config & Obfuscation** — Narrowed ProGuard keep rules for Ktor, documented benchmark debuggable intent
+- [x] **Morning Summary Enhancement** — Peak daily pollen values included in morning briefing notifications
+- [x] **Offline-First Stale Data Indicator** — Amber banner on Dashboard and Forecast when cached data is older than 6 hours, tap to refresh
 - [x] **Pre-Season Medication Alerts** — Advance warning to start taking medication (e.g., 1 month before typical season for user's selected allergies)
 - [x] **Medication History** — Persist daily dose confirmations to Room so medication adherence is available for historical review
 - [x] **Symptom Diary** — Configurable symptoms per profile (defaults + custom via Settings), daily evening check-in (in-app + notification) with 0–5 severity rating per symptom, auto-logs daily peak pollen/AQI values alongside entries

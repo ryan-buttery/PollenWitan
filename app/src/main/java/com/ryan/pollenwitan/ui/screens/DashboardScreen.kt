@@ -48,6 +48,7 @@ import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SymptomDiaryEntry
 import com.ryan.pollenwitan.domain.model.UserProfile
 import com.ryan.pollenwitan.ui.components.ProfileSwitcher
+import com.ryan.pollenwitan.ui.components.StaleDataBanner
 import com.ryan.pollenwitan.ui.theme.localizedName
 import com.ryan.pollenwitan.ui.theme.localizedUnitLabel
 import com.ryan.pollenwitan.ui.theme.toColor
@@ -68,6 +69,7 @@ fun DashboardScreen(
         is WeatherState.Loading -> LoadingContent()
         is WeatherState.Success -> DashboardContent(
             conditions = weather.conditions,
+            fetchedAtMillis = weather.fetchedAtMillis,
             profiles = uiState.profiles,
             selectedProfile = uiState.selectedProfile,
             locationDisplayName = uiState.locationDisplayName,
@@ -125,6 +127,7 @@ private fun ErrorContent(message: String, onRetry: () -> Unit) {
 @Composable
 private fun DashboardContent(
     conditions: CurrentConditions,
+    fetchedAtMillis: Long,
     profiles: List<UserProfile>,
     selectedProfile: UserProfile?,
     locationDisplayName: String,
@@ -161,6 +164,8 @@ private fun DashboardContent(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        StaleDataBanner(fetchedAtMillis = fetchedAtMillis, onRefresh = onRefresh)
 
         Spacer(modifier = Modifier.height(16.dp))
 
