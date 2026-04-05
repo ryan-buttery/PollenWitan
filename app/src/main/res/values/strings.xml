@@ -517,4 +517,6 @@
     <!-- Database reset warning -->
     <string name="db_reset_title">Cached data reset</string>
     <string name="db_reset_message">The local forecast cache could not be decrypted and had to be cleared. Your profiles and settings are unaffected. Fresh forecast data will be fetched automatically.</string>
+    <string name="keystore_reset_title">Settings reset</string>
+    <string name="keystore_reset_message">Your device security settings changed and encrypted app data could not be recovered. Profiles, medicines, and preferences have been reset. Please reconfigure your settings.</string>
 </resources>

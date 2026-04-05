@@ -34,6 +34,8 @@
 - [x] **Medication History Back-Fill** — New screen to confirm/unconfirm medication doses for past dates (up to 90 days). Navigation drawer item, date navigation, checkbox per dose slot
 - [x] **Widget Profile Selection** — Settings UI to pin a specific profile to the widget instead of following the dashboard selection. Default fallback to dashboard profile
 - [x] **Accessibility Pass** — Content descriptions for interactive icons, severity dot semantics (TalkBack reads allergen + severity), chart semantics, colourblind abbreviation letters in Dashboard severity dots
+- [x] **Security Phase 5: Encryption & Storage Review** — Keystore invalidation warning dialog, verified DataStore migration cleanup, confirmed SQLCipher fully removed
+- [x] **Security Phase 6: Background Worker & Notification Security** — Explicit exponential backoff policy on PollenCheckWorker, verified VISIBILITY_PRIVATE on all notification channels, verified notification ID uniqueness
 
 ## Unit Test Coverage (Issue #10)
 

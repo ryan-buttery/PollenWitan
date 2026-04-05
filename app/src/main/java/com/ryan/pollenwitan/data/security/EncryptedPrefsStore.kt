@@ -31,10 +31,20 @@ class EncryptedPrefsStore(context: Context, name: String) {
     } catch (e: java.security.GeneralSecurityException) {
         Log.e("EncryptedPrefsStore", "Keystore key invalidated for '$name' — clearing and recreating", e)
         deletePrefsFiles(context.applicationContext, name)
+        keystoreWasReset = true
         createEncryptedPrefs(context.applicationContext, name, masterKey)
     }
 
     companion object {
+        /**
+         * True if any EncryptedPrefsStore had to be recreated due to Android
+         * Keystore key invalidation (e.g. lock screen changed). UI should
+         * read this once and show a one-time warning about data loss.
+         */
+        @Volatile
+        var keystoreWasReset = false
+            private set
+
         private fun createEncryptedPrefs(
             context: Context, name: String, masterKey: MasterKey
         ): SharedPreferences = EncryptedSharedPreferences.create(

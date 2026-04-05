@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
 import com.ryan.pollenwitan.data.repository.ThemePrefsRepository
 import com.ryan.pollenwitan.data.security.DatabaseEncryption
+import com.ryan.pollenwitan.data.security.EncryptedPrefsStore
 import com.ryan.pollenwitan.ui.navigation.AppNavGraph
 import com.ryan.pollenwitan.ui.navigation.Screen
 import com.ryan.pollenwitan.ui.theme.ForestTheme
@@ -79,6 +80,23 @@ class MainActivity : AppCompatActivity() {
                             text = { Text(stringResource(R.string.db_reset_message)) },
                             confirmButton = {
                                 TextButton(onClick = { showDbResetWarning = false }) {
+                                    Text(stringResource(R.string.common_ok))
+                                }
+                            }
+                        )
+                    }
+
+                    // One-shot warning when Keystore invalidation forced prefs reset
+                    var showKeystoreResetWarning by remember {
+                        mutableStateOf(EncryptedPrefsStore.keystoreWasReset)
+                    }
+                    if (showKeystoreResetWarning) {
+                        AlertDialog(
+                            onDismissRequest = { showKeystoreResetWarning = false },
+                            title = { Text(stringResource(R.string.keystore_reset_title)) },
+                            text = { Text(stringResource(R.string.keystore_reset_message)) },
+                            confirmButton = {
+                                TextButton(onClick = { showKeystoreResetWarning = false }) {
                                     Text(stringResource(R.string.common_ok))
                                 }
                             }

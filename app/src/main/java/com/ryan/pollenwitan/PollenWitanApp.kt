@@ -1,6 +1,7 @@
 package com.ryan.pollenwitan
 
 import android.app.Application
+import androidx.work.BackoffPolicy
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -25,7 +26,9 @@ class PollenWitanApp : Application() {
         val request = PeriodicWorkRequestBuilder<PollenCheckWorker>(
             1, TimeUnit.HOURS,
             15, TimeUnit.MINUTES
-        ).build()
+        )
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+            .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             PollenCheckWorker.WORK_NAME,
