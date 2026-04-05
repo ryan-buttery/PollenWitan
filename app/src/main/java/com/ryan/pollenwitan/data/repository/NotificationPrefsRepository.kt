@@ -19,7 +19,9 @@ data class NotificationPrefs(
     val compoundRiskAlertsEnabled: Boolean = true,
     val preSeasonAlertsEnabled: Boolean = true,
     val symptomReminderEnabled: Boolean = true,
-    val symptomReminderHour: Int = 20
+    val symptomReminderHour: Int = 20,
+    val missedDoseEscalationEnabled: Boolean = true,
+    val missedDoseWindowMinutes: Int = 120
 )
 
 private val Context.notificationPrefsDataStore by preferencesDataStore(name = "notification_prefs")
@@ -39,6 +41,8 @@ class NotificationPrefsRepository(
         val PRE_SEASON_ENABLED = booleanPreferencesKey("pre_season_alerts_enabled")
         val SYMPTOM_REMINDER_ENABLED = booleanPreferencesKey("symptom_reminder_enabled")
         val SYMPTOM_REMINDER_HOUR = intPreferencesKey("symptom_reminder_hour")
+        val MISSED_DOSE_ESCALATION_ENABLED = booleanPreferencesKey("missed_dose_escalation_enabled")
+        val MISSED_DOSE_WINDOW_MINUTES = intPreferencesKey("missed_dose_window_minutes")
         fun preSeasonAlertYearKey(type: PollenType) =
             intPreferencesKey("preseason_alert_year_${type.name.lowercase()}")
     }
@@ -51,7 +55,9 @@ class NotificationPrefsRepository(
             compoundRiskAlertsEnabled = prefs[Keys.COMPOUND_ENABLED] ?: true,
             preSeasonAlertsEnabled = prefs[Keys.PRE_SEASON_ENABLED] ?: true,
             symptomReminderEnabled = prefs[Keys.SYMPTOM_REMINDER_ENABLED] ?: true,
-            symptomReminderHour = prefs[Keys.SYMPTOM_REMINDER_HOUR] ?: 20
+            symptomReminderHour = prefs[Keys.SYMPTOM_REMINDER_HOUR] ?: 20,
+            missedDoseEscalationEnabled = prefs[Keys.MISSED_DOSE_ESCALATION_ENABLED] ?: true,
+            missedDoseWindowMinutes = prefs[Keys.MISSED_DOSE_WINDOW_MINUTES] ?: 120
         )
     }
 
@@ -98,5 +104,13 @@ class NotificationPrefsRepository(
 
     suspend fun setSymptomReminderHour(hour: Int) {
         dataStore.edit { it[Keys.SYMPTOM_REMINDER_HOUR] = hour }
+    }
+
+    suspend fun setMissedDoseEscalationEnabled(enabled: Boolean) {
+        dataStore.edit { it[Keys.MISSED_DOSE_ESCALATION_ENABLED] = enabled }
+    }
+
+    suspend fun setMissedDoseWindowMinutes(minutes: Int) {
+        dataStore.edit { it[Keys.MISSED_DOSE_WINDOW_MINUTES] = minutes }
     }
 }

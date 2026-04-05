@@ -9,15 +9,23 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
 import com.ryan.pollenwitan.data.repository.ThemePrefsRepository
+import com.ryan.pollenwitan.data.security.DatabaseEncryption
+import com.ryan.pollenwitan.data.security.EncryptedPrefsStore
 import com.ryan.pollenwitan.ui.navigation.AppNavGraph
+import com.ryan.pollenwitan.ui.navigation.Screen
 import com.ryan.pollenwitan.ui.theme.ForestTheme
 import com.ryan.pollenwitan.ui.theme.PollenWitanTheme
 import com.ryan.pollenwitan.worker.NotificationHelper
@@ -27,11 +35,16 @@ class MainActivity : AppCompatActivity() {
 
     private var navigateTo by mutableStateOf<String?>(null)
 
+    private fun validatedRoute(intent: Intent?): String? {
+        val route = intent?.getStringExtra(NotificationHelper.EXTRA_NAVIGATE_TO) ?: return null
+        return route.takeIf { it in VALID_NOTIFICATION_ROUTES }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applySystemBars(dark = true)
 
-        navigateTo = intent.getStringExtra(NotificationHelper.EXTRA_NAVIGATE_TO)
+        navigateTo = validatedRoute(intent)
 
         val themePrefsRepository = ThemePrefsRepository(this)
 
@@ -55,6 +68,40 @@ class MainActivity : AppCompatActivity() {
                         },
                         initialRoute = navigateTo
                     )
+
+                    // One-shot warning when the encrypted DB had to be deleted
+                    var showDbResetWarning by remember {
+                        mutableStateOf(DatabaseEncryption.dbWasReset)
+                    }
+                    if (showDbResetWarning) {
+                        AlertDialog(
+                            onDismissRequest = { showDbResetWarning = false },
+                            title = { Text(stringResource(R.string.db_reset_title)) },
+                            text = { Text(stringResource(R.string.db_reset_message)) },
+                            confirmButton = {
+                                TextButton(onClick = { showDbResetWarning = false }) {
+                                    Text(stringResource(R.string.common_ok))
+                                }
+                            }
+                        )
+                    }
+
+                    // One-shot warning when Keystore invalidation forced prefs reset
+                    var showKeystoreResetWarning by remember {
+                        mutableStateOf(EncryptedPrefsStore.keystoreWasReset)
+                    }
+                    if (showKeystoreResetWarning) {
+                        AlertDialog(
+                            onDismissRequest = { showKeystoreResetWarning = false },
+                            title = { Text(stringResource(R.string.keystore_reset_title)) },
+                            text = { Text(stringResource(R.string.keystore_reset_message)) },
+                            confirmButton = {
+                                TextButton(onClick = { showKeystoreResetWarning = false }) {
+                                    Text(stringResource(R.string.common_ok))
+                                }
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -62,7 +109,20 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        navigateTo = intent.getStringExtra(NotificationHelper.EXTRA_NAVIGATE_TO)
+        navigateTo = validatedRoute(intent)
+    }
+
+    companion object {
+        private val VALID_NOTIFICATION_ROUTES = setOf(
+            Screen.Dashboard.route,
+            Screen.Forecast.route,
+            Screen.Settings.route,
+            Screen.ProfileList.route,
+            Screen.SymptomCheckIn.createRoute(),
+            Screen.SymptomDiary.route,
+            Screen.SymptomTrends.route,
+            Screen.MedicationHistory.route
+        )
     }
 
     private fun applySystemBars(dark: Boolean) {

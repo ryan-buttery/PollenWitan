@@ -53,7 +53,8 @@ class ExportImportRoundTripTest {
                 trackedSymptoms = listOf(
                     ExportTrackedSymptom("Sneezing", "Sneezing", isDefault = true),
                     ExportTrackedSymptom("custom-1", "Headache", isDefault = false)
-                )
+                ),
+                discoveryMode = true
             ),
             ExportProfile(
                 id = "olga",
@@ -64,7 +65,8 @@ class ExportImportRoundTripTest {
                 ),
                 location = null,
                 medicineAssignments = emptyList(),
-                trackedSymptoms = emptyList()
+                trackedSymptoms = emptyList(),
+                discoveryMode = false
             )
         ),
         medicines = listOf(
@@ -113,7 +115,9 @@ class ExportImportRoundTripTest {
             compoundRiskAlertsEnabled = true,
             preSeasonAlertsEnabled = false,
             symptomReminderEnabled = true,
-            symptomReminderHour = 20
+            symptomReminderHour = 20,
+            missedDoseEscalationEnabled = false,
+            missedDoseWindowMinutes = 90
         )
     )
 
@@ -180,6 +184,10 @@ class ExportImportRoundTripTest {
         assertEquals("custom-1", symptoms[1].id)
         assertEquals("Headache", symptoms[1].displayName)
         assertTrue(!symptoms[1].isDefault)
+
+        // Discovery mode
+        assertTrue(restored.profiles[0].discoveryMode)
+        assertTrue(!restored.profiles[1].discoveryMode)
     }
 
     @Test
@@ -250,6 +258,8 @@ class ExportImportRoundTripTest {
         assertTrue(!np.preSeasonAlertsEnabled)
         assertTrue(np.symptomReminderEnabled)
         assertEquals(20, np.symptomReminderHour)
+        assertTrue(!np.missedDoseEscalationEnabled)
+        assertEquals(90, np.missedDoseWindowMinutes)
     }
 
     // ── Version validation ─────────────────────────────────────────────

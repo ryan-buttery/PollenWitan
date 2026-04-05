@@ -26,6 +26,10 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.ryan.pollenwitan.R
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -65,11 +69,13 @@ fun TimelineLineChart(
     val sortedData = data.sortedBy { it.date }
     val dates = sortedData.map { it.date }
 
+    val chartDescription = stringResource(R.string.accessibility_chart_line, yLabel, data.size)
     Column(modifier = modifier) {
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)
+                .semantics { contentDescription = chartDescription }
                 .pointerInput(dates) {
                     detectTapGestures { offset ->
                         val leftMargin = 44.dp.toPx()

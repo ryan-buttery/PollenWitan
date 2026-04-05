@@ -17,6 +17,10 @@
 
 ## Planned
 
+- [x] **Security Phase 4: Permissions & Component Security** — Explicit permission checks in GpsLocationProvider, intent route validation in MainActivity, dataExtractionRules for Android 12+
+- [x] **Security Phase 7: Build Config & Obfuscation** — Narrowed ProGuard keep rules for Ktor, documented benchmark debuggable intent
+- [x] **Morning Summary Enhancement** — Peak daily pollen values included in morning briefing notifications
+- [x] **Offline-First Stale Data Indicator** — Amber banner on Dashboard and Forecast when cached data is older than 6 hours, tap to refresh
 - [x] **Pre-Season Medication Alerts** — Advance warning to start taking medication (e.g., 1 month before typical season for user's selected allergies)
 - [x] **Medication History** — Persist daily dose confirmations to Room so medication adherence is available for historical review
 - [x] **Symptom Diary** — Configurable symptoms per profile (defaults + custom via Settings), daily evening check-in (in-app + notification) with 0–5 severity rating per symptom, auto-logs daily peak pollen/AQI values alongside entries
@@ -26,6 +30,12 @@
 - [x] **Notification Enhancements** — Combine daily notifications for all profiles into a single grouped notification instead of one per profile. Add PendingIntents so tapping a notification navigates to the relevant screen (e.g., morning briefing → dashboard, medication reminder → dashboard, symptom reminder → check-in screen)
 - [x] **Symptom Diary Back-Fill** — Allow users to log symptom entries for past dates from the diary browser screen, not just the current day. Date picker to select the target date, pre-fill if an entry already exists for that date
 - [x] **Evening Check-In UX** — Make it clearer on the dashboard card that the daily symptom check-in is intended for the evening (e.g., subtitle text, time-aware messaging like "Log your evening check-in" vs "Check back this evening")
+- [x] **Symptom Diary Full CRUD** — Historical pollen data via Open-Meteo `past_days` (up to 16 days), delete entries with confirmation dialog, edit via existing tap-to-check-in flow
+- [x] **Medication History Back-Fill** — New screen to confirm/unconfirm medication doses for past dates (up to 90 days). Navigation drawer item, date navigation, checkbox per dose slot
+- [x] **Widget Profile Selection** — Settings UI to pin a specific profile to the widget instead of following the dashboard selection. Default fallback to dashboard profile
+- [x] **Accessibility Pass** — Content descriptions for interactive icons, severity dot semantics (TalkBack reads allergen + severity), chart semantics, colourblind abbreviation letters in Dashboard severity dots
+- [x] **Security Phase 5: Encryption & Storage Review** — Keystore invalidation warning dialog, verified DataStore migration cleanup, confirmed SQLCipher fully removed
+- [x] **Security Phase 6: Background Worker & Notification Security** — Explicit exponential backoff policy on PollenCheckWorker, verified VISIBILITY_PRIVATE on all notification channels, verified notification ID uniqueness
 
 ## Unit Test Coverage (Issue #10)
 

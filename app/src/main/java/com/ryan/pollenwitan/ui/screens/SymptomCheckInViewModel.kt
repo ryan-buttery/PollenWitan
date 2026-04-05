@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.time.temporal.ChronoUnit
 import java.time.LocalDate
 
 data class SymptomCheckInUiState(
@@ -99,25 +100,39 @@ class SymptomCheckInViewModel(application: Application) : AndroidViewModel(appli
             val globalLocation = locationRepository.getLocation().first()
             val location = ProfileRepository.resolveLocation(profile, globalLocation)
 
-            // Fetch environmental peaks — only reliable for today (API is forecast-only)
+            // Fetch environmental peaks — available for today and up to 16 days back
             var peakPollenJson = "{}"
             var peakAqi = 0
             var peakPm25 = 0.0
             var peakPm10 = 0.0
 
-            if (targetDate == LocalDate.now()) {
-                val forecastResult = airQualityRepository.getForecast(location.latitude, location.longitude, days = 1)
-                forecastResult.getOrNull()?.firstOrNull()?.let { today ->
-                    val pollenMap = today.peakPollenReadings.associate { it.type.name to it.value }
-                    peakPollenJson = Json.encodeToString(pollenMap)
-                    peakAqi = today.peakAqi
+            val daysBetween = ChronoUnit.DAYS.between(targetDate, LocalDate.now())
+            when {
+                daysBetween == 0L -> {
+                    val forecastResult = airQualityRepository.getForecast(location.latitude, location.longitude, days = 1)
+                    forecastResult.getOrNull()?.firstOrNull()?.let { today ->
+                        val pollenMap = today.peakPollenReadings.associate { it.type.name to it.value }
+                        peakPollenJson = Json.encodeToString(pollenMap)
+                        peakAqi = today.peakAqi
+                    }
+                    val conditionsResult = airQualityRepository.getCurrentConditions(location.latitude, location.longitude)
+                    conditionsResult.getOrNull()?.let { conditions ->
+                        peakPm25 = conditions.pm25
+                        peakPm10 = conditions.pm10
+                    }
                 }
-
-                val conditionsResult = airQualityRepository.getCurrentConditions(location.latitude, location.longitude)
-                conditionsResult.getOrNull()?.let { conditions ->
-                    peakPm25 = conditions.pm25
-                    peakPm10 = conditions.pm10
+                daysBetween in 1..16 -> {
+                    airQualityRepository.getHistoricalDayPeaks(
+                        location.latitude, location.longitude, targetDate
+                    ).getOrNull()?.let { day ->
+                        val pollenMap = day.peakPollenReadings.associate { it.type.name to it.value }
+                        peakPollenJson = Json.encodeToString(pollenMap)
+                        peakAqi = day.peakAqi
+                        peakPm25 = day.hourlyReadings.maxOfOrNull { it.pm25 } ?: 0.0
+                        peakPm10 = day.hourlyReadings.maxOfOrNull { it.pm10 } ?: 0.0
+                    }
                 }
+                // >16 days: leave defaults (no historical data available)
             }
 
             val displayNameLookup = buildDisplayNameLookup(state.trackedSymptoms)

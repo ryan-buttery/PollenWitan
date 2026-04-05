@@ -1,5 +1,7 @@
-# Ktor
--keep class io.ktor.** { *; }
+# Ktor — keep only reflection-required classes (engine + plugin registration)
+-keep class io.ktor.serialization.** { *; }
+-keep class io.ktor.client.engine.okhttp.** { *; }
+-keep class io.ktor.client.plugins.contentnegotiation.** { *; }
 -dontwarn io.ktor.**
 
 # SLF4J (referenced by Ktor, not bundled)
@@ -24,9 +26,6 @@
 -keep class * extends androidx.room.RoomDatabase
 -keep @androidx.room.Entity class *
 
-# SQLCipher
--keep class net.zetetic.database.sqlcipher.** { *; }
--dontwarn net.zetetic.database.sqlcipher.**
 
 # Google Tink (transitive via security-crypto) — compile-time annotations not bundled
 -dontwarn com.google.errorprone.annotations.**

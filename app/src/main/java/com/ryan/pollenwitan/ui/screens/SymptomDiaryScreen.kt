@@ -20,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
@@ -41,6 +43,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -96,7 +100,7 @@ fun SymptomDiaryScreen(
         ) {
             Icon(
                 Icons.Filled.Add,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.symptom_diary_add_entry),
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -114,7 +118,7 @@ fun SymptomDiaryScreen(
             IconButton(onClick = { viewModel.navigateRange(forward = false) }) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = null
+                    contentDescription = stringResource(R.string.accessibility_previous_range)
                 )
             }
             Text(
@@ -124,7 +128,7 @@ fun SymptomDiaryScreen(
             IconButton(onClick = { viewModel.navigateRange(forward = true) }) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null
+                    contentDescription = stringResource(R.string.accessibility_next_range)
                 )
             }
         }
@@ -142,7 +146,8 @@ fun SymptomDiaryScreen(
             uiState.entries.sortedByDescending { it.date }.forEach { entry ->
                 DiaryEntryCard(
                     entry = entry,
-                    onClick = { onNavigateToCheckIn(entry.date.toString()) }
+                    onClick = { onNavigateToCheckIn(entry.date.toString()) },
+                    onDelete = { viewModel.deleteEntry(entry.date) }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -199,8 +204,37 @@ fun SymptomDiaryScreen(
 @Composable
 private fun DiaryEntryCard(
     entry: SymptomDiaryEntry,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(stringResource(R.string.symptom_diary_delete_title)) },
+            text = {
+                Text(stringResource(
+                    R.string.symptom_diary_delete_message,
+                    entry.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
+                ))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    onDelete()
+                }) {
+                    Text(stringResource(R.string.symptom_diary_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -210,11 +244,28 @@ private fun DiaryEntryCard(
         )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text = entry.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = entry.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+                IconButton(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = stringResource(R.string.accessibility_delete_entry),
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
 
             // Symptom ratings
@@ -230,6 +281,7 @@ private fun DiaryEntryCard(
                             .size(10.dp)
                             .clip(CircleShape)
                             .background(ratingSeverityColor(rating.severity))
+                            .semantics { contentDescription = "${rating.symptomName} ${rating.severity}/5" }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
