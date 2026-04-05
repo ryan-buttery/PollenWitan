@@ -54,7 +54,7 @@ class AirQualityApi {
                 parameter("latitude", latitude)
                 parameter("longitude", longitude)
                 parameter("hourly", HOURLY_PARAMS)
-                parameter("timezone", "Europe/Warsaw")
+                parameter("timezone", java.time.ZoneId.systemDefault().id)
                 parameter("forecast_days", forecastDays)
                 if (pastDays > 0) parameter("past_days", pastDays)
             }

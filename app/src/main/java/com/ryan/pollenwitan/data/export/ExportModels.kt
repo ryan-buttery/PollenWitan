@@ -26,7 +26,8 @@ data class ExportProfile(
     val trackedAllergens: Map<String, ExportAllergenThreshold>,
     val location: ExportProfileLocation? = null,
     val medicineAssignments: List<ExportMedicineAssignment> = emptyList(),
-    val trackedSymptoms: List<ExportTrackedSymptom> = emptyList()
+    val trackedSymptoms: List<ExportTrackedSymptom> = emptyList(),
+    val discoveryMode: Boolean = false
 )
 
 @Serializable
@@ -112,7 +113,9 @@ data class ExportNotificationPrefs(
     val compoundRiskAlertsEnabled: Boolean,
     val preSeasonAlertsEnabled: Boolean,
     val symptomReminderEnabled: Boolean,
-    val symptomReminderHour: Int
+    val symptomReminderHour: Int,
+    val missedDoseEscalationEnabled: Boolean = true,
+    val missedDoseWindowMinutes: Int = 120
 )
 
 @Serializable

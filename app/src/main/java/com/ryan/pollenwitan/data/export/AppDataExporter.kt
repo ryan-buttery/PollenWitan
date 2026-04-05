@@ -31,8 +31,7 @@ class AppDataExporter(private val context: Context) {
 
         val profiles = profileRepo.getProfiles().first()
         val medicines = medicineRepo.getMedicines().first()
-        val location = locationRepo.getLocation().first()
-        val locationMode = locationRepo.getLocationMode().first()
+        val rawLocation = locationRepo.getRawLocationData().first()
         val notifPrefs = notifRepo.getPrefs().first()
         val doseHistory = db.doseHistoryDao().getAll()
         val symptomEntries = db.symptomEntryDao().getAll()
@@ -75,10 +74,13 @@ class AppDataExporter(private val context: Context) {
                 )
             },
             locationSettings = ExportLocation(
-                mode = locationMode.name,
-                manualLatitude = location.latitude,
-                manualLongitude = location.longitude,
-                manualDisplayName = location.displayName
+                mode = rawLocation.mode.name,
+                manualLatitude = rawLocation.manualLatitude,
+                manualLongitude = rawLocation.manualLongitude,
+                manualDisplayName = rawLocation.manualDisplayName,
+                gpsLatitude = rawLocation.gpsLatitude,
+                gpsLongitude = rawLocation.gpsLongitude,
+                gpsDisplayName = rawLocation.gpsDisplayName
             ),
             notificationPrefs = ExportNotificationPrefs(
                 morningBriefingEnabled = notifPrefs.morningBriefingEnabled,
@@ -87,7 +89,9 @@ class AppDataExporter(private val context: Context) {
                 compoundRiskAlertsEnabled = notifPrefs.compoundRiskAlertsEnabled,
                 preSeasonAlertsEnabled = notifPrefs.preSeasonAlertsEnabled,
                 symptomReminderEnabled = notifPrefs.symptomReminderEnabled,
-                symptomReminderHour = notifPrefs.symptomReminderHour
+                symptomReminderHour = notifPrefs.symptomReminderHour,
+                missedDoseEscalationEnabled = notifPrefs.missedDoseEscalationEnabled,
+                missedDoseWindowMinutes = notifPrefs.missedDoseWindowMinutes
             )
         )
 
@@ -140,6 +144,7 @@ class AppDataExporter(private val context: Context) {
                 displayName = symptom.displayName,
                 isDefault = symptom.isDefault
             )
-        }
+        },
+        discoveryMode = discoveryMode
     )
 }
