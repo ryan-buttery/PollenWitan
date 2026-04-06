@@ -32,18 +32,26 @@ class AirQualityRepository(context: Context) {
         latitude: Double,
         longitude: Double
     ): Result<CurrentConditions> = runCatching {
-        val (response, fetchedAt) = fetchOrCache(latitude, longitude, forecastDays = 1)
-        val hourly = response.hourly
-
         val now = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
-        val index = hourly.time.indexOfFirst { timeStr ->
+
+        fun findIndex(hourly: HourlyData) = hourly.time.indexOfFirst { timeStr ->
             LocalDateTime.parse(timeStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME) == now
         }
 
+        var (response, fetchedAt) = fetchOrCache(latitude, longitude, forecastDays = 1)
+        var index = findIndex(response.hourly)
+
         if (index == -1) {
-            error("Current hour not found in API response")
+            // Cached data doesn't cover the current hour (e.g. day boundary crossed); force a live fetch
+            val fresh = fetchOrCache(latitude, longitude, forecastDays = 1, forceRefresh = true)
+            response = fresh.first
+            fetchedAt = fresh.second
+            index = findIndex(response.hourly)
         }
 
+        if (index == -1) error("Current hour not found in API response")
+
+        val hourly = response.hourly
         val readings = parseReadingsAtIndex(hourly, index)
         val aqiValue = hourly.europeanAqi?.getOrNull(index) ?: 0
 
@@ -97,15 +105,18 @@ class AirQualityRepository(context: Context) {
     private suspend fun fetchOrCache(
         latitude: Double,
         longitude: Double,
-        forecastDays: Int
+        forecastDays: Int,
+        forceRefresh: Boolean = false
     ): Pair<AirQualityResponse, Long> {
         val roundedLat = roundCoord(latitude)
         val roundedLon = roundCoord(longitude)
         val now = System.currentTimeMillis()
 
-        val cached = dao.getLatest(roundedLat, roundedLon, forecastDays)
-        if (cached != null && (now - cached.fetchedAtMillis) < CACHE_MAX_AGE_MS) {
-            return json.decodeFromString<AirQualityResponse>(cached.responseJson) to cached.fetchedAtMillis
+        if (!forceRefresh) {
+            val cached = dao.getLatest(roundedLat, roundedLon, forecastDays)
+            if (cached != null && (now - cached.fetchedAtMillis) < CACHE_MAX_AGE_MS) {
+                return json.decodeFromString<AirQualityResponse>(cached.responseJson) to cached.fetchedAtMillis
+            }
         }
 
         val rawJson = api.getAirQualityRaw(latitude, longitude, forecastDays)
