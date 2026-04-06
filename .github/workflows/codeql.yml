@@ -42,13 +42,17 @@ jobs:
         name: Build with Gradle
         shell: bash
         run: |
-          echo "storeFile=/dev/null" > keystore.properties
-          echo "storePassword=dummy" >> keystore.properties
-          echo "keyAlias=dummy" >> keystore.properties
-          echo "keyPassword=dummy" >> keystore.properties
+          keytool -genkey -v -keystore /tmp/ci-debug.jks \
+            -keyalg RSA -keysize 2048 -validity 1 \
+            -alias ci -storepass changeit -keypass changeit \
+            -dname "CN=CI,OU=CI,O=CI,L=CI,ST=CI,C=XX"
+          echo "storeFile=/tmp/ci-debug.jks" > keystore.properties
+          echo "storePassword=changeit" >> keystore.properties
+          echo "keyAlias=ci" >> keystore.properties
+          echo "keyPassword=changeit" >> keystore.properties
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon
-
+          
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
