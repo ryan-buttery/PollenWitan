@@ -112,7 +112,7 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")
 
     // EncryptedSharedPreferences (profiles, settings)
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("androidx.security:security-crypto:1.1.0")
 
     // Glance (home screen widget)
     implementation("androidx.glance:glance-appwidget:1.1.1")
