@@ -131,6 +131,7 @@ class MissedDoseAlarmReceiver : BroadcastReceiver() {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             // Re-create the same PendingIntent (extras don't matter for matching — only requestCode does)
             val intent = Intent(context, MissedDoseAlarmReceiver::class.java).apply {
+                setPackage(context.packageName)
                 action = ACTION_MISSED_DOSE_CHECK
             }
             val reqCode = requestCode(profileIndex, assignmentIndex, slotIndex)
@@ -154,6 +155,7 @@ class MissedDoseAlarmReceiver : BroadcastReceiver() {
             assignmentIndex: Int,
             slotIndex: Int
         ): Intent = Intent(context, MissedDoseAlarmReceiver::class.java).apply {
+            setPackage(context.packageName)
             action = ACTION_MISSED_DOSE_CHECK
             putExtra(EXTRA_PROFILE_ID, profileId)
             putExtra(EXTRA_MEDICINE_ID, medicineId)
