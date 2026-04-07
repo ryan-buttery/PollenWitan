@@ -122,7 +122,7 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.11.2")
 
     // Ktor
-    val ktorVersion = "2.3.12"
+    val ktorVersion = "3.4.2"
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-okhttp:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
