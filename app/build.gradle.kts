@@ -119,7 +119,7 @@ dependencies {
     implementation("androidx.glance:glance-material3:1.1.1")
 
     // WorkManager
-    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
 
     // Ktor
     val ktorVersion = "2.3.12"
