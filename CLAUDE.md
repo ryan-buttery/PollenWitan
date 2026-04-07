@@ -201,7 +201,7 @@ Side drawer (`ModalNavigationDrawer`) with four top-level destinations: Dashboar
 
 - **JDK 17** (`sourceCompatibility`, `targetCompatibility`, `jvmTarget` all set to 17)
 - **Android Studio** (latest stable recommended)
-- **AGP 8.9.1** / **Kotlin 2.2.20** / **KSP 2.3.6** / **Compose BOM 2024.12.01** / **Gradle 8.11.1**
+- **AGP 9.1.0** / **Kotlin 2.2.20** / **KSP 2.3.6** / **Compose BOM 2024.12.01** / **Gradle 9.3.1**
 
 > Kotlin is held at 2.2.20 because CodeQL (used in CI) does not yet support 2.3.x. Bump in lockstep with CodeQL once support lands.
 
