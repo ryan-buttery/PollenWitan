@@ -10,7 +10,7 @@ Comprehensive guide for AI assistants working in this repository.
 
 - **Language**: Kotlin
 - **UI**: Jetpack Compose + Material 3, custom ForestColors theme (dark/light)
-- **Min SDK**: 26 (Android 8.0) / **Target SDK**: 35 (Android 15)
+- **Min SDK**: 26 (Android 8.0) / **Target SDK**: 36 (Android 16)
 - **Version**: 0.1.0 (versionCode 1)
 - **Package**: `com.ryan.pollenwitan`
 - **Build system**: Gradle with Kotlin DSL (`.gradle.kts` files throughout)
@@ -201,7 +201,7 @@ Side drawer (`ModalNavigationDrawer`) with four top-level destinations: Dashboar
 
 - **JDK 17** (`sourceCompatibility`, `targetCompatibility`, `jvmTarget` all set to 17)
 - **Android Studio** (latest stable recommended)
-- **AGP 8.7.3** / **Kotlin 2.1.0** / **Compose BOM 2024.12.01** / **Gradle 8.11.1**
+- **AGP 8.9.1** / **Kotlin 2.3.20** / **KSP 2.3.6** / **Compose BOM 2024.12.01** / **Gradle 8.11.1**
 
 ### Dependency Versions (app/build.gradle.kts)
 
@@ -211,7 +211,7 @@ Side drawer (`ModalNavigationDrawer`) with four top-level destinations: Dashboar
 | Activity | `activity-compose` | 1.9.3 |
 | Navigation | `navigation-compose` | 2.8.5 |
 | Lifecycle | `lifecycle-runtime-compose` / `lifecycle-viewmodel-compose` | 2.8.7 |
-| Room | `room-runtime` / `room-ktx` | 2.6.1 |
+| Room | `room-runtime` / `room-ktx` | 2.8.3 |
 | DataStore | `datastore-preferences` | 1.1.1 |
 | Glance | `glance-appwidget` / `glance-material3` | 1.1.1 |
 | WorkManager | `work-runtime-ktx` | 2.9.1 |
