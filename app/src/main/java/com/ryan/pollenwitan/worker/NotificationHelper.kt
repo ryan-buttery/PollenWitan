@@ -118,6 +118,7 @@ object NotificationHelper {
 
         if (targetRoute != null) {
             val intent = Intent(context, MainActivity::class.java).apply {
+                setPackage(context.packageName)
                 putExtra(EXTRA_NAVIGATE_TO, targetRoute)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
@@ -162,6 +163,7 @@ object NotificationHelper {
 
         if (targetRoute != null) {
             val intent = Intent(context, MainActivity::class.java).apply {
+                setPackage(context.packageName)
                 putExtra(EXTRA_NAVIGATE_TO, targetRoute)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
@@ -211,6 +213,7 @@ object NotificationHelper {
 
         // "Mark as Taken" action
         val actionIntent = Intent(context, MedicationActionReceiver::class.java).apply {
+            setPackage(context.packageName)
             action = MedicationActionReceiver.ACTION_MARK_DOSE_TAKEN
             putExtra(MedicationActionReceiver.EXTRA_PROFILE_ID, profileId)
             putExtra(MedicationActionReceiver.EXTRA_MEDICINE_ID, medicineId)
@@ -237,6 +240,7 @@ object NotificationHelper {
 
         if (targetRoute != null) {
             val intent = Intent(context, MainActivity::class.java).apply {
+                setPackage(context.packageName)
                 putExtra(EXTRA_NAVIGATE_TO, targetRoute)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
