@@ -4,6 +4,17 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      # CodeQL does not yet support Kotlin 2.3.x. Hold the entire
+      # Kotlin plugin family at 2.2.x until CodeQL catches up.
+      - dependency-name: "org.jetbrains.kotlin:*"
+        versions: [ ">=2.3.0" ]
+      - dependency-name: "org.jetbrains.kotlin.android"
+        versions: [ ">=2.3.0" ]
+      - dependency-name: "org.jetbrains.kotlin.plugin.compose"
+        versions: [ ">=2.3.0" ]
+      - dependency-name: "org.jetbrains.kotlin.plugin.serialization"
+        versions: [ ">=2.3.0" ]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
