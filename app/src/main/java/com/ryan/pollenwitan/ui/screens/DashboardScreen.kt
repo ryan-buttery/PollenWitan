@@ -15,13 +15,21 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.snap
@@ -51,6 +59,7 @@ import com.ryan.pollenwitan.domain.model.PollenReading
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SymptomDiaryEntry
 import com.ryan.pollenwitan.domain.model.UserProfile
+import com.ryan.pollenwitan.domain.model.WeatherConditions
 import com.ryan.pollenwitan.ui.components.ProfileSwitcher
 import com.ryan.pollenwitan.ui.components.StaleDataBanner
 import com.ryan.pollenwitan.ui.theme.localizedName
@@ -62,6 +71,7 @@ import java.time.LocalTime
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
@@ -72,21 +82,27 @@ fun DashboardScreen(
 
     when (val weather = uiState.weatherState) {
         is WeatherState.Loading -> LoadingContent()
-        is WeatherState.Success -> DashboardContent(
-            conditions = weather.conditions,
-            fetchedAtMillis = weather.fetchedAtMillis,
-            profiles = uiState.profiles,
-            selectedProfile = uiState.selectedProfile,
-            locationDisplayName = uiState.locationDisplayName,
-            medicineSlots = uiState.medicineSlots,
-            todaySymptomEntry = uiState.todaySymptomEntry,
-            onSelectProfile = viewModel::selectProfile,
+        is WeatherState.Success -> PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
             onRefresh = viewModel::refresh,
-            onConfirmDose = viewModel::confirmDose,
-            onUnconfirmDose = viewModel::unconfirmDose,
-            onNavigateToCheckIn = onNavigateToCheckIn,
-            onNavigateToDiscovery = onNavigateToDiscovery
-        )
+            modifier = Modifier.fillMaxSize()
+        ) {
+            DashboardContent(
+                conditions = weather.conditions,
+                fetchedAtMillis = weather.fetchedAtMillis,
+                profiles = uiState.profiles,
+                selectedProfile = uiState.selectedProfile,
+                locationDisplayName = uiState.locationDisplayName,
+                medicineSlots = uiState.medicineSlots,
+                todaySymptomEntry = uiState.todaySymptomEntry,
+                onSelectProfile = viewModel::selectProfile,
+                onRefresh = viewModel::refresh,
+                onConfirmDose = viewModel::confirmDose,
+                onUnconfirmDose = viewModel::unconfirmDose,
+                onNavigateToCheckIn = onNavigateToCheckIn,
+                onNavigateToDiscovery = onNavigateToDiscovery
+            )
+        }
         is WeatherState.Error -> ErrorContent(
             message = weather.message,
             onRetry = viewModel::refresh
@@ -151,12 +167,30 @@ private fun DashboardContent(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        // Header
-        Text(
-            text = selectedProfile?.displayName ?: locationDisplayName.ifEmpty { stringResource(R.string.common_loading) },
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
+        // Header — title plus a small refresh affordance for users who don't
+        // know about the pull-to-refresh gesture.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = selectedProfile?.displayName ?: locationDisplayName.ifEmpty { stringResource(R.string.common_loading) },
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(
+                onClick = onRefresh,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = stringResource(R.string.common_refresh),
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         if (selectedProfile != null && locationDisplayName.isNotEmpty()) {
             Text(
                 text = locationDisplayName,
@@ -257,6 +291,12 @@ private fun DashboardContent(
                     }
                 }
             }
+        }
+
+        // Weather context — wind and rain probability for the current hour
+        conditions.weather?.let { weather ->
+            Spacer(modifier = Modifier.height(12.dp))
+            WeatherContextCard(weather)
         }
 
         // Discovery mode banner
@@ -501,14 +541,6 @@ private fun DashboardContent(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-
-        // Refresh button
-        Button(
-            onClick = onRefresh,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text(stringResource(R.string.common_refresh))
-        }
     }
 }
 
@@ -571,4 +603,82 @@ private fun PollenRow(reading: PollenReading, dimmed: Boolean = false) {
 @Composable
 private fun Context.isReduceMotionEnabled(): Boolean = remember {
     Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+}
+
+@Composable
+private fun WeatherContextCard(weather: WeatherConditions) {
+    val windKmh = weather.windSpeedKmh.toInt()
+    val compass = compassDirection(weather.windDirectionDegrees)
+    val rainPct = weather.precipitationProbabilityPercent
+    val cd = stringResource(
+        R.string.dashboard_weather_content_description,
+        windKmh, compass, rainPct
+    )
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .semantics { contentDescription = cd },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            WeatherStat(
+                icon = Icons.Filled.Air,
+                label = stringResource(R.string.dashboard_weather_wind_label),
+                value = stringResource(R.string.dashboard_weather_wind_value, windKmh, compass)
+            )
+            WeatherStat(
+                icon = Icons.Filled.WaterDrop,
+                label = stringResource(R.string.dashboard_weather_rain_label),
+                value = stringResource(R.string.dashboard_weather_rain_value, rainPct)
+            )
+        }
+    }
+}
+
+@Composable
+private fun WeatherStat(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+/**
+ * Convert a wind-direction bearing (0–360°) to an 8-point compass abbreviation.
+ * 0° / 360° = N, 90° = E, 180° = S, 270° = W.
+ */
+private fun compassDirection(degrees: Int): String {
+    val normalized = ((degrees % 360) + 360) % 360
+    val sectors = arrayOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
+    val index = ((normalized + 22) / 45) % 8
+    return sectors[index]
 }

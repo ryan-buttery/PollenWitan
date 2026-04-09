@@ -651,14 +651,29 @@ private fun MedicineAssignmentCard(
 
             Spacer(modifier = Modifier.height(12.dp))
             Text(stringResource(R.string.profile_reminder_hours), style = MaterialTheme.typography.bodyMedium)
+            val timesPerDayInt = assignment.timesPerDay.toIntOrNull()
+            val limitReached = timesPerDayInt != null &&
+                assignment.reminderHours.size >= timesPerDayInt
+            Text(
+                text = stringResource(
+                    R.string.profile_reminder_hours_hint,
+                    assignment.reminderHours.size,
+                    timesPerDayInt ?: 0
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = if (limitReached) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Spacer(modifier = Modifier.height(4.dp))
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                (6..22).forEach { hour ->
+                (0..23).forEach { hour ->
+                    val isSelected = hour in assignment.reminderHours
                     FilterChip(
-                        selected = hour in assignment.reminderHours,
+                        selected = isSelected,
+                        enabled = isSelected || !limitReached,
                         onClick = { onToggleHour(hour) },
                         label = { Text(String.format("%02d", hour)) }
                     )

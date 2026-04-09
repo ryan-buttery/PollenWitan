@@ -29,7 +29,9 @@ internal object ProfileEditLogic {
         InvalidLatitude,
         InvalidLongitude,
         InvalidThreshold,
-        InvalidDose
+        InvalidDose,
+        TooManyReminderHours,
+        InvalidReminderHour
     }
 
     fun validate(state: ProfileEditUiState): ValidationResult {
@@ -60,6 +62,12 @@ internal object ProfileEditLogic {
             val times = assignment.timesPerDay.toIntOrNull()
             if (dose == null || dose !in 1..MAX_DOSE || times == null || times !in 1..MAX_TIMES_PER_DAY) {
                 return ValidationResult.Invalid(ValidationReason.InvalidDose)
+            }
+            if (assignment.reminderHours.any { it !in 0..23 }) {
+                return ValidationResult.Invalid(ValidationReason.InvalidReminderHour)
+            }
+            if (assignment.reminderHours.size > times) {
+                return ValidationResult.Invalid(ValidationReason.TooManyReminderHours)
             }
         }
         return ValidationResult.Valid

@@ -12,7 +12,7 @@ import java.io.File
 
 @Database(
     entities = [CachedForecastEntity::class, DoseHistoryEntity::class, SymptomEntryEntity::class],
-    version = 3,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -58,6 +58,27 @@ abstract class AppDatabase : RoomDatabase() {
                     CREATE UNIQUE INDEX IF NOT EXISTS `index_dose_history_profileId_date_medicineId_slotIndex`
                         ON `dose_history` (`profileId`, `date`, `medicineId`, `slotIndex`)
                     """.trimIndent()
+                )
+            }
+        }
+
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Tag existing cached forecasts as the air-quality endpoint so the
+                // new weather-forecast cache rows can coexist on the same table.
+                db.execSQL(
+                    "ALTER TABLE `cached_forecasts` ADD COLUMN `endpoint` TEXT NOT NULL DEFAULT 'air_quality'"
+                )
+            }
+        }
+
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Optional free-text observation field on diary entries.
+                // Nullable column, no DEFAULT clause so the runtime schema matches
+                // Room's entity-derived schema exactly (no @ColumnInfo defaultValue).
+                db.execSQL(
+                    "ALTER TABLE `symptom_entries` ADD COLUMN `notes` TEXT"
                 )
             }
         }
@@ -152,7 +173,7 @@ abstract class AppDatabase : RoomDatabase() {
                 DB_NAME
             )
                 .setJournalMode(JournalMode.TRUNCATE)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
     }
 }

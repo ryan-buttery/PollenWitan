@@ -56,6 +56,12 @@
     <string name="dashboard_no_tracked_allergens">No tracked allergens</string>
     <string name="dashboard_air_quality">Air Quality</string>
     <string name="dashboard_european_aqi">European AQI</string>
+    <string name="dashboard_weather_context">Weather</string>
+    <string name="dashboard_weather_wind_label">Wind</string>
+    <string name="dashboard_weather_wind_value">%1$d km/h %2$s</string>
+    <string name="dashboard_weather_rain_label">Rain</string>
+    <string name="dashboard_weather_rain_value">%1$d%%</string>
+    <string name="dashboard_weather_content_description">Wind %1$d km/h from %2$s, %3$d%% rain probability</string>
     <string name="dashboard_medicines">Medicines</string>
     <string name="dashboard_dose_format">%1$d %2$s</string>
 
@@ -202,6 +208,7 @@
     <string name="profile_dose">Dose</string>
     <string name="profile_times_per_day">Times/day</string>
     <string name="profile_reminder_hours">Reminder hours</string>
+    <string name="profile_reminder_hours_hint">%1$d of %2$d selected</string>
     <string name="profile_add_medicine">Add Medicine</string>
 
     <!-- Profile list -->
@@ -325,6 +332,9 @@
     <string name="symptom_checkin_prompt_early">Check back this evening to log today\u2019s symptoms.</string>
     <string name="symptom_checkin_button_evening">Log Evening Check-In</string>
     <string name="symptom_checkin_button_update">Update Check-In</string>
+    <string name="symptom_checkin_notes_label">Notes (optional)</string>
+    <string name="symptom_checkin_notes_placeholder">Anything else worth noting today? (e.g. felt worse after gardening)</string>
+    <string name="symptom_diary_notes_heading">Notes</string>
     <string name="symptom_avg_severity">Avg severity: %1$.1f</string>
     <string name="nav_symptom_diary">Symptom Diary</string>
     <string name="symptom_diary_title">Symptom Diary</string>

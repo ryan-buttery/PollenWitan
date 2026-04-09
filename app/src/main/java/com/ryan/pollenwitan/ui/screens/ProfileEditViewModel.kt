@@ -232,13 +232,34 @@ class ProfileEditViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun updateAssignmentTimesPerDay(medicineId: String, times: String) {
-        updateAssignment(medicineId) { it.copy(timesPerDay = times) }
+        updateAssignment(medicineId) { assignment ->
+            // If the new value is a valid int smaller than the current
+            // reminder hour count, trim the trailing hours so validation
+            // doesn't immediately fail. Earlier hours are kept.
+            val newLimit = times.toIntOrNull()
+            val trimmed = if (newLimit != null && newLimit in 1..ProfileEditLogic.MAX_TIMES_PER_DAY &&
+                assignment.reminderHours.size > newLimit
+            ) {
+                assignment.reminderHours.take(newLimit)
+            } else {
+                assignment.reminderHours
+            }
+            assignment.copy(timesPerDay = times, reminderHours = trimmed)
+        }
     }
 
     fun toggleReminderHour(medicineId: String, hour: Int) {
         updateAssignment(medicineId) { assignment ->
             val hours = assignment.reminderHours.toMutableList()
-            if (hour in hours) hours.remove(hour) else hours.add(hour)
+            if (hour in hours) {
+                hours.remove(hour)
+            } else {
+                // Cap selection at the configured times-per-day to prevent
+                // selecting more reminder hours than doses.
+                val limit = assignment.timesPerDay.toIntOrNull() ?: ProfileEditLogic.MAX_TIMES_PER_DAY
+                if (hours.size >= limit) return@updateAssignment assignment
+                hours.add(hour)
+            }
             assignment.copy(reminderHours = hours.sorted())
         }
     }

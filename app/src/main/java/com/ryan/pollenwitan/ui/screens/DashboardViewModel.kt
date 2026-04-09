@@ -48,7 +48,13 @@ data class DashboardUiState(
     val selectedProfileId: String = "",
     val locationDisplayName: String = "",
     val medicineSlots: List<MedicineSlot> = emptyList(),
-    val todaySymptomEntry: SymptomDiaryEntry? = null
+    val todaySymptomEntry: SymptomDiaryEntry? = null,
+    /**
+     * True while a pull-to-refresh / manual refresh is in flight on top of
+     * existing data. The full Loading screen is only shown for the initial
+     * load (when [weatherState] is [WeatherState.Loading]).
+     */
+    val isRefreshing: Boolean = false
 ) {
     val selectedProfile: UserProfile?
         get() = profiles.find { it.id == selectedProfileId }
@@ -66,15 +72,16 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val symptomDiaryRepository = SymptomDiaryRepository(application)
 
     private val _weatherState = MutableStateFlow<WeatherState>(WeatherState.Loading)
+    private val _isRefreshing = MutableStateFlow(false)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiState: StateFlow<DashboardUiState> = combine(
-        _weatherState,
+        combine(_weatherState, _isRefreshing) { weather, refreshing -> weather to refreshing },
         profileRepository.getProfiles(),
         profileRepository.getSelectedProfileId(),
         locationRepository.getLocation(),
         medicineRepository.getMedicines()
-    ) { weather, profiles, selectedId, globalLocation, medicines ->
+    ) { (weather, isRefreshing), profiles, selectedId, globalLocation, medicines ->
         val selectedProfile = profiles.find { it.id == selectedId }
         val effectiveLocation = ProfileRepository.resolveLocation(selectedProfile, globalLocation)
         Triple(
@@ -82,7 +89,8 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 weatherState = weather,
                 profiles = profiles,
                 selectedProfileId = selectedId,
-                locationDisplayName = effectiveLocation.displayName
+                locationDisplayName = effectiveLocation.displayName,
+                isRefreshing = isRefreshing
             ),
             selectedProfile,
             medicines
@@ -137,19 +145,38 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun refresh() {
         viewModelScope.launch {
-            _weatherState.value = WeatherState.Loading
-            val globalLocation = locationRepository.getLocation().first()
-            val profiles = profileRepository.getProfiles().first()
-            val selectedId = profileRepository.getSelectedProfileId().first()
-            val selectedProfile = profiles.find { it.id == selectedId }
-            val location = ProfileRepository.resolveLocation(selectedProfile, globalLocation)
-            airQualityRepository.getCurrentConditions(
-                location.latitude,
-                location.longitude
-            ).fold(
-                onSuccess = { _weatherState.value = WeatherState.Success(it, it.fetchedAtMillis) },
-                onFailure = { _weatherState.value = WeatherState.Error(it.message ?: "Unknown error") }
-            )
+            // If we already have data, run the refresh in the background and keep
+            // existing content visible. If this is the first load (or a previous
+            // load errored), fall back to the full Loading screen.
+            val hasData = _weatherState.value is WeatherState.Success
+            if (hasData) {
+                _isRefreshing.value = true
+            } else {
+                _weatherState.value = WeatherState.Loading
+            }
+
+            try {
+                val globalLocation = locationRepository.getLocation().first()
+                val profiles = profileRepository.getProfiles().first()
+                val selectedId = profileRepository.getSelectedProfileId().first()
+                val selectedProfile = profiles.find { it.id == selectedId }
+                val location = ProfileRepository.resolveLocation(selectedProfile, globalLocation)
+                airQualityRepository.getCurrentConditions(
+                    location.latitude,
+                    location.longitude
+                ).fold(
+                    onSuccess = { _weatherState.value = WeatherState.Success(it, it.fetchedAtMillis) },
+                    onFailure = {
+                        // Only blow away existing content if there was none to begin with;
+                        // background refresh failures leave the dashboard intact.
+                        if (!hasData) {
+                            _weatherState.value = WeatherState.Error(it.message ?: "Unknown error")
+                        }
+                    }
+                )
+            } finally {
+                _isRefreshing.value = false
+            }
         }
     }
 

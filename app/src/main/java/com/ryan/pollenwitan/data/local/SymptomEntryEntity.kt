@@ -19,5 +19,6 @@ data class SymptomEntryEntity(
     val peakPollenJson: String,
     val peakAqi: Int,
     val peakPm25: Double,
-    val peakPm10: Double
+    val peakPm10: Double,
+    val notes: String? = null
 )

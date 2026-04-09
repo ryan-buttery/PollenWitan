@@ -24,6 +24,7 @@ import java.time.LocalDate
 data class SymptomCheckInUiState(
     val trackedSymptoms: List<TrackedSymptom> = emptyList(),
     val ratings: Map<String, Int> = emptyMap(),
+    val notes: String = "",
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val savedSuccessfully: Boolean = false,
@@ -73,6 +74,7 @@ class SymptomCheckInViewModel(application: Application) : AndroidViewModel(appli
             _uiState.value = SymptomCheckInUiState(
                 trackedSymptoms = symptoms,
                 ratings = ratings,
+                notes = existing?.notes.orEmpty(),
                 isLoading = false,
                 profileName = profile.displayName,
                 targetDate = targetDate,
@@ -86,6 +88,10 @@ class SymptomCheckInViewModel(application: Application) : AndroidViewModel(appli
         _uiState.value = current.copy(
             ratings = current.ratings + (symptomId to severity)
         )
+    }
+
+    fun setNotes(value: String) {
+        _uiState.value = _uiState.value.copy(notes = value)
     }
 
     fun save() {
@@ -152,7 +158,8 @@ class SymptomCheckInViewModel(application: Application) : AndroidViewModel(appli
                 peakPollenJson = peakPollenJson,
                 peakAqi = peakAqi,
                 peakPm25 = peakPm25,
-                peakPm10 = peakPm10
+                peakPm10 = peakPm10,
+                notes = state.notes.trim().takeIf { it.isNotEmpty() }
             )
 
             symptomDiaryRepository.logEntry(entry)

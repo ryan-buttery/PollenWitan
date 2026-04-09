@@ -62,7 +62,8 @@ class SymptomDiaryRepository(private val context: Context) {
             peakPollenJson = entry.peakPollenJson,
             peakAqi = entry.peakAqi,
             peakPm25 = entry.peakPm25,
-            peakPm10 = entry.peakPm10
+            peakPm10 = entry.peakPm10,
+            notes = entry.notes?.takeIf { it.isNotBlank() }
         )
     }
 
@@ -81,7 +82,8 @@ class SymptomDiaryRepository(private val context: Context) {
             peakPollenJson = entity.peakPollenJson,
             peakAqi = entity.peakAqi,
             peakPm25 = entity.peakPm25,
-            peakPm10 = entity.peakPm10
+            peakPm10 = entity.peakPm10,
+            notes = entity.notes
         )
     }
 }
