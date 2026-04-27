@@ -20,6 +20,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -120,6 +121,18 @@ fun SymptomCheckInScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
         }
+
+        // Free-text observation for the day. Optional; intended for future PDF
+        // export to medical providers.
+        OutlinedTextField(
+            value = uiState.notes,
+            onValueChange = viewModel::setNotes,
+            label = { Text(stringResource(R.string.symptom_checkin_notes_label)) },
+            placeholder = { Text(stringResource(R.string.symptom_checkin_notes_placeholder)) },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3,
+            maxLines = 6
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 

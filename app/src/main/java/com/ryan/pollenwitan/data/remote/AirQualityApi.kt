@@ -40,20 +40,30 @@ class AirQualityApi {
         forecastDays: Int = 1,
         pastDays: Int = 0
     ): String {
-        return executeRequest(latitude, longitude, forecastDays, pastDays).body()
+        return executeRequest(AIR_QUALITY_URL, AIR_QUALITY_HOURLY_PARAMS, latitude, longitude, forecastDays, pastDays).body()
+    }
+
+    suspend fun getWeatherRaw(
+        latitude: Double,
+        longitude: Double,
+        forecastDays: Int = 1
+    ): String {
+        return executeRequest(WEATHER_URL, WEATHER_HOURLY_PARAMS, latitude, longitude, forecastDays).body()
     }
 
     private suspend fun executeRequest(
+        url: String,
+        hourlyParams: String,
         latitude: Double,
         longitude: Double,
         forecastDays: Int,
         pastDays: Int = 0
     ): HttpResponse {
         return retryWithBackoff {
-            client.get(BASE_URL) {
+            client.get(url) {
                 parameter("latitude", latitude)
                 parameter("longitude", longitude)
-                parameter("hourly", HOURLY_PARAMS)
+                parameter("hourly", hourlyParams)
                 parameter("timezone", java.time.ZoneId.systemDefault().id)
                 parameter("forecast_days", forecastDays)
                 if (pastDays > 0) parameter("past_days", pastDays)
@@ -113,8 +123,11 @@ class AirQualityApi {
     }
 
     companion object {
-        private const val BASE_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
-        private const val HOURLY_PARAMS = "birch_pollen,alder_pollen,grass_pollen,mugwort_pollen,ragweed_pollen,olive_pollen,pm2_5,pm10,european_aqi"
+        private const val AIR_QUALITY_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
+        private const val AIR_QUALITY_HOURLY_PARAMS = "birch_pollen,alder_pollen,grass_pollen,mugwort_pollen,ragweed_pollen,olive_pollen,pm2_5,pm10,european_aqi"
+
+        private const val WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
+        private const val WEATHER_HOURLY_PARAMS = "wind_speed_10m,wind_direction_10m,precipitation_probability"
 
         private const val CONNECT_TIMEOUT_MS = 15_000L
         private const val REQUEST_TIMEOUT_MS = 30_000L

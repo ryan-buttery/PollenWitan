@@ -16,5 +16,10 @@ data class SymptomDiaryEntry(
     val peakPollenJson: String,
     val peakAqi: Int,
     val peakPm25: Double,
-    val peakPm10: Double
+    val peakPm10: Double,
+    /**
+     * Optional free-text observation for the day, intended for future PDF export
+     * to medical providers. Null when the user didn't add a note.
+     */
+    val notes: String? = null
 )

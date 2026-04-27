@@ -13,6 +13,7 @@ val keystoreProperties = Properties().apply {
         load(keystorePropertiesFile.inputStream())
     }
 }
+val hasReleaseKeystore = keystoreProperties.getProperty("storeFile")?.isNotBlank() == true
 
 android {
 namespace = "com.ryan.pollenwitan"
@@ -28,10 +29,12 @@ namespace = "com.ryan.pollenwitan"
 
     signingConfigs {
         create("release") {
-            storeFile = file(keystoreProperties.getProperty("storeFile", ""))
-            storePassword = keystoreProperties.getProperty("storePassword", "")
-            keyAlias = keystoreProperties.getProperty("keyAlias", "")
-            keyPassword = keystoreProperties.getProperty("keyPassword", "")
+            if (hasReleaseKeystore) {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword", "")
+                keyAlias = keystoreProperties.getProperty("keyAlias", "")
+                keyPassword = keystoreProperties.getProperty("keyPassword", "")
+            }
         }
     }
 
@@ -40,7 +43,9 @@ namespace = "com.ryan.pollenwitan"
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
             resValue("string", "app_name", "PollenWitan (Debug)")
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         create("benchmark") {
             initWith(getByName("debug"))
@@ -52,7 +57,9 @@ namespace = "com.ryan.pollenwitan"
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isDebuggable = true // Intentional: required for profiling with Android Studio
         }
         release {
@@ -63,7 +70,9 @@ namespace = "com.ryan.pollenwitan"
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 

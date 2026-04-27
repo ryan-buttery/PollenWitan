@@ -1,11 +1,14 @@
 package com.ryan.pollenwitan.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.ryan.pollenwitan.data.local.AppDatabase
 import com.ryan.pollenwitan.data.local.CachedForecastEntity
 import com.ryan.pollenwitan.data.remote.AirQualityApi
 import com.ryan.pollenwitan.data.remote.dto.AirQualityResponse
 import com.ryan.pollenwitan.data.remote.dto.HourlyData
+import com.ryan.pollenwitan.data.remote.dto.WeatherForecastResponse
+import com.ryan.pollenwitan.data.remote.dto.WeatherHourlyData
 import com.ryan.pollenwitan.domain.model.CurrentConditions
 import com.ryan.pollenwitan.domain.model.DayPeriod
 import com.ryan.pollenwitan.domain.model.ForecastDay
@@ -15,6 +18,9 @@ import com.ryan.pollenwitan.domain.model.PeriodSummary
 import com.ryan.pollenwitan.domain.model.PollenReading
 import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
+import com.ryan.pollenwitan.domain.model.WeatherConditions
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -32,38 +38,56 @@ class AirQualityRepository(context: Context) {
         latitude: Double,
         longitude: Double
     ): Result<CurrentConditions> = runCatching {
-        val now = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
+        coroutineScope {
+            val now = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
 
-        fun findIndex(hourly: HourlyData) = hourly.time.indexOfFirst { timeStr ->
-            LocalDateTime.parse(timeStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME) == now
+            fun findIndex(hourly: HourlyData) = hourly.time.indexOfFirst { timeStr ->
+                LocalDateTime.parse(timeStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME) == now
+            }
+
+            // Run the air-quality fetch (required) and the weather fetch (best-effort)
+            // in parallel. Weather failures degrade gracefully to a null context row.
+            val airQualityDeferred = async {
+                fetchOrCache(latitude, longitude, forecastDays = 1)
+            }
+            val weatherDeferred = async {
+                runCatching { fetchWeatherOrCache(latitude, longitude, forecastDays = 1) }
+                    .onFailure { Log.w(TAG, "Weather fetch failed; falling back to null", it) }
+                    .getOrNull()
+            }
+
+            var (response, fetchedAt) = airQualityDeferred.await()
+            var index = findIndex(response.hourly)
+
+            if (index == -1) {
+                // Cached data doesn't cover the current hour (e.g. day boundary crossed); force a live fetch
+                val fresh = fetchOrCache(latitude, longitude, forecastDays = 1, forceRefresh = true)
+                response = fresh.first
+                fetchedAt = fresh.second
+                index = findIndex(response.hourly)
+            }
+
+            if (index == -1) error("Current hour not found in API response")
+
+            val hourly = response.hourly
+            val readings = parseReadingsAtIndex(hourly, index)
+            val aqiValue = hourly.europeanAqi?.getOrNull(index) ?: 0
+
+            val weather = weatherDeferred.await()?.let { weatherResponse ->
+                weatherConditionsAt(weatherResponse.hourly, now)
+            }
+
+            CurrentConditions(
+                pollenReadings = readings,
+                europeanAqi = aqiValue,
+                pm25 = hourly.pm25?.getOrNull(index) ?: 0.0,
+                pm10 = hourly.pm10?.getOrNull(index) ?: 0.0,
+                aqiSeverity = SeverityClassifier.aqiSeverity(aqiValue),
+                timestamp = now,
+                fetchedAtMillis = fetchedAt,
+                weather = weather
+            )
         }
-
-        var (response, fetchedAt) = fetchOrCache(latitude, longitude, forecastDays = 1)
-        var index = findIndex(response.hourly)
-
-        if (index == -1) {
-            // Cached data doesn't cover the current hour (e.g. day boundary crossed); force a live fetch
-            val fresh = fetchOrCache(latitude, longitude, forecastDays = 1, forceRefresh = true)
-            response = fresh.first
-            fetchedAt = fresh.second
-            index = findIndex(response.hourly)
-        }
-
-        if (index == -1) error("Current hour not found in API response")
-
-        val hourly = response.hourly
-        val readings = parseReadingsAtIndex(hourly, index)
-        val aqiValue = hourly.europeanAqi?.getOrNull(index) ?: 0
-
-        CurrentConditions(
-            pollenReadings = readings,
-            europeanAqi = aqiValue,
-            pm25 = hourly.pm25?.getOrNull(index) ?: 0.0,
-            pm10 = hourly.pm10?.getOrNull(index) ?: 0.0,
-            aqiSeverity = SeverityClassifier.aqiSeverity(aqiValue),
-            timestamp = now,
-            fetchedAtMillis = fetchedAt
-        )
     }
 
     suspend fun getForecast(
@@ -113,7 +137,9 @@ class AirQualityRepository(context: Context) {
         val now = System.currentTimeMillis()
 
         if (!forceRefresh) {
-            val cached = dao.getLatest(roundedLat, roundedLon, forecastDays)
+            val cached = dao.getLatest(
+                roundedLat, roundedLon, forecastDays, CachedForecastEntity.ENDPOINT_AIR_QUALITY
+            )
             if (cached != null && (now - cached.fetchedAtMillis) < CACHE_MAX_AGE_MS) {
                 return json.decodeFromString<AirQualityResponse>(cached.responseJson) to cached.fetchedAtMillis
             }
@@ -128,7 +154,8 @@ class AirQualityRepository(context: Context) {
                 longitude = roundedLon,
                 forecastDays = forecastDays,
                 fetchedAtMillis = now,
-                responseJson = rawJson
+                responseJson = rawJson,
+                endpoint = CachedForecastEntity.ENDPOINT_AIR_QUALITY
             )
         )
 
@@ -137,12 +164,74 @@ class AirQualityRepository(context: Context) {
         return response to now
     }
 
+    private suspend fun fetchWeatherOrCache(
+        latitude: Double,
+        longitude: Double,
+        forecastDays: Int
+    ): WeatherForecastResponse {
+        val roundedLat = roundCoord(latitude)
+        val roundedLon = roundCoord(longitude)
+        val now = System.currentTimeMillis()
+
+        val cached = dao.getLatest(
+            roundedLat, roundedLon, forecastDays, CachedForecastEntity.ENDPOINT_WEATHER
+        )
+        if (cached != null && (now - cached.fetchedAtMillis) < CACHE_MAX_AGE_MS) {
+            return json.decodeFromString<WeatherForecastResponse>(cached.responseJson)
+        }
+
+        val rawJson = api.getWeatherRaw(latitude, longitude, forecastDays)
+        val response = json.decodeFromString<WeatherForecastResponse>(rawJson)
+
+        dao.insert(
+            CachedForecastEntity(
+                latitude = roundedLat,
+                longitude = roundedLon,
+                forecastDays = forecastDays,
+                fetchedAtMillis = now,
+                responseJson = rawJson,
+                endpoint = CachedForecastEntity.ENDPOINT_WEATHER
+            )
+        )
+
+        return response
+    }
+
     companion object {
+        private const val TAG = "AirQualityRepository"
         internal const val CACHE_MAX_AGE_MS = 60 * 60 * 1000L
         internal const val CACHE_CLEANUP_AGE_MS = 24 * 60 * 60 * 1000L
 
         internal fun roundCoord(value: Double): Double =
             (value * 100).roundToInt() / 100.0
+
+        /**
+         * Resolve the wind/precipitation values that line up with [target] in the
+         * weather forecast response. Falls back to null if the matching hour is
+         * missing or all three fields are absent for that index.
+         */
+        internal fun weatherConditionsAt(
+            hourly: WeatherHourlyData,
+            target: LocalDateTime
+        ): WeatherConditions? {
+            val index = hourly.time.indexOfFirst { timeStr ->
+                LocalDateTime.parse(timeStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME) == target
+            }
+            if (index == -1) return null
+
+            val windSpeed = hourly.windSpeed10m?.getOrNull(index)
+            val windDir = hourly.windDirection10m?.getOrNull(index)
+            val precipProb = hourly.precipitationProbability?.getOrNull(index)
+
+            // If every field is null the row carries no useful info; degrade to null.
+            if (windSpeed == null && windDir == null && precipProb == null) return null
+
+            return WeatherConditions(
+                windSpeedKmh = windSpeed ?: 0.0,
+                windDirectionDegrees = windDir?.toInt()?.mod(360) ?: 0,
+                precipitationProbabilityPercent = precipProb ?: 0
+            )
+        }
 
         internal fun parseReadingsAtIndex(hourly: HourlyData, index: Int): List<PollenReading> {
             val birchValue = hourly.birchPollen?.getOrNull(index) ?: 0.0

@@ -298,6 +298,21 @@ private fun DiaryEntryCard(
                 }
             }
 
+            // Free-text note (if logged)
+            entry.notes?.takeIf { it.isNotBlank() }?.let { note ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.symptom_diary_notes_heading),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = note,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             // Environmental snapshot
             if (entry.peakAqi > 0) {
                 Spacer(modifier = Modifier.height(8.dp))

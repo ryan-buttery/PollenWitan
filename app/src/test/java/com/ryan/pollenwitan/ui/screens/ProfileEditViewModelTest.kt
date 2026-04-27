@@ -243,6 +243,66 @@ class ProfileEditViewModelTest {
     }
 
     @Test
+    fun `validation rejects more reminder hours than times per day`() {
+        val state = makeState(
+            medicineAssignments = listOf(
+                makeAssignmentUi("med1", dose = "1", timesPerDay = "2", reminderHours = listOf(8, 14, 20))
+            )
+        )
+        val result = ProfileEditLogic.validate(state)
+        assertTrue(result is ProfileEditLogic.ValidationResult.Invalid)
+        assertEquals(
+            ProfileEditLogic.ValidationReason.TooManyReminderHours,
+            (result as ProfileEditLogic.ValidationResult.Invalid).reason
+        )
+    }
+
+    @Test
+    fun `validation accepts equal reminder hours and times per day`() {
+        val state = makeState(
+            medicineAssignments = listOf(
+                makeAssignmentUi("med1", dose = "1", timesPerDay = "3", reminderHours = listOf(8, 14, 20))
+            )
+        )
+        assertTrue(ProfileEditLogic.validate(state) is ProfileEditLogic.ValidationResult.Valid)
+    }
+
+    @Test
+    fun `validation accepts fewer reminder hours than times per day`() {
+        val state = makeState(
+            medicineAssignments = listOf(
+                makeAssignmentUi("med1", dose = "1", timesPerDay = "3", reminderHours = listOf(8))
+            )
+        )
+        assertTrue(ProfileEditLogic.validate(state) is ProfileEditLogic.ValidationResult.Valid)
+    }
+
+    @Test
+    fun `validation rejects out-of-range reminder hour`() {
+        val state = makeState(
+            medicineAssignments = listOf(
+                makeAssignmentUi("med1", dose = "1", timesPerDay = "1", reminderHours = listOf(24))
+            )
+        )
+        val result = ProfileEditLogic.validate(state)
+        assertTrue(result is ProfileEditLogic.ValidationResult.Invalid)
+        assertEquals(
+            ProfileEditLogic.ValidationReason.InvalidReminderHour,
+            (result as ProfileEditLogic.ValidationResult.Invalid).reason
+        )
+    }
+
+    @Test
+    fun `validation accepts midnight reminder hour`() {
+        val state = makeState(
+            medicineAssignments = listOf(
+                makeAssignmentUi("med1", dose = "1", timesPerDay = "1", reminderHours = listOf(0))
+            )
+        )
+        assertTrue(ProfileEditLogic.validate(state) is ProfileEditLogic.ValidationResult.Valid)
+    }
+
+    @Test
     fun `reminder hours are preserved in assignment`() {
         val assignments = listOf(
             makeAssignmentUi("med1", dose = "1", timesPerDay = "3", reminderHours = listOf(7, 13, 21))

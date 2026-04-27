@@ -1,10 +1,12 @@
 package com.ryan.pollenwitan.data.repository
 
 import com.ryan.pollenwitan.data.remote.dto.HourlyData
+import com.ryan.pollenwitan.data.remote.dto.WeatherHourlyData
 import com.ryan.pollenwitan.data.repository.AirQualityRepository.Companion.buildForecastDays
 import com.ryan.pollenwitan.data.repository.AirQualityRepository.Companion.parseReadingsAtIndex
 import com.ryan.pollenwitan.data.repository.AirQualityRepository.Companion.peakPollenReadings
 import com.ryan.pollenwitan.data.repository.AirQualityRepository.Companion.roundCoord
+import com.ryan.pollenwitan.data.repository.AirQualityRepository.Companion.weatherConditionsAt
 import com.ryan.pollenwitan.data.repository.AirQualityRepository.Companion.CACHE_MAX_AGE_MS
 import com.ryan.pollenwitan.data.repository.AirQualityRepository.Companion.CACHE_CLEANUP_AGE_MS
 import com.ryan.pollenwitan.domain.model.DayPeriod
@@ -14,6 +16,8 @@ import com.ryan.pollenwitan.domain.model.PollenType
 import com.ryan.pollenwitan.domain.model.SeverityClassifier
 import com.ryan.pollenwitan.domain.model.SeverityLevel
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
@@ -441,6 +445,89 @@ class AirQualityRepositoryTest {
         assertEquals(2, days[0].hourlyReadings.size)
         assertEquals(LocalDateTime.of(2026, 3, 28, 10, 0), days[0].hourlyReadings[0].hour)
         assertEquals(LocalDateTime.of(2026, 3, 28, 14, 0), days[0].hourlyReadings[1].hour)
+    }
+
+    // ── weatherConditionsAt ─────────────────────────────────────────────
+
+    @Test
+    fun `weatherConditionsAt picks the matching hour`() {
+        val target = LocalDateTime.of(2026, 4, 9, 14, 0)
+        val hourly = WeatherHourlyData(
+            time = listOf(
+                "2026-04-09T13:00",
+                "2026-04-09T14:00",
+                "2026-04-09T15:00"
+            ),
+            windSpeed10m = listOf(5.0, 12.5, 20.0),
+            windDirection10m = listOf(45.0, 180.0, 270.0),
+            precipitationProbability = listOf(0, 60, 90)
+        )
+
+        val result = weatherConditionsAt(hourly, target)
+
+        assertNotNull(result)
+        assertEquals(12.5, result!!.windSpeedKmh, 0.001)
+        assertEquals(180, result.windDirectionDegrees)
+        assertEquals(60, result.precipitationProbabilityPercent)
+    }
+
+    @Test
+    fun `weatherConditionsAt returns null when target hour absent`() {
+        val target = LocalDateTime.of(2026, 4, 9, 14, 0)
+        val hourly = WeatherHourlyData(
+            time = listOf("2026-04-09T13:00", "2026-04-09T15:00"),
+            windSpeed10m = listOf(5.0, 20.0),
+            windDirection10m = listOf(45.0, 270.0),
+            precipitationProbability = listOf(10, 90)
+        )
+
+        assertNull(weatherConditionsAt(hourly, target))
+    }
+
+    @Test
+    fun `weatherConditionsAt returns null when all fields null at index`() {
+        val target = LocalDateTime.of(2026, 4, 9, 14, 0)
+        val hourly = WeatherHourlyData(
+            time = listOf("2026-04-09T14:00"),
+            windSpeed10m = listOf(null),
+            windDirection10m = listOf(null),
+            precipitationProbability = listOf(null)
+        )
+
+        assertNull(weatherConditionsAt(hourly, target))
+    }
+
+    @Test
+    fun `weatherConditionsAt fills missing fields with zero when at least one present`() {
+        val target = LocalDateTime.of(2026, 4, 9, 14, 0)
+        val hourly = WeatherHourlyData(
+            time = listOf("2026-04-09T14:00"),
+            windSpeed10m = listOf(null),
+            windDirection10m = listOf(null),
+            precipitationProbability = listOf(75)
+        )
+
+        val result = weatherConditionsAt(hourly, target)
+
+        assertNotNull(result)
+        assertEquals(0.0, result!!.windSpeedKmh, 0.001)
+        assertEquals(0, result.windDirectionDegrees)
+        assertEquals(75, result.precipitationProbabilityPercent)
+    }
+
+    @Test
+    fun `weatherConditionsAt normalises wind direction modulo 360`() {
+        val target = LocalDateTime.of(2026, 4, 9, 14, 0)
+        val hourly = WeatherHourlyData(
+            time = listOf("2026-04-09T14:00"),
+            windSpeed10m = listOf(10.0),
+            windDirection10m = listOf(450.0),
+            precipitationProbability = listOf(0)
+        )
+
+        val result = weatherConditionsAt(hourly, target)
+
+        assertEquals(90, result!!.windDirectionDegrees)
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────
