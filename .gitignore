@@ -9,3 +9,7 @@ app/release/
 .idea/
 *.hprof
 .DS_Store
+
+# Private signing keys
+*.jks
+*.keystore

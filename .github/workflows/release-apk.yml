@@ -1,0 +1,111 @@
+name: Signed release APK
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-apk-${{ github.event.release.id }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.repository == 'ryan-buttery/PollenWitan'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the release commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Java 17
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Android SDK packages
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+
+      - name: Restore signing credentials
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          import base64
+          import os
+          from pathlib import Path
+
+          names = ('ANDROID_KEYSTORE_BASE64', 'ANDROID_KEYSTORE_PASSWORD',
+                   'ANDROID_KEY_ALIAS', 'ANDROID_KEY_PASSWORD')
+          missing = [name for name in names if not os.environ.get(name)]
+          if missing:
+              raise SystemExit('Missing Actions secrets: ' + ', '.join(missing))
+          os.umask(0o077)
+          keystore = Path(os.environ['RUNNER_TEMP']) / 'pollenwitan-release.jks'
+          try:
+              data = base64.b64decode(''.join(os.environ[names[0]].split()), validate=True)
+          except ValueError:
+              raise SystemExit('ANDROID_KEYSTORE_BASE64 is not valid Base64') from None
+          if not data:
+              raise SystemExit('Decoded keystore is empty')
+          keystore.write_bytes(data)
+
+          # Properties.load(InputStream) expects Java properties escapes. Encoding
+          # every UTF-16 code unit also preserves spaces, backslashes and Unicode.
+          def escape(value):
+              raw = value.encode('utf-16-be')
+              return ''.join('\\u' + raw[i:i + 2].hex() for i in range(0, len(raw), 2))
+
+          values = {
+              'storeFile': str(keystore),
+              'storePassword': os.environ['ANDROID_KEYSTORE_PASSWORD'],
+              'keyAlias': os.environ['ANDROID_KEY_ALIAS'],
+              'keyPassword': os.environ['ANDROID_KEY_PASSWORD'],
+          }
+          Path('keystore.properties').write_text(
+              ''.join(key + '=' + escape(value) + '\n' for key, value in values.items()),
+              encoding='ascii')
+          PY
+
+      - name: Test, lint and build release APK
+        run: ./gradlew :app:testReleaseUnitTest :app:lintRelease :app:assembleRelease --no-daemon --no-configuration-cache
+
+      - name: Verify release signature and prepare asset
+        run: |
+          apk=app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$apk" > "$RUNNER_TEMP/apk-signature.txt"
+          expected=68dbbb027435608c5413169297cf2b5edf118b5e2277a34465f4a3ce6885ea8c
+          actual=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' "$RUNNER_TEMP/apk-signature.txt" | tr '[:upper:]' '[:lower:]' | tr -d ':\r')
+          if [[ "$actual" != "$expected" ]]; then
+            echo '::error::APK certificate does not match the release fingerprint in README.md'
+            exit 1
+          fi
+          mkdir -p dist
+          cp "$apk" dist/PollenWitan.apk
+          (cd dist && sha256sum PollenWitan.apk > PollenWitan.apk.sha256)
+
+      - name: Remove signing credentials
+        if: always()
+        run: rm -f -- "$RUNNER_TEMP/pollenwitan-release.jks" keystore.properties
+
+      - name: Attach APK and checksum to the published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        # No --clobber: a retry must not silently replace a published binary.
+        run: gh release upload "$RELEASE_TAG" dist/PollenWitan.apk dist/PollenWitan.apk.sha256
