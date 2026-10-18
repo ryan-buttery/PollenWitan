@@ -83,3 +83,11 @@ Incremental test coverage plan. Each task is a self-contained PR targeting `rele
 - [x] **Threshold Auto-Calibration** — Use symptom diary data to suggest personalised threshold adjustments
 - [x] **Allergen Discovery Mode** — Functionality for users who don't know their specific allergies to track all pollens and use symptom diary correlation to help identify triggers over time. Clear medical disclaimers that the app is not a diagnostic tool and recommends consulting a specialist
 - [x] **Onboarding Wizard Improvements** — Streamlined flow for returning users importing JSON data; restructure wizard to support both "I know my allergies" and "help me figure it out" paths
+
+## Signed Release APK Automation
+
+- [x] Add a release-only workflow using the existing signing configuration.
+- [x] Verify the published certificate fingerprint before uploading the APK.
+- [x] Document local secret setup and release/retry steps; ignore keystore files.
+- [x] Validate workflow syntax and credential serialization without a real signing key.
+- [ ] Owner: configure secrets and verify the first signed release build.
